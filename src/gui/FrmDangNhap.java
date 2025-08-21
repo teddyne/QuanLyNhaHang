@@ -196,8 +196,8 @@ public class FrmDangNhap extends JFrame implements ActionListener,MouseListener{
             isPasswordVisible = !isPasswordVisible;
             txtPass.setEchoChar(isPasswordVisible ? (char) 0 : '●');
             ImageIcon eyeIcon = isPasswordVisible
-                    ? new ImageIcon(new ImageIcon("src/img/nhinMatKhau.png").getImage().getScaledInstance(24, 24, Image.SCALE_SMOOTH))
-                    : new ImageIcon(new ImageIcon("src/img/anMatKhau.png").getImage().getScaledInstance(24, 24, Image.SCALE_SMOOTH));
+                    ? new ImageIcon(new ImageIcon("img/nhinMatKhau.png").getImage().getScaledInstance(24, 24, Image.SCALE_SMOOTH))
+                    : new ImageIcon(new ImageIcon("img/anMatKhau.png").getImage().getScaledInstance(24, 24, Image.SCALE_SMOOTH));
             iconEye.setIcon(eyeIcon);
         }
     }
