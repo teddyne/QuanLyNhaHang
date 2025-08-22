@@ -26,97 +26,100 @@ public class FrmDangNhap extends JFrame implements ActionListener,MouseListener{
         ConnectSQL.getInstance().connect();
 
         setTitle("Đăng nhập");
-        setSize(900, 600);
+        setSize(1440, 1024);
         setLocationRelativeTo(null);
-        setResizable(false);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
 
         JSplitPane jp = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         jp.setEnabled(false);
         add(jp, BorderLayout.CENTER);
 
-        ImageIcon img = new ImageIcon("img/anhdangnhap.jpg");
+        ImageIcon img = new ImageIcon("img/anhbia.png");
         JPanel pLeft = new ImagePanel(img);
-        pLeft.setPreferredSize(new Dimension(800, 800));
+        pLeft.setPreferredSize(new Dimension(400, 550));
 
         JPanel pRight = new JPanel(null);
-        pRight.setBackground(Color.gray);
 
         jp.setLeftComponent(pLeft);
         jp.setRightComponent(pRight);
-        jp.setDividerLocation(400);
+        jp.setDividerLocation(650);
 
         lblTitle = new JLabel("THÔNG TIN ĐĂNG NHẬP");
-        lblTitle.setFont(new Font("Times New Roman", Font.BOLD, 30));
-        lblTitle.setBounds(60, 100, 400, 40);
+        lblTitle.setFont(new Font("Times New Roman", Font.BOLD, 40));
+        lblTitle.setBounds(140, 100, 600, 60);
         pRight.add(lblTitle);
 
         lblTaiKhoan = new JLabel("Tài khoản:");
-        lblTaiKhoan.setFont(new Font("Times New Roman", Font.BOLD, 20));
-        lblTaiKhoan.setBounds(80, 170, 150, 25);
+        lblTaiKhoan.setFont(new Font("Times New Roman", Font.BOLD, 30));
+        lblTaiKhoan.setBounds(140, 180, 150, 25);
         pRight.add(lblTaiKhoan);
 
         ImageIcon imgTaiKhoan = new ImageIcon("img/taiKhoan.png");
-        Image scaledTaiKhoan = imgTaiKhoan.getImage().getScaledInstance(24, 24, Image.SCALE_SMOOTH);
+        Image scaledTaiKhoan = imgTaiKhoan.getImage().getScaledInstance(45, 45, Image.SCALE_SMOOTH);
         JLabel iconTaiKhoan = new JLabel(new ImageIcon(scaledTaiKhoan));
-        iconTaiKhoan.setBounds(40, 200, 30, 30);
+        iconTaiKhoan.setBounds(140, 210, 30, 55);
         pRight.add(iconTaiKhoan);
 
         txtTaiKhoan = new JTextField();
-        txtTaiKhoan.setBounds(80, 200, 300, 30);
+        txtTaiKhoan.setBounds(180, 220, 290, 35);
         pRight.add(txtTaiKhoan);
 
         lblMatKhau = new JLabel("Mật khẩu:");
-        lblMatKhau.setFont(new Font("Times New Roman", Font.BOLD, 20));
-        lblMatKhau.setBounds(80, 240, 150, 25);
+        lblMatKhau.setFont(new Font("Times New Roman", Font.BOLD, 30));
+        lblMatKhau.setBounds(140, 300, 200, 35);
         pRight.add(lblMatKhau);
 
         ImageIcon imgPass = new ImageIcon("img/password.png");
-        Image scaledPass = imgPass.getImage().getScaledInstance(24, 24, Image.SCALE_SMOOTH);
+        Image scaledPass = imgPass.getImage().getScaledInstance(35, 35, Image.SCALE_SMOOTH);
         JLabel iconPass = new JLabel(new ImageIcon(scaledPass));
-        iconPass.setBounds(40, 270, 30, 30);
+        iconPass.setBounds(140, 345, 30, 32);
         pRight.add(iconPass);
 
         txtPass = new JPasswordField();
-        txtPass.setBounds(80, 270, 300, 30);
+        txtPass.setBounds(180, 350, 300, 30);
+        txtTaiKhoan.setFont(new Font("Arial", Font.PLAIN, 20));
+        txtPass.setFont(new Font("Arial", Font.PLAIN, 20));
         pRight.add(txtPass);
 
         ImageIcon eyeClosedRaw = new ImageIcon("img/anMatKhau.png");
         ImageIcon eyeOpenRaw = new ImageIcon("img/nhinMatKhau.png");
 
-        Image eyeClosedScaled = eyeClosedRaw.getImage().getScaledInstance(24, 24, Image.SCALE_SMOOTH);
-        Image eyeOpenScaled = eyeOpenRaw.getImage().getScaledInstance(24, 24, Image.SCALE_SMOOTH);
+        Image eyeClosedScaled = eyeClosedRaw.getImage().getScaledInstance(35, 35, Image.SCALE_SMOOTH);
+        Image eyeOpenScaled = eyeOpenRaw.getImage().getScaledInstance(35, 35, Image.SCALE_SMOOTH);
 
         ImageIcon eyeClosedIcon = new ImageIcon(eyeClosedScaled);
         ImageIcon eyeOpenIcon = new ImageIcon(eyeOpenScaled);
 
         iconEye = new JLabel(eyeClosedIcon);
-        iconEye.setBounds(380, 270, 33, 33);
+        iconEye.setBounds(490, 350, 33, 33);
         iconEye.setCursor(new Cursor(Cursor.HAND_CURSOR));
         iconEye.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        iconEye.setBounds(380, 270, 33, 33);
+        iconEye.setBounds(490, 350, 33, 33);
         pRight.add(iconEye);
 
         iconEye.addMouseListener(this);
 
-        JPanel tacVu = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
+        JPanel tacVu = new JPanel(new FlowLayout(FlowLayout.CENTER, 30, 20));
 
         btnDangNhap = new JButton("Đăng nhập");
         btnDangNhap.setBackground(new Color(46, 204, 113));
         btnDangNhap.setForeground(Color.WHITE);
         btnDangNhap.setFocusPainted(false);
+        btnDangNhap.setFont(new Font("Times New Roman", Font.BOLD, 22)); 
+        btnDangNhap.setPreferredSize(new Dimension(160, 50));
 
         btnThoat = new JButton("Thoát");
         btnThoat.setBackground(new Color(231, 76, 60));
         btnThoat.setForeground(Color.WHITE);
         btnThoat.setFocusPainted(false);
+        btnThoat.setFont(new Font("Times New Roman", Font.BOLD, 22)); 
+        btnThoat.setPreferredSize(new Dimension(160, 50));
 
         tacVu.add(btnDangNhap);
         tacVu.add(btnThoat);
-        tacVu.setBorder(BorderFactory.createTitledBorder("Chọn tác vụ"));
-        tacVu.setBounds(30, 450, 400, 80);
+        tacVu.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),"Chọn tác vụ",0, 0, new Font("Times New Roman", Font.BOLD, 30)));
+        tacVu.setBounds(140, 450, 500, 150);
         pRight.add(tacVu);
-
         btnDangNhap.addActionListener(this);
         btnThoat.addActionListener(this);
         setVisible(true);
@@ -138,22 +141,50 @@ public class FrmDangNhap extends JFrame implements ActionListener,MouseListener{
         }
     }
 
-    public void dangNhap(){
+    public void dangNhap() {
         String tk = txtTaiKhoan.getText();
         String mk = String.valueOf(txtPass.getPassword());
+
         if (tk.isEmpty() || mk.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Vui lòng nhập tài khoản và mật khẩu!", "Thông báo", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        if (kiemTraDangNhap(tk, mk)) {
-            JOptionPane.showMessageDialog(this, "Đăng nhập thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
-            new FrmDangNhap();
-            dispose();
-        } else {
-            JOptionPane.showMessageDialog(this, "Tài khoản hoặc mật khẩu không đúng!", "Thông báo", JOptionPane.ERROR_MESSAGE);
-        }
 
+        JDialog loadingDialog = new JDialog(this, "Đang xử lý...", true);
+        JProgressBar progressBar = new JProgressBar();
+        progressBar.setIndeterminate(true);
+        loadingDialog.add(BorderLayout.CENTER, progressBar);
+        loadingDialog.setSize(500, 95);
+        loadingDialog.setLocationRelativeTo(this);
+
+        SwingWorker<Boolean, Void> worker = new SwingWorker<>() {
+            @Override
+            protected Boolean doInBackground() throws Exception {
+            	Thread.sleep(1000);
+                return kiemTraDangNhap(tk, mk);
+            }
+
+            @Override
+            protected void done() {
+                loadingDialog.dispose();
+                try {
+                    if (get()) {
+                        JOptionPane.showMessageDialog(null, "Đăng nhập thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                        new FrmTrangChu();
+                        dispose(); 
+                    } else {
+                        JOptionPane.showMessageDialog(null, "Tài khoản hoặc mật khẩu không đúng!", "Thông báo", JOptionPane.ERROR_MESSAGE);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+
+        worker.execute();
+        loadingDialog.setVisible(true);
     }
+
     public boolean kiemTraDangNhap(String user, String pass) {
         try {
 
@@ -196,8 +227,8 @@ public class FrmDangNhap extends JFrame implements ActionListener,MouseListener{
             isPasswordVisible = !isPasswordVisible;
             txtPass.setEchoChar(isPasswordVisible ? (char) 0 : '●');
             ImageIcon eyeIcon = isPasswordVisible
-                    ? new ImageIcon(new ImageIcon("img/nhinMatKhau.png").getImage().getScaledInstance(24, 24, Image.SCALE_SMOOTH))
-                    : new ImageIcon(new ImageIcon("img/anMatKhau.png").getImage().getScaledInstance(24, 24, Image.SCALE_SMOOTH));
+                    ? new ImageIcon(new ImageIcon("img/nhinMatKhau.png").getImage().getScaledInstance(35, 35, Image.SCALE_SMOOTH))
+                    : new ImageIcon(new ImageIcon("img/anMatKhau.png").getImage().getScaledInstance(35, 35, Image.SCALE_SMOOTH));
             iconEye.setIcon(eyeIcon);
         }
     }
