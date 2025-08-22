@@ -26,7 +26,7 @@ public class FrmDangNhap extends JFrame implements ActionListener,MouseListener{
         ConnectSQL.getInstance().connect();
 
         setTitle("Đăng nhập");
-        setSize(1440, 1024);
+        setSize(1560, 1340);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
 
@@ -168,15 +168,18 @@ public class FrmDangNhap extends JFrame implements ActionListener,MouseListener{
             protected void done() {
                 loadingDialog.dispose();
                 try {
-                    if (get()) {
+                    boolean ketQua = get();
+                    if (ketQua) {
                         JOptionPane.showMessageDialog(null, "Đăng nhập thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
-                        new FrmTrangChu();
-                        dispose(); 
+                        
+                        FrmTrangChu trangChu = new FrmTrangChu();
+                        trangChu.setVisible(true);
+                        dispose();
                     } else {
                         JOptionPane.showMessageDialog(null, "Tài khoản hoặc mật khẩu không đúng!", "Thông báo", JOptionPane.ERROR_MESSAGE);
                     }
-                } catch (Exception e) {
-                    e.printStackTrace();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
                 }
             }
         };
