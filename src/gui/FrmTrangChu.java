@@ -36,7 +36,7 @@ public class FrmTrangChu extends JFrame {
         pNor = new JPanel(new BorderLayout());
         pNor.setBackground(Color.WHITE);
         ImageIcon banner = new ImageIcon("img/banner.png");
-        Image img = banner.getImage().getScaledInstance(1240, 400, Image.SCALE_SMOOTH);
+        Image img = banner.getImage().getScaledInstance(1140, 300, Image.SCALE_SMOOTH);
         JLabel lblBanner = new JLabel(new ImageIcon(img));
         lblBanner.setHorizontalAlignment(SwingConstants.CENTER);
         pNor.add(lblBanner, BorderLayout.CENTER);
@@ -71,17 +71,49 @@ public class FrmTrangChu extends JFrame {
 
         add(pCen, BorderLayout.CENTER);
         
-     // Vùng South
-        pSou = new JPanel(new FlowLayout(FlowLayout.CENTER, 50, 10));
-        pSou.setBackground(new Color(245, 245, 245));
+        // Vùng South
+        JPanel bottomBar = new JPanel(new BorderLayout());
+        bottomBar.setBackground(new Color(245, 245, 245));
+        bottomBar.setBorder(BorderFactory.createEmptyBorder(5, 0, 5, 0));
 
-        btnHome = new BottomButton("Home", "img/home.png");
-        btnQuanLy = new BottomButton("Setting", "img/quanly.png");
+        JPanel infoPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 40, 0));
+        infoPanel.setOpaque(false);
+        infoPanel.setBorder(BorderFactory.createEmptyBorder(10, 180, 0, 0));
 
-        pSou.add(btnHome);
-        pSou.add(btnQuanLy);
+        // Icon địa chỉ
+        ImageIcon iconAddress = new ImageIcon("img/diachi.png");
+        Image imgAddr = iconAddress.getImage().getScaledInstance(25, 25, Image.SCALE_SMOOTH);
+        JLabel lblAddress = new JLabel("Đại học Công Nghiệp Tp HCM", new ImageIcon(imgAddr), JLabel.LEFT);
+        lblAddress.setFont(new Font("Times New Roman", Font.BOLD, 20));
+        lblAddress.setForeground(Color.DARK_GRAY);
 
-        add(pSou, BorderLayout.SOUTH);
+        // Icon liên hệ
+        ImageIcon iconPhone = new ImageIcon("img/lienhe.png");
+        Image imgPhone = iconPhone.getImage().getScaledInstance(25, 25, Image.SCALE_SMOOTH);
+        JLabel lblPhone = new JLabel("Nhóm 9_PTUD", new ImageIcon(imgPhone), JLabel.LEFT);
+        lblPhone.setFont(new Font("Times New Roman", Font.BOLD, 20));
+        lblPhone.setForeground(Color.DARK_GRAY);
+
+        infoPanel.add(lblAddress);
+        infoPanel.add(lblPhone);
+        bottomBar.add(infoPanel, BorderLayout.WEST);
+
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0));
+        buttonPanel.setOpaque(false);
+        buttonPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 190));
+
+        BottomButton btnHome = new BottomButton("Trang chủ", "img/home.png");
+        BottomButton btnQuanLy = new BottomButton("Thoát", "img/quanly.png");
+
+        btnHome.setFont(new Font("Times New Roman", Font.BOLD, 20));
+        btnQuanLy.setFont(new Font("Times New Roman", Font.BOLD, 20));
+
+        buttonPanel.add(btnHome);
+        buttonPanel.add(btnQuanLy);
+
+        bottomBar.add(buttonPanel, BorderLayout.EAST);
+
+        add(bottomBar, BorderLayout.SOUTH);
 
         btnNhanVien.addActionListener(e -> {
             new FrmNhanVien().setVisible(true);
@@ -124,7 +156,10 @@ public class FrmTrangChu extends JFrame {
             dispose();
         });
         btnQuanLy.addActionListener(e -> {
-            JOptionPane.showMessageDialog(this, "Đã cài đặt tiếng Việt!");
+        	int confirm = JOptionPane.showConfirmDialog(this, "Bạn có chắc muốn thoát không?", "Xác nhận", JOptionPane.YES_NO_OPTION);
+            if (confirm == JOptionPane.YES_OPTION) {
+                System.exit(0);
+            }
         });
     }
 
@@ -211,6 +246,6 @@ public class FrmTrangChu extends JFrame {
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new FrmDangNhap().setVisible(true));
+        SwingUtilities.invokeLater(() -> new FrmTrangChu().setVisible(true));
     }
 }
