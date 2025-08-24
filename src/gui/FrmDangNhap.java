@@ -26,24 +26,25 @@ public class FrmDangNhap extends JFrame implements ActionListener,MouseListener{
         ConnectSQL.getInstance().connect();
 
         setTitle("Đăng nhập");
-        setSize(1560, 1340);
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
 
+        //ảnh nhà hàng
         JSplitPane jp = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         jp.setEnabled(false);
         add(jp, BorderLayout.CENTER);
-
         ImageIcon img = new ImageIcon("img/anhbia.png");
         JPanel pLeft = new ImagePanel(img);
-        pLeft.setPreferredSize(new Dimension(400, 550));
 
+        //thông tin đăng nhập
         JPanel pRight = new JPanel(null);
 
         jp.setLeftComponent(pLeft);
         jp.setRightComponent(pRight);
-        jp.setDividerLocation(650);
-
+        jp.setResizeWeight(0.5);
+        
+        pRight.setBackground(Color.white);
         lblTitle = new JLabel("THÔNG TIN ĐĂNG NHẬP");
         lblTitle.setFont(new Font("Times New Roman", Font.BOLD, 40));
         lblTitle.setBounds(140, 100, 600, 60);
@@ -55,7 +56,7 @@ public class FrmDangNhap extends JFrame implements ActionListener,MouseListener{
         pRight.add(lblTaiKhoan);
 
         ImageIcon imgTaiKhoan = new ImageIcon("img/taiKhoan.png");
-        Image scaledTaiKhoan = imgTaiKhoan.getImage().getScaledInstance(45, 45, Image.SCALE_SMOOTH);
+        Image scaledTaiKhoan = imgTaiKhoan.getImage().getScaledInstance(40, 40, Image.SCALE_SMOOTH);
         JLabel iconTaiKhoan = new JLabel(new ImageIcon(scaledTaiKhoan));
         iconTaiKhoan.setBounds(140, 210, 30, 55);
         pRight.add(iconTaiKhoan);
@@ -70,7 +71,7 @@ public class FrmDangNhap extends JFrame implements ActionListener,MouseListener{
         pRight.add(lblMatKhau);
 
         ImageIcon imgPass = new ImageIcon("img/password.png");
-        Image scaledPass = imgPass.getImage().getScaledInstance(35, 35, Image.SCALE_SMOOTH);
+        Image scaledPass = imgPass.getImage().getScaledInstance(40, 40, Image.SCALE_SMOOTH);
         JLabel iconPass = new JLabel(new ImageIcon(scaledPass));
         iconPass.setBounds(140, 345, 30, 32);
         pRight.add(iconPass);
@@ -100,19 +101,20 @@ public class FrmDangNhap extends JFrame implements ActionListener,MouseListener{
         iconEye.addMouseListener(this);
 
         JPanel tacVu = new JPanel(new FlowLayout(FlowLayout.CENTER, 30, 20));
-
+        
+        tacVu.setBackground(Color.white);
         btnDangNhap = new JButton("Đăng nhập");
         btnDangNhap.setBackground(new Color(46, 204, 113));
         btnDangNhap.setForeground(Color.WHITE);
         btnDangNhap.setFocusPainted(false);
-        btnDangNhap.setFont(new Font("Times New Roman", Font.BOLD, 22)); 
+        btnDangNhap.setFont(new Font("Times New Roman", Font.BOLD, 25)); 
         btnDangNhap.setPreferredSize(new Dimension(160, 50));
 
         btnThoat = new JButton("Thoát");
         btnThoat.setBackground(new Color(231, 76, 60));
         btnThoat.setForeground(Color.WHITE);
         btnThoat.setFocusPainted(false);
-        btnThoat.setFont(new Font("Times New Roman", Font.BOLD, 22)); 
+        btnThoat.setFont(new Font("Times New Roman", Font.BOLD, 25)); 
         btnThoat.setPreferredSize(new Dimension(160, 50));
 
         tacVu.add(btnDangNhap);
@@ -135,7 +137,7 @@ public class FrmDangNhap extends JFrame implements ActionListener,MouseListener{
     }
 
     public void exit() {
-        int confirm = JOptionPane.showConfirmDialog(this, "Bạn có muốn thoát không?", "Xác nhận", JOptionPane.YES_NO_OPTION);
+        int confirm = JOptionPane.showConfirmDialog(this, "Bạn có chắc muốn thoát không?", "Xác nhận", JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {
             System.exit(0);
         }

@@ -5,179 +5,212 @@ import java.awt.event.*;
 import javax.swing.*;
 
 public class FrmTrangChu extends JFrame {
-    private JPanel sidebar, contentPanel;
-    private CardLayout cardLayout;
-	private JPanel pNor;
-	private JLabel lbltieude;
+
+    private JPanel pNor, pCen;
+
+    // Khai báo các nút
+    private RoundedButton btnBan;
+    private RoundedButton btnNhanVien;
+    private RoundedButton btnThucDon;
+    private RoundedButton btnKhuyenMai;
+    private RoundedButton btnKhach;
+    private RoundedButton btnKho;
+    private RoundedButton btnHoaDon;
+    private RoundedButton btnThongKe;
+    private RoundedButton btnDangXuat;
+
+	private JPanel pSou;
+
+	private JButton btnHome;
+
+	private JButton btnQuanLy;
 
     public FrmTrangChu() {
-        setTitle("Phần mềm Quản Lý Nhà Hàng");
-        setSize(1560, 1340);
+        setTitle("Quản Lý Nhà Hàng Vang");
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
-        
+
+        //Vùng north chứa banner
         pNor = new JPanel(new BorderLayout());
-        pNor.add(lbltieude = new JLabel("QUẢN LÝ NHÀ HÀNG SEN VÀNG"));
-        lbltieude.setFont(new Font("Times New Roman", Font.BOLD, 25));
-        lbltieude.setForeground(Color.white);
-        lbltieude.setHorizontalAlignment(SwingConstants.LEFT);
-        lbltieude.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 10)); 
-        pNor.setBackground(new Color(70, 130, 180));
+        pNor.setBackground(Color.WHITE);
+        ImageIcon banner = new ImageIcon("img/banner.png");
+        Image img = banner.getImage().getScaledInstance(1240, 400, Image.SCALE_SMOOTH);
+        JLabel lblBanner = new JLabel(new ImageIcon(img));
+        lblBanner.setHorizontalAlignment(SwingConstants.CENTER);
+        pNor.add(lblBanner, BorderLayout.CENTER);
+
         add(pNor, BorderLayout.NORTH);
+
+        //Vùng center chứa các nút 
+        pCen = new JPanel(new GridLayout(3, 3, 30, 30));
+        pCen.setBackground(Color.white);
+        pCen.setBorder(BorderFactory.createEmptyBorder(30, 200, 30, 200));
+
+        // Tạo nút
+        btnBan = new RoundedButton("Bàn", "img/ban.png");
+        btnNhanVien = new RoundedButton("Nhân Viên", "img/nhanvien.png");
+        btnThucDon = new RoundedButton("Thực Đơn", "img/thucdon.png");
+        btnKhuyenMai = new RoundedButton("Khuyến Mãi", "img/khuyenmai.png");
+        btnKhach = new RoundedButton("Khách Hàng", "img/khachhang.png");
+        btnKho = new RoundedButton("Kho", "img/kho.png");
+        btnHoaDon = new RoundedButton("Hóa Đơn", "img/hoadon.png");
+        btnThongKe = new RoundedButton("Thống Kê", "img/thongke.png");
+        btnDangXuat = new RoundedButton("Đăng Xuất", "img/dangxuat.png");
+
+        pCen.add(btnBan);
+        pCen.add(btnNhanVien);
+        pCen.add(btnThucDon);
+        pCen.add(btnKhuyenMai);
+        pCen.add(btnKhach);
+        pCen.add(btnKho);
+        pCen.add(btnHoaDon);
+        pCen.add(btnThongKe);
+        pCen.add(btnDangXuat);
+
+        add(pCen, BorderLayout.CENTER);
         
-        // ===== Sidebar Menu =====
-        sidebar = new JPanel();
-        sidebar.setPreferredSize(new Dimension(300, getHeight()));
-        sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
+     // Vùng South
+        pSou = new JPanel(new FlowLayout(FlowLayout.CENTER, 50, 10));
+        pSou.setBackground(new Color(245, 245, 245));
 
-        // Các nút menu
-        JButton btnTrangChu = createMenuButton("Trang Chủ", "img/nha.png");
-        JButton btnNhanVien = createMenuButton("Nhân Viên", "img/taiKhoan.png");
-        JButton btnBan      = createMenuButton("Bàn", "img/ban.png");
-        JButton btnThucDon  = createMenuButton("Thực Đơn", "img/thucdon.png");
-        JButton btnKhuyenMai = createMenuButton("Khuyến mãi","img/khuyenmai.png");
-        JButton btnKhach    = createMenuButton("Khách Hàng", "img/taiKhoan.png");
-        JButton btnKho      = createMenuButton("Kho", "img/kho.png");
-        JButton btnHoaDon   = createMenuButton("Hóa Đơn", "img/hoadon.png");
-        JButton btnThongKe   = createMenuButton("Báo Cáo", "img/thongke.png");
-        JButton btnDangXuat = createMenuButton("Đăng Xuất", "img/dangxuat.png");
+        btnHome = new BottomButton("Home", "img/home.png");
+        btnQuanLy = new BottomButton("Setting", "img/quanly.png");
 
-        sidebar.add(Box.createVerticalStrut(5));
-        sidebar.add(btnTrangChu);
-        sidebar.add(Box.createVerticalStrut(5));
-        sidebar.add(btnNhanVien);
-        sidebar.add(Box.createVerticalStrut(5));
-        sidebar.add(btnBan);
-        sidebar.add(Box.createVerticalStrut(5));
-        sidebar.add(btnThucDon);
-        sidebar.add(Box.createVerticalStrut(5));
-        sidebar.add(btnKhuyenMai);
-        sidebar.add(Box.createVerticalStrut(5));
-        sidebar.add(btnKhach);
-        sidebar.add(Box.createVerticalStrut(5));
-        sidebar.add(btnKho);
-        sidebar.add(Box.createVerticalStrut(5));
-        sidebar.add(btnHoaDon);
-        sidebar.add(Box.createVerticalStrut(5));
-        sidebar.add(btnThongKe);
-        sidebar.add(Box.createVerticalStrut(5));
-        sidebar.add(btnDangXuat);
+        pSou.add(btnHome);
+        pSou.add(btnQuanLy);
 
-        add(sidebar, BorderLayout.WEST);
+        add(pSou, BorderLayout.SOUTH);
 
-        cardLayout = new CardLayout();
-        contentPanel = new JPanel(cardLayout);
-
-        contentPanel.add(createPage("Trang Chủ"), "Trang Chủ");
-        
-        add(contentPanel, BorderLayout.CENTER);
-
-        btnTrangChu.addActionListener(e -> cardLayout.show(contentPanel, "Trang Chủ"));
-        btnNhanVien.addActionListener(e ->{
-        	new FrmNhanVien().setVisible(true);
-        	dispose();
+        btnNhanVien.addActionListener(e -> {
+            new FrmNhanVien().setVisible(true);
+            dispose();
         });
-        btnBan.addActionListener(e ->{
-        	new FrmBan().setVisible(true);
-        	dispose();
+        btnBan.addActionListener(e -> {
+            new FrmBan().setVisible(true);
+            dispose();
         });
-        btnThucDon.addActionListener(e ->{
-        	new FrmThucDon().setVisible(true);
-        	dispose();
+        btnThucDon.addActionListener(e -> {
+            new FrmThucDon().setVisible(true);
+            dispose();
         });
-        btnKhuyenMai.addActionListener(e ->{
-        	new FrmKhuyenMai().setVisible(true);
-        	dispose();
+        btnKhuyenMai.addActionListener(e -> {
+            new FrmKhuyenMai().setVisible(true);
+            dispose();
         });
-        btnKhach.addActionListener(e ->{
-        	new FrmKhachHang().setVisible(true);
-        	dispose();
+        btnKhach.addActionListener(e -> {
+            new FrmKhachHang().setVisible(true);
+            dispose();
         });
-        btnKho.addActionListener(e ->{
-        	new FrmKho().setVisible(true);
-        	dispose();
+        btnKho.addActionListener(e -> {
+            new FrmKho().setVisible(true);
+            dispose();
         });
-        btnHoaDon.addActionListener(e ->{
-        	new FrmHoaDon().setVisible(true);
-        	dispose();
+        btnHoaDon.addActionListener(e -> {
+            new FrmHoaDon().setVisible(true);
+            dispose();
         });
-        btnThongKe.addActionListener(e ->{
-        	new FrmThongKe().setVisible(true);
-        	dispose();
+        btnThongKe.addActionListener(e -> {
+            new FrmThongKe().setVisible(true);
+            dispose();
         });
         btnDangXuat.addActionListener(e -> {
             new FrmDangNhap().setVisible(true);
             dispose();
         });
+        btnHome.addActionListener(e -> {
+            new FrmTrangChu().setVisible(true);
+            dispose();
+        });
+        btnQuanLy.addActionListener(e -> {
+            JOptionPane.showMessageDialog(this, "Đã cài đặt tiếng Việt!");
+        });
     }
 
-    private JButton createMenuButton(String text, String iconPath) {
-        JButton btn = new JButton(text);
-        btn.setFont(new Font("Times New Roman", Font.BOLD, 22));
-        btn.setBackground(Color.white);
-        btn.setHorizontalAlignment(SwingConstants.LEFT);
-        btn.setFocusPainted(false);
+    // tạo bo tròn
+    class RoundedButton extends JButton {
+        private int cornerRadius = 25;
 
-        btn.setPreferredSize(new Dimension(300, 80));
-        btn.setMaximumSize(new Dimension(300, 80));
-        btn.setAlignmentX(Component.CENTER_ALIGNMENT);
+        public RoundedButton(String text, String iconPath) {
+            super(text);
+            setFont(new Font("Times New Roman", Font.BOLD, 22));
+            setFocusPainted(false);
+            setContentAreaFilled(false);
+            setOpaque(false);
+            setBackground(Color.WHITE);
+            setHorizontalTextPosition(SwingConstants.RIGHT);
+            setVerticalTextPosition(SwingConstants.CENTER);
+            try {
+                ImageIcon icon = new ImageIcon(iconPath);
+                Image img = icon.getImage().getScaledInstance(60, 60, Image.SCALE_SMOOTH);
+                setIcon(new ImageIcon(img));
+            } catch (Exception e) {
+                System.out.println("Không tìm thấy icon: " + iconPath);
+            }
 
-        btn.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(200, 200, 200), 2, true), 
-            BorderFactory.createEmptyBorder(10, 20, 10, 20)
-        ));
+            setBorder(BorderFactory.createEmptyBorder(12, 25, 12, 25));
 
-        try {
-            ImageIcon icon = new ImageIcon(iconPath);
-            Image img = icon.getImage().getScaledInstance(40, 40, Image.SCALE_SMOOTH);
-            btn.setIcon(new ImageIcon(img));
-        } catch (Exception e) {
-            System.out.println("Không tìm thấy icon: " + iconPath);
+            // Hiệu ứng khi hover (chuột chạm)
+            addMouseListener(new java.awt.event.MouseAdapter() {
+                public void mouseEntered(java.awt.event.MouseEvent evt) {
+                    setBackground(new Color(255, 204, 204));
+                }
+                public void mouseExited(java.awt.event.MouseEvent evt) {
+                    setBackground(Color.WHITE);
+                }
+            });
         }
+        
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        Color defaultColor = Color.white;
-        Color hoverColor = new Color(220, 220, 220);
-        Color selectedColor = new Color(173, 216, 230);
+            g2.setColor(getBackground());
+            g2.fillRoundRect(0, 0, getWidth(), getHeight(), cornerRadius, cornerRadius);
 
-        btn.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                if (btn.getBackground().equals(defaultColor)) { 
-                    btn.setBackground(hoverColor);
-                }
-            }
+            g2.setColor(new Color(160, 160, 160));
+            g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, cornerRadius, cornerRadius);
 
-            @Override
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                if (!btn.getBackground().equals(selectedColor)) {
-                    btn.setBackground(defaultColor);
-                }
-            }
-        });
-
-        btn.addActionListener(e -> {
-            for (Component c : sidebar.getComponents()) {
-                if (c instanceof JButton) {
-                    c.setBackground(defaultColor);
-                }
-            }
-            btn.setBackground(selectedColor);
-        });
-
-        return btn;
+            g2.dispose();
+            super.paintComponent(g);
+        }
     }
+    
+    class BottomButton extends JButton {
+        public BottomButton(String text, String iconPath) {
+            super(text);
 
+            setFont(new Font("Times New Roman", Font.BOLD, 18));
+            setFocusPainted(false);
+            setContentAreaFilled(false);
+            setOpaque(false);
+            setBorderPainted(false);
+            setHorizontalTextPosition(SwingConstants.RIGHT);
+            setVerticalTextPosition(SwingConstants.CENTER);
+            try {
+                ImageIcon icon = new ImageIcon(iconPath);
+                Image img = icon.getImage().getScaledInstance(30, 30, Image.SCALE_SMOOTH);
+                setIcon(new ImageIcon(img));
+            } catch (Exception e) {
+                System.out.println("Không tìm thấy icon: " + iconPath);
+            }
 
-    private JPanel createPage(String title) {
-        JPanel panel = new JPanel(new BorderLayout());
-        JLabel lbl = new JLabel(title, JLabel.CENTER);
-        lbl.setFont(new Font("Arial", Font.BOLD, 28));
-        panel.add(lbl, BorderLayout.CENTER);
-        return panel;
+            setBorder(BorderFactory.createEmptyBorder(8, 18, 8, 18));
+
+            addMouseListener(new java.awt.event.MouseAdapter() {
+                public void mouseEntered(java.awt.event.MouseEvent evt) {
+                    setForeground(new Color(200, 0, 0));
+                }
+                public void mouseExited(java.awt.event.MouseEvent evt) {
+                    setForeground(Color.BLACK);
+                }
+            });
+        }
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new FrmTrangChu().setVisible(true));
+        SwingUtilities.invokeLater(() -> new FrmDangNhap().setVisible(true));
     }
 }
