@@ -2,6 +2,8 @@ package gui;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.sql.SQLException;
+
 import javax.swing.*;
 
 public class FrmTrangChu extends JFrame {
@@ -120,7 +122,12 @@ public class FrmTrangChu extends JFrame {
             dispose();
         });
         btnBan.addActionListener(e -> {
-            new FrmBan().setVisible(true);
+            try {
+				new FrmBan().setVisible(true);
+			} catch (SQLException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
             dispose();
         });
         btnThucDon.addActionListener(e -> {
