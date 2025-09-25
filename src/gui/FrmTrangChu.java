@@ -61,7 +61,6 @@ public class FrmTrangChu extends JFrame {
         btnThucDon = new RoundedButton("Thực Đơn", "img/thucdon.png");
         btnKhuyenMai = new RoundedButton("Khuyến Mãi", "img/khuyenmai.png");
         btnKhach = new RoundedButton("Khách Hàng", "img/khachhang.png");
-        btnKho = new RoundedButton("Kho", "img/kho.png");
         btnHoaDon = new RoundedButton("Hóa Đơn", "img/hoadon.png");
         btnThongKe = new RoundedButton("Thống Kê", "img/thongke.png");
         btnDangXuat = new RoundedButton("Đăng Xuất", "img/dangxuat.png");
@@ -74,7 +73,6 @@ public class FrmTrangChu extends JFrame {
             pCen.add(btnNhanVien);
             pCen.add(btnKhuyenMai);
             pCen.add(btnKhach);
-            pCen.add(btnKho);
             pCen.add(btnThongKe);
         } else if ("LeTan".equals(phanQuyen)) {
             pCen.add(btnKhach);
@@ -164,15 +162,6 @@ public class FrmTrangChu extends JFrame {
         btnKhach.addActionListener(e -> {
             new FrmKhachHang().setVisible(true);
             dispose();
-        });
-
-        btnKho.addActionListener(e -> {
-            if ("QuanLy".equals(phanQuyen)) {
-                new FrmKho().setVisible(true);
-                dispose();
-            } else {
-                JOptionPane.showMessageDialog(this, "Bạn không có quyền truy cập!", "Thông báo", JOptionPane.WARNING_MESSAGE);
-            }
         });
 
         btnHoaDon.addActionListener(e -> {
@@ -290,7 +279,7 @@ public class FrmTrangChu extends JFrame {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            setPhanQuyen("LeTan"); 
+            setPhanQuyen("QuanLy"); 
             new FrmTrangChu().setVisible(true);
         });
     }
