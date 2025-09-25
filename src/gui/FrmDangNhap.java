@@ -1,6 +1,7 @@
 package gui;
 
 import connectSQL.ConnectSQL;
+import entity.TaiKhoan;
 
 import javax.swing.*;
 import java.awt.*;
@@ -10,7 +11,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class FrmDangNhap extends JFrame implements ActionListener,MouseListener{
+public class FrmDangNhap extends JFrame implements ActionListener, MouseListener {
     private final JLabel lblTitle;
     private final JLabel lblTaiKhoan;
     private final JLabel lblMatKhau;
@@ -22,6 +23,8 @@ public class FrmDangNhap extends JFrame implements ActionListener,MouseListener{
 
     private boolean isPasswordVisible = false;
 
+    private static TaiKhoan currentTaiKhoan;
+
     public FrmDangNhap() {
         ConnectSQL.getInstance().connect();
 
@@ -30,20 +33,20 @@ public class FrmDangNhap extends JFrame implements ActionListener,MouseListener{
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
 
-        //ảnh nhà hàng
+        // ảnh nhà hàng
         JSplitPane jp = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         jp.setEnabled(false);
         add(jp, BorderLayout.CENTER);
         ImageIcon img = new ImageIcon("img/anhbia.png");
         JPanel pLeft = new ImagePanel(img);
 
-        //thông tin đăng nhập
+        // thông tin đăng nhập
         JPanel pRight = new JPanel(null);
 
         jp.setLeftComponent(pLeft);
         jp.setRightComponent(pRight);
         jp.setResizeWeight(0.5);
-        
+
         pRight.setBackground(Color.white);
         lblTitle = new JLabel("THÔNG TIN ĐĂNG NHẬP");
         lblTitle.setFont(new Font("Times New Roman", Font.BOLD, 40));
@@ -94,32 +97,30 @@ public class FrmDangNhap extends JFrame implements ActionListener,MouseListener{
         iconEye = new JLabel(eyeClosedIcon);
         iconEye.setBounds(490, 350, 33, 33);
         iconEye.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        iconEye.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        iconEye.setBounds(490, 350, 33, 33);
         pRight.add(iconEye);
 
         iconEye.addMouseListener(this);
 
         JPanel tacVu = new JPanel(new FlowLayout(FlowLayout.CENTER, 30, 20));
-        
+
         tacVu.setBackground(Color.white);
         btnDangNhap = new JButton("Đăng nhập");
         btnDangNhap.setBackground(new Color(46, 204, 113));
         btnDangNhap.setForeground(Color.WHITE);
         btnDangNhap.setFocusPainted(false);
-        btnDangNhap.setFont(new Font("Times New Roman", Font.BOLD, 25)); 
+        btnDangNhap.setFont(new Font("Times New Roman", Font.BOLD, 25));
         btnDangNhap.setPreferredSize(new Dimension(160, 50));
 
         btnThoat = new JButton("Thoát");
         btnThoat.setBackground(new Color(231, 76, 60));
         btnThoat.setForeground(Color.WHITE);
         btnThoat.setFocusPainted(false);
-        btnThoat.setFont(new Font("Times New Roman", Font.BOLD, 25)); 
+        btnThoat.setFont(new Font("Times New Roman", Font.BOLD, 25));
         btnThoat.setPreferredSize(new Dimension(160, 50));
 
         tacVu.add(btnDangNhap);
         tacVu.add(btnThoat);
-        tacVu.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),"Chọn tác vụ",0, 0, new Font("Times New Roman", Font.BOLD, 30)));
+        tacVu.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Chọn tác vụ", 0, 0, new Font("Times New Roman", Font.BOLD, 30)));
         tacVu.setBounds(140, 450, 500, 150);
         pRight.add(tacVu);
         btnDangNhap.addActionListener(this);
@@ -129,11 +130,11 @@ public class FrmDangNhap extends JFrame implements ActionListener,MouseListener{
 
     @Override
     public void actionPerformed(ActionEvent e) {
-            if (e.getSource() == btnDangNhap) {
-                dangNhap();
-            } else if (e.getSource() == btnThoat) {
-                exit();
-            }
+        if (e.getSource() == btnDangNhap) {
+            dangNhap();
+        } else if (e.getSource() == btnThoat) {
+            exit();
+        }
     }
 
     public void exit() {
@@ -162,7 +163,7 @@ public class FrmDangNhap extends JFrame implements ActionListener,MouseListener{
         SwingWorker<Boolean, Void> worker = new SwingWorker<>() {
             @Override
             protected Boolean doInBackground() throws Exception {
-            	Thread.sleep(1000);
+                Thread.sleep(1000);
                 return kiemTraDangNhap(tk, mk);
             }
 
@@ -172,8 +173,8 @@ public class FrmDangNhap extends JFrame implements ActionListener,MouseListener{
                 try {
                     boolean ketQua = get();
                     if (ketQua) {
-                        JOptionPane.showMessageDialog(null, "Đăng nhập thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
-                        
+                        JOptionPane.showMessageDialog(null, "Đăng nhập thành công! Quyền: " + currentTaiKhoan.getPhanQuyen(), "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                        FrmTrangChu.setPhanQuyen(currentTaiKhoan.getPhanQuyen());
                         FrmTrangChu trangChu = new FrmTrangChu();
                         trangChu.setVisible(true);
                         dispose();
@@ -182,6 +183,7 @@ public class FrmDangNhap extends JFrame implements ActionListener,MouseListener{
                     }
                 } catch (Exception ex) {
                     ex.printStackTrace();
+                    JOptionPane.showMessageDialog(null, "Lỗi hệ thống: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
                 }
             }
         };
@@ -192,25 +194,42 @@ public class FrmDangNhap extends JFrame implements ActionListener,MouseListener{
 
     public boolean kiemTraDangNhap(String user, String pass) {
         try {
-
             Connection con = ConnectSQL.getConnection();
             if (con == null) {
                 System.out.println("Kết nối cơ sở dữ liệu thất bại!");
                 return false;
             }
 
-            String sql = "SELECT * FROM TaiKhoanNhanVien WHERE SDT = ? AND matKhau = ?";
+            String sql = "SELECT t.*, n.maNhanVien FROM TaiKhoan t " +
+                         "INNER JOIN NhanVien n ON t.maNhanVien = n.maNhanVien " +
+                         "WHERE (t.soDienThoai = ? OR t.maNhanVien = ?) AND t.matKhau = ?";
             PreparedStatement ps = con.prepareStatement(sql);
             ps.setString(1, user);
-            ps.setString(2, pass);
+            ps.setString(2, user);
+            ps.setString(3, pass);
+
             ResultSet rs = ps.executeQuery();
-            return rs.next();
+
+            if (rs.next()) {
+                currentTaiKhoan = new TaiKhoan();
+                currentTaiKhoan.setSoDienThoai(rs.getString("soDienThoai"));
+                currentTaiKhoan.setMatKhau(rs.getString("matKhau"));
+                currentTaiKhoan.setMaNhanVien(rs.getString("maNhanVien"));
+                currentTaiKhoan.setPhanQuyen(rs.getString("phanQuyen"));
+                try {
+                    currentTaiKhoan.setPhanQuyen(currentTaiKhoan.getPhanQuyen());
+                    return true;
+                } catch (IllegalArgumentException e) {
+                    System.out.println("Phân quyền không hợp lệ: " + e.getMessage());
+                    return false;
+                }
+            }
+            return false;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
         }
     }
-
 
     class ImagePanel extends JPanel {
         private final Image img;
@@ -239,25 +258,18 @@ public class FrmDangNhap extends JFrame implements ActionListener,MouseListener{
     }
 
     @Override
-    public void mousePressed(MouseEvent e) {
-
-    }
+    public void mousePressed(MouseEvent e) {}
 
     @Override
-    public void mouseReleased(MouseEvent e) {
-
-    }
+    public void mouseReleased(MouseEvent e) {}
 
     @Override
-    public void mouseEntered(MouseEvent e) {
-
-    }
+    public void mouseEntered(MouseEvent e) {}
 
     @Override
-    public void mouseExited(MouseEvent e) {
+    public void mouseExited(MouseEvent e) {}
 
-    }
     public static void main(String args[]) {
-    	new FrmDangNhap();
+        new FrmDangNhap();
     }
 }

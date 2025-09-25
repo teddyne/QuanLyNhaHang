@@ -99,6 +99,7 @@ public class FrmBan extends JFrame {
         JButton btnGopBan = createMenuButton("Gộp bàn", "img/gopban.png");
         JButton btnChuyenBan = createMenuButton("Chuyển bàn", "img/chuyenban.png");
         JButton btnDatMon = createMenuButton("Đặt món", "img/thucdon.png");
+        JButton btnKhuVuc = createMenuButton("Quản lý khu vực", "img/khuvuc.png");
         JButton btnChinhSua = createMenuButton("Chỉnh sửa", "img/chinhsua.png");
 
         sidebar.add(Box.createVerticalStrut(30));
@@ -115,6 +116,8 @@ public class FrmBan extends JFrame {
         sidebar.add(btnChuyenBan);
         sidebar.add(Box.createVerticalStrut(15));
         sidebar.add(btnDatMon);
+        sidebar.add(Box.createVerticalStrut(15));
+        sidebar.add(btnKhuVuc);
         sidebar.add(Box.createVerticalStrut(15));
         sidebar.add(btnChinhSua);
         

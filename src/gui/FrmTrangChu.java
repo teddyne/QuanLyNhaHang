@@ -21,11 +21,16 @@ public class FrmTrangChu extends JFrame {
     private RoundedButton btnThongKe;
     private RoundedButton btnDangXuat;
 
-	private JPanel pSou;
+    private JPanel pSou;
 
-	private JButton btnHome;
+    private JButton btnHome;
+    private JButton btnQuanLy;
 
-	private JButton btnQuanLy;
+    private static String phanQuyen = "LeTan"; 
+
+    public static void setPhanQuyen(String quyen) {
+        phanQuyen = quyen;
+    }
 
     public FrmTrangChu() {
         setTitle("Quản Lý Nhà Hàng Vang");
@@ -34,7 +39,7 @@ public class FrmTrangChu extends JFrame {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        //Vùng north chứa banner
+        // Vùng north chứa banner
         pNor = new JPanel(new BorderLayout());
         pNor.setBackground(Color.WHITE);
         ImageIcon banner = new ImageIcon("img/banner.png");
@@ -45,7 +50,7 @@ public class FrmTrangChu extends JFrame {
 
         add(pNor, BorderLayout.NORTH);
 
-        //Vùng center chứa các nút 
+        // Vùng center chứa các nút
         pCen = new JPanel(new GridLayout(3, 3, 30, 30));
         pCen.setBackground(Color.white);
         pCen.setBorder(BorderFactory.createEmptyBorder(30, 200, 30, 200));
@@ -62,17 +67,23 @@ public class FrmTrangChu extends JFrame {
         btnDangXuat = new RoundedButton("Đăng Xuất", "img/dangxuat.png");
 
         pCen.add(btnBan);
-        pCen.add(btnNhanVien);
         pCen.add(btnThucDon);
-        pCen.add(btnKhuyenMai);
-        pCen.add(btnKhach);
-        pCen.add(btnKho);
         pCen.add(btnHoaDon);
-        pCen.add(btnThongKe);
+
+        if ("QuanLy".equals(phanQuyen)) {
+            pCen.add(btnNhanVien);
+            pCen.add(btnKhuyenMai);
+            pCen.add(btnKhach);
+            pCen.add(btnKho);
+            pCen.add(btnThongKe);
+        } else if ("LeTan".equals(phanQuyen)) {
+            pCen.add(btnKhach);
+        }
+
         pCen.add(btnDangXuat);
 
         add(pCen, BorderLayout.CENTER);
-        
+
         // Vùng South
         JPanel bottomBar = new JPanel(new BorderLayout());
         bottomBar.setBackground(new Color(245, 245, 245));
@@ -104,8 +115,8 @@ public class FrmTrangChu extends JFrame {
         buttonPanel.setOpaque(false);
         buttonPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 190));
 
-        BottomButton btnHome = new BottomButton("Trang chủ", "img/home.png");
-        BottomButton btnQuanLy = new BottomButton("Thoát", "img/quanly.png");
+        btnHome = new BottomButton("Trang chủ", "img/home.png");
+        btnQuanLy = new BottomButton("Thoát", "img/quanly.png");
 
         btnHome.setFont(new Font("Times New Roman", Font.BOLD, 20));
         btnQuanLy.setFont(new Font("Times New Roman", Font.BOLD, 20));
@@ -117,60 +128,86 @@ public class FrmTrangChu extends JFrame {
 
         add(bottomBar, BorderLayout.SOUTH);
 
-        btnNhanVien.addActionListener(e -> {
-            new FrmNhanVien().setVisible(true);
-            dispose();
-        });
+        // Xử lý sự kiện cho các nút
         btnBan.addActionListener(e -> {
             try {
-				new FrmBan().setVisible(true);
-			} catch (SQLException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
+                new FrmBan().setVisible(true);
+            } catch (SQLException e1) {
+                e1.printStackTrace();
+            }
             dispose();
         });
+
+        btnNhanVien.addActionListener(e -> {
+            if ("QuanLy".equals(phanQuyen)) {
+                new FrmNhanVien().setVisible(true);
+                dispose();
+            } else {
+                JOptionPane.showMessageDialog(this, "Bạn không có quyền truy cập!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            }
+        });
+
         btnThucDon.addActionListener(e -> {
             new FrmThucDon().setVisible(true);
             dispose();
         });
+
         btnKhuyenMai.addActionListener(e -> {
-            new FrmKhuyenMai().setVisible(true);
-            dispose();
+            if ("QuanLy".equals(phanQuyen)) {
+                new FrmKhuyenMai().setVisible(true);
+                dispose();
+            } else {
+                JOptionPane.showMessageDialog(this, "Bạn không có quyền truy cập!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            }
         });
+
         btnKhach.addActionListener(e -> {
             new FrmKhachHang().setVisible(true);
             dispose();
         });
+
         btnKho.addActionListener(e -> {
-            new FrmKho().setVisible(true);
-            dispose();
+            if ("QuanLy".equals(phanQuyen)) {
+                new FrmKho().setVisible(true);
+                dispose();
+            } else {
+                JOptionPane.showMessageDialog(this, "Bạn không có quyền truy cập!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            }
         });
+
         btnHoaDon.addActionListener(e -> {
             new FrmHoaDon().setVisible(true);
             dispose();
         });
+
         btnThongKe.addActionListener(e -> {
-            new FrmThongKe().setVisible(true);
-            dispose();
+            if ("QuanLy".equals(phanQuyen)) {
+                new FrmThongKe().setVisible(true);
+                dispose();
+            } else {
+                JOptionPane.showMessageDialog(this, "Bạn không có quyền truy cập!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            }
         });
+
         btnDangXuat.addActionListener(e -> {
             new FrmDangNhap().setVisible(true);
             dispose();
         });
+
         btnHome.addActionListener(e -> {
             new FrmTrangChu().setVisible(true);
             dispose();
         });
+
         btnQuanLy.addActionListener(e -> {
-        	int confirm = JOptionPane.showConfirmDialog(this, "Bạn có chắc muốn thoát không?", "Xác nhận", JOptionPane.YES_NO_OPTION);
+            int confirm = JOptionPane.showConfirmDialog(this, "Bạn có chắc muốn thoát không?", "Xác nhận", JOptionPane.YES_NO_OPTION);
             if (confirm == JOptionPane.YES_OPTION) {
                 System.exit(0);
             }
         });
     }
 
-    // tạo bo tròn
+    // Tạo bo tròn
     class RoundedButton extends JButton {
         private int cornerRadius = 25;
 
@@ -193,7 +230,6 @@ public class FrmTrangChu extends JFrame {
 
             setBorder(BorderFactory.createEmptyBorder(12, 25, 12, 25));
 
-            // Hiệu ứng khi hover (chuột chạm)
             addMouseListener(new java.awt.event.MouseAdapter() {
                 public void mouseEntered(java.awt.event.MouseEvent evt) {
                     setBackground(new Color(255, 204, 204));
@@ -253,6 +289,9 @@ public class FrmTrangChu extends JFrame {
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new FrmTrangChu().setVisible(true));
+        SwingUtilities.invokeLater(() -> {
+            setPhanQuyen("LeTan"); 
+            new FrmTrangChu().setVisible(true);
+        });
     }
 }

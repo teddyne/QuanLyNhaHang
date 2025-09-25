@@ -1,18 +1,37 @@
 ﻿use QLNH
-create table TaiKhoanNhanVien (
-    maTK nvarchar(15) not null,
-    maNV nvarchar(15) not null primary key,
-    SDT nvarchar(10) null,
-    matKhau nvarchar(20) null
+-- Tạo bảng NhanVien
+CREATE TABLE NhanVien (
+    maNhanVien VARCHAR(50) PRIMARY KEY,
+    hoTen NVARCHAR(100) NOT NULL,
+    diaChi NVARCHAR(200),
+    soDienThoai VARCHAR(10),
+    ngayVaoLam DATE
 );
-create table CaLamViec (
-    maCa int identity(1,1) primary key,
-    maNV nvarchar(15) not null,
-    ngay date not null,
-    gioMoCa datetime null,
-    gioKetCa datetime null,
-    foreign key (maNV) references TaiKhoanNhanVien(maNV)
+
+-- Tạo bảng TaiKhoan
+CREATE TABLE TaiKhoan (
+    maTaiKhoan VARCHAR(100) PRIMARY KEY DEFAULT ('{' + CONVERT(VARCHAR(36), NEWID()) + '}'),
+    soDienThoai VARCHAR(10) NOT NULL,
+    matKhau VARCHAR(255) NOT NULL,
+    maNhanVien VARCHAR(50) NOT NULL,
+    phanQuyen VARCHAR(20) NOT NULL,
+    CONSTRAINT chk_sdt CHECK (soDienThoai LIKE '0[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]' AND LEN(soDienThoai) = 10),
+    CONSTRAINT chk_matKhau CHECK (LEN(matKhau) >= 6),
+    CONSTRAINT chk_phanQuyen CHECK (phanQuyen IN ('QuanLy', 'LeTan')),
+    CONSTRAINT fk_maNhanVien FOREIGN KEY (maNhanVien) REFERENCES NhanVien(maNhanVien),
+    CONSTRAINT uk_sdt UNIQUE (soDienThoai)
 );
+
+-- Chèn dữ liệu mẫu vào bảng NhanVien
+INSERT INTO NhanVien (maNhanVien, hoTen, diaChi, soDienThoai, ngayVaoLam) VALUES
+('NV002', N'Ừng Thị Thanh Trúc', N'IUH Nguyễn Văn Bảo', '0972606924', '2025-01-01')
+('NV001', N'Bùi Ngọc Hiền', N'IUH Nguyễn Văn Bảo', '0972606925', '2025-01-01')
+
+-- Chèn dữ liệu mẫu vào bảng TaiKhoan
+INSERT INTO TaiKhoan (soDienThoai, matKhau, maNhanVien, phanQuyen) VALUES
+('0972606924', 'Ngochien1708', 'NV002', 'LeTan')
+('0972606925', 'Ngochien1708', 'NV001', 'QuanLy')
+
 create table Ban (
     maBan nvarchar(10) primary key,   -- mã bàn (ví dụ: b1, b2...)
     khuVuc nvarchar(50) not null,     -- khu vực (sảnh, vip, ngoài trời...)
