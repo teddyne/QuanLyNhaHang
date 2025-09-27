@@ -61,27 +61,6 @@ SELECT '0972606924', 'user123', 'NV003', 'LeTan'
 WHERE EXISTS (SELECT 1 FROM NhanVien WHERE maNhanVien = 'NV003')
 AND NOT EXISTS (SELECT 1 FROM TaiKhoan WHERE soDienThoai = '0972606924');
 
--- Insert sample data into LichSuDangNhap (example login attempts)
-INSERT INTO LichSuDangNhap (maTaiKhoan, thoiGianDangNhap, trangThai)
-SELECT maTaiKhoan, '2025-09-28 00:30:00', 1
-FROM TaiKhoan WHERE soDienThoai = '0123456789';
-
-INSERT INTO LichSuDangNhap (maTaiKhoan, thoiGianDangNhap, trangThai)
-SELECT maTaiKhoan, '2025-09-28 00:35:00', 0
-FROM TaiKhoan WHERE soDienThoai = '0987654321';
-);
-
-
--- Chèn dữ liệu mẫu vào bảng NhanVien
-INSERT INTO NhanVien (maNhanVien, hoTen, diaChi, soDienThoai, ngayVaoLam) VALUES
-('NV002', N'Ừng Thị Thanh Trúc', N'IUH Nguyễn Văn Bảo', '0972606924', '2025-01-01')
-('NV001', N'Bùi Ngọc Hiền', N'IUH Nguyễn Văn Bảo', '0972606925', '2025-01-01')
-
--- Chèn dữ liệu mẫu vào bảng TaiKhoan
-INSERT INTO TaiKhoan (soDienThoai, matKhau, maNhanVien, phanQuyen) VALUES
-('0972606924', 'Ngochien1708', 'NV002', 'LeTan')
-('0972606925', 'Ngochien1708', 'NV001', 'QuanLy')
-
 INSERT INTO TaiKhoan (soDienThoai, matKhau, maNhanVien, phanQuyen) VALUES
 ('0972606921', 'user123', 'NV005', 'LeTan');
 create table Ban (
