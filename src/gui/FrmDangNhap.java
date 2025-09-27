@@ -22,8 +22,15 @@ public class FrmDangNhap extends JFrame implements ActionListener, MouseListener
     private final JLabel iconEye;
 
     private boolean isPasswordVisible = false;
-
     private static TaiKhoan currentTaiKhoan;
+
+    public static TaiKhoan getCurrentTaiKhoan() {
+        return currentTaiKhoan;
+    }
+
+    public static void resetCurrentTaiKhoan() {
+        currentTaiKhoan = null; // Đặt lại currentTaiKhoan khi đăng xuất
+    }
 
     public FrmDangNhap() {
         ConnectSQL.getInstance().connect();
@@ -33,16 +40,13 @@ public class FrmDangNhap extends JFrame implements ActionListener, MouseListener
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
 
-        // ảnh nhà hàng
         JSplitPane jp = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         jp.setEnabled(false);
         add(jp, BorderLayout.CENTER);
         ImageIcon img = new ImageIcon("img/anhbia.png");
         JPanel pLeft = new ImagePanel(img);
 
-        // thông tin đăng nhập
         JPanel pRight = new JPanel(null);
-
         jp.setLeftComponent(pLeft);
         jp.setRightComponent(pRight);
         jp.setResizeWeight(0.5);
@@ -102,7 +106,6 @@ public class FrmDangNhap extends JFrame implements ActionListener, MouseListener
         iconEye.addMouseListener(this);
 
         JPanel tacVu = new JPanel(new FlowLayout(FlowLayout.CENTER, 30, 20));
-
         tacVu.setBackground(Color.white);
         btnDangNhap = new JButton("Đăng nhập");
         btnDangNhap.setBackground(new Color(46, 204, 113));
@@ -174,7 +177,10 @@ public class FrmDangNhap extends JFrame implements ActionListener, MouseListener
                     boolean ketQua = get();
                     if (ketQua) {
                         JOptionPane.showMessageDialog(null, "Đăng nhập thành công! Quyền: " + currentTaiKhoan.getPhanQuyen(), "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                        FrmTrangChu.resetPhanQuyen();
                         FrmTrangChu.setPhanQuyen(currentTaiKhoan.getPhanQuyen());
+                        CustomMenu.resetInstance();
+                        CustomMenu.setPhanQuyen(currentTaiKhoan.getPhanQuyen());
                         FrmTrangChu trangChu = new FrmTrangChu();
                         trangChu.setVisible(true);
                         dispose();
@@ -193,41 +199,78 @@ public class FrmDangNhap extends JFrame implements ActionListener, MouseListener
     }
 
     public boolean kiemTraDangNhap(String user, String pass) {
+        Connection con = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        PreparedStatement logPs = null;
         try {
-            Connection con = ConnectSQL.getConnection();
+            con = ConnectSQL.getConnection();
             if (con == null) {
                 System.out.println("Kết nối cơ sở dữ liệu thất bại!");
                 return false;
             }
 
-            String sql = "SELECT t.*, n.maNhanVien FROM TaiKhoan t " +
-                         "INNER JOIN NhanVien n ON t.maNhanVien = n.maNhanVien " +
-                         "WHERE (t.soDienThoai = ? OR t.maNhanVien = ?) AND t.matKhau = ?";
-            PreparedStatement ps = con.prepareStatement(sql);
+            String sql = "SELECT t.maTaiKhoan, t.soDienThoai, t.matKhau, t.maNhanVien, t.phanQuyen, n.hoTen " +
+                         "FROM TaiKhoan t INNER JOIN NhanVien n ON t.maNhanVien = n.maNhanVien " +
+                         "WHERE t.soDienThoai = ? OR t.maNhanVien = ?";
+            ps = con.prepareStatement(sql);
             ps.setString(1, user);
             ps.setString(2, user);
-            ps.setString(3, pass);
+            rs = ps.executeQuery();
+            boolean loginSuccess = false;
+            String maTaiKhoan = null;
 
-            ResultSet rs = ps.executeQuery();
-
-            if (rs.next()) {
+            if (rs.next() && rs.getString("matKhau").equals(pass)) {
                 currentTaiKhoan = new TaiKhoan();
+                currentTaiKhoan.setMaTaiKhoan(rs.getString("maTaiKhoan"));
                 currentTaiKhoan.setSoDienThoai(rs.getString("soDienThoai"));
                 currentTaiKhoan.setMatKhau(rs.getString("matKhau"));
                 currentTaiKhoan.setMaNhanVien(rs.getString("maNhanVien"));
                 currentTaiKhoan.setPhanQuyen(rs.getString("phanQuyen"));
+                currentTaiKhoan.setHoTen(rs.getString("hoTen"));
+                maTaiKhoan = rs.getString("maTaiKhoan");
                 try {
                     currentTaiKhoan.setPhanQuyen(currentTaiKhoan.getPhanQuyen());
-                    return true;
+                    loginSuccess = true;
                 } catch (IllegalArgumentException e) {
                     System.out.println("Phân quyền không hợp lệ: " + e.getMessage());
-                    return false;
                 }
             }
-            return false;
+
+            if (maTaiKhoan == null) {
+                String findSql = "SELECT maTaiKhoan FROM TaiKhoan WHERE soDienThoai = ? OR maNhanVien = ?";
+                PreparedStatement findPs = con.prepareStatement(findSql);
+                findPs.setString(1, user);
+                findPs.setString(2, user);
+                ResultSet findRs = findPs.executeQuery();
+                if (findRs.next()) {
+                    maTaiKhoan = findRs.getString("maTaiKhoan");
+                }
+                findRs.close();
+                findPs.close();
+            }
+
+            if (maTaiKhoan != null) {
+                String logSql = "INSERT INTO LichSuDangNhap (maTaiKhoan, trangThai) VALUES (?, ?)";
+                logPs = con.prepareStatement(logSql);
+                logPs.setString(1, maTaiKhoan);
+                logPs.setBoolean(2, loginSuccess);
+                logPs.executeUpdate();
+            }
+
+            return loginSuccess;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (ps != null) ps.close();
+                if (logPs != null) logPs.close();
+                if (con != null) con.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -259,17 +302,14 @@ public class FrmDangNhap extends JFrame implements ActionListener, MouseListener
 
     @Override
     public void mousePressed(MouseEvent e) {}
-
     @Override
     public void mouseReleased(MouseEvent e) {}
-
     @Override
     public void mouseEntered(MouseEvent e) {}
-
     @Override
     public void mouseExited(MouseEvent e) {}
 
-    public static void main(String args[]) {
-        new FrmDangNhap();
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> new FrmDangNhap().setVisible(true));
     }
 }

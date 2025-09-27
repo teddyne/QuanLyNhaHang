@@ -1,5 +1,6 @@
 ﻿use QLNH
--- Tạo bảng NhanVien
+
+-- Create NhanVien table
 CREATE TABLE NhanVien (
     maNhanVien VARCHAR(50) PRIMARY KEY,
     hoTen NVARCHAR(100) NOT NULL,
@@ -8,7 +9,7 @@ CREATE TABLE NhanVien (
     ngayVaoLam DATE
 );
 
--- Tạo bảng TaiKhoan
+-- Create TaiKhoan table
 CREATE TABLE TaiKhoan (
     maTaiKhoan VARCHAR(100) PRIMARY KEY DEFAULT ('{' + CONVERT(VARCHAR(36), NEWID()) + '}'),
     soDienThoai VARCHAR(10) NOT NULL,
@@ -22,6 +23,55 @@ CREATE TABLE TaiKhoan (
     CONSTRAINT uk_sdt UNIQUE (soDienThoai)
 );
 
+-- Create LichSuDangNhap table
+CREATE TABLE LichSuDangNhap (
+    maLichSu INT IDENTITY(1,1) PRIMARY KEY,
+    maTaiKhoan VARCHAR(100) NOT NULL,
+    thoiGianDangNhap DATETIME NOT NULL DEFAULT GETDATE(),
+    trangThai BIT NOT NULL, -- 1: Success, 0: Failure
+    CONSTRAINT fk_maTaiKhoan FOREIGN KEY (maTaiKhoan) REFERENCES TaiKhoan(maTaiKhoan)
+);
+
+-- Insert sample data into NhanVien
+INSERT INTO NhanVien (maNhanVien, hoTen, diaChi, soDienThoai, ngayVaoLam)
+SELECT 'NV001', N'Bùi Ngọc Hiền', N'Lý thường kiệt gò vấp', '0972606925', '2025-09-28'
+WHERE NOT EXISTS (SELECT 1 FROM NhanVien WHERE maNhanVien = 'NV001');
+
+INSERT INTO NhanVien (maNhanVien, hoTen, diaChi, soDienThoai, ngayVaoLam)
+SELECT 'NV002', N'Ừng Thị Thanh Trúc', N'456 Nguyễn Huệ, TP HCM', '0987654321', '2023-02-01'
+WHERE NOT EXISTS (SELECT 1 FROM NhanVien WHERE maNhanVien = 'NV002');
+
+INSERT INTO NhanVien (maNhanVien, hoTen, diaChi, soDienThoai, ngayVaoLam)
+SELECT 'NV003', N'Nguyễn Trương An Thy', N'789 Lê Lợi, TP HCM', '0972606924', '2023-03-01'
+WHERE NOT EXISTS (SELECT 1 FROM NhanVien WHERE maNhanVien = 'NV003');
+
+-- Insert sample data into TaiKhoan
+INSERT INTO TaiKhoan (soDienThoai, matKhau, maNhanVien, phanQuyen)
+SELECT '0972606925', 'Ngochien1708', 'NV001', 'QuanLy'
+WHERE EXISTS (SELECT 1 FROM NhanVien WHERE maNhanVien = 'NV001')
+AND NOT EXISTS (SELECT 1 FROM TaiKhoan WHERE soDienThoai = '0123456789');
+
+INSERT INTO TaiKhoan (soDienThoai, matKhau, maNhanVien, phanQuyen)
+SELECT '0987654321', 'letan123', 'NV002', 'LeTan'
+WHERE EXISTS (SELECT 1 FROM NhanVien WHERE maNhanVien = 'NV002')
+AND NOT EXISTS (SELECT 1 FROM TaiKhoan WHERE soDienThoai = '0987654321');
+
+INSERT INTO TaiKhoan (soDienThoai, matKhau, maNhanVien, phanQuyen)
+SELECT '0972606924', 'user123', 'NV003', 'LeTan'
+WHERE EXISTS (SELECT 1 FROM NhanVien WHERE maNhanVien = 'NV003')
+AND NOT EXISTS (SELECT 1 FROM TaiKhoan WHERE soDienThoai = '0972606924');
+
+-- Insert sample data into LichSuDangNhap (example login attempts)
+INSERT INTO LichSuDangNhap (maTaiKhoan, thoiGianDangNhap, trangThai)
+SELECT maTaiKhoan, '2025-09-28 00:30:00', 1
+FROM TaiKhoan WHERE soDienThoai = '0123456789';
+
+INSERT INTO LichSuDangNhap (maTaiKhoan, thoiGianDangNhap, trangThai)
+SELECT maTaiKhoan, '2025-09-28 00:35:00', 0
+FROM TaiKhoan WHERE soDienThoai = '0987654321';
+);
+
+
 -- Chèn dữ liệu mẫu vào bảng NhanVien
 INSERT INTO NhanVien (maNhanVien, hoTen, diaChi, soDienThoai, ngayVaoLam) VALUES
 ('NV002', N'Ừng Thị Thanh Trúc', N'IUH Nguyễn Văn Bảo', '0972606924', '2025-01-01')
@@ -32,6 +82,8 @@ INSERT INTO TaiKhoan (soDienThoai, matKhau, maNhanVien, phanQuyen) VALUES
 ('0972606924', 'Ngochien1708', 'NV002', 'LeTan')
 ('0972606925', 'Ngochien1708', 'NV001', 'QuanLy')
 
+INSERT INTO TaiKhoan (soDienThoai, matKhau, maNhanVien, phanQuyen) VALUES
+('0972606921', 'user123', 'NV005', 'LeTan');
 create table Ban (
     maBan nvarchar(10) primary key,   -- mã bàn (ví dụ: b1, b2...)
     khuVuc nvarchar(50) not null,     -- khu vực (sảnh, vip, ngoài trời...)

@@ -70,6 +70,7 @@ public class FrmBan extends JFrame {
     public FrmBan() throws SQLException {
         Connection conn = ConnectSQL.getConnection();
         banDAO = new Ban_DAO(conn);
+        setJMenuBar(CustomMenu.getInstance().getJMenuBar());
 
         setTitle("Phần mềm quản lý nhà hàng");
         setExtendedState(JFrame.MAXIMIZED_BOTH);
@@ -198,62 +199,9 @@ public class FrmBan extends JFrame {
         add(contentPanel, BorderLayout.CENTER);
 
         taiTrangThaiBanTuDB();
-
-        // ===== Bottom Bar =====
-        JPanel bottomBar = new JPanel(new BorderLayout());
-        bottomBar.setBackground(new Color(245, 245, 245));
-        bottomBar.setBorder(BorderFactory.createEmptyBorder(5, 0, 5, 0));
-
-        JPanel infoPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 40, 0));
-        infoPanel.setOpaque(false);
-        infoPanel.setBorder(BorderFactory.createEmptyBorder(10, 180, 0, 0));
-
-        // Icon địa chỉ
-        ImageIcon iconAddress = new ImageIcon("img/diachi.png");
-        Image imgAddr = iconAddress.getImage().getScaledInstance(25, 25, Image.SCALE_SMOOTH);
-        JLabel lblAddress = new JLabel("Đại học Công Nghiệp Tp HCM", new ImageIcon(imgAddr), JLabel.LEFT);
-        lblAddress.setFont(new Font("Times New Roman", Font.BOLD, 20));
-        lblAddress.setForeground(Color.DARK_GRAY);
-
-        // Icon liên hệ
-        ImageIcon iconPhone = new ImageIcon("img/lienhe.png");
-        Image imgPhone = iconPhone.getImage().getScaledInstance(25, 25, Image.SCALE_SMOOTH);
-        JLabel lblPhone = new JLabel("Nhóm 9_PTUD", new ImageIcon(imgPhone), JLabel.LEFT);
-        lblPhone.setFont(new Font("Times New Roman", Font.BOLD, 20));
-        lblPhone.setForeground(Color.DARK_GRAY);
-
-        infoPanel.add(lblAddress);
-        infoPanel.add(lblPhone);
-        bottomBar.add(infoPanel, BorderLayout.WEST);
-
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0));
-        buttonPanel.setOpaque(false);
-        buttonPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 190));
-
-        BottomButton btnHome = new BottomButton("Trang chủ", "img/home.png");
-        BottomButton btnQuanLy = new BottomButton("Thoát", "img/quanly.png");
-
-        btnHome.setFont(new Font("Times New Roman", Font.BOLD, 20));
-        btnQuanLy.setFont(new Font("Times New Roman", Font.BOLD, 20));
-
-        buttonPanel.add(btnHome);
-        buttonPanel.add(btnQuanLy);
-
-        bottomBar.add(buttonPanel, BorderLayout.EAST);
-        add(bottomBar, BorderLayout.SOUTH);
-        
-        btnHome.addActionListener(e -> {
-            new FrmTrangChu().setVisible(true);
-            dispose();
-        });
-        btnQuanLy.addActionListener(e -> {
-            int confirm = JOptionPane.showConfirmDialog(this, "Bạn có chắc muốn thoát không?", "Xác nhận", JOptionPane.YES_NO_OPTION);
-            if (confirm == JOptionPane.YES_OPTION) {
-                System.exit(0);
-            }
-        });
-
     }
+
+        
 
     private void taiTrangThaiBanTuDB() {
         for (String tenBan : mapBan.keySet()) {
@@ -331,32 +279,28 @@ public class FrmBan extends JFrame {
             mapBan.put(b.getMaBan(), btn);
         }
 
-        // Đưa background xuống dưới cùng (để không che nút)
         panel.setComponentZOrder(background, panel.getComponentCount() - 1);
 
         return panel;
     }
 
     private void hienThiThongTinBan(Ban b) {
-    // Tạo JDialog để hiển thị thông tin
     JDialog dialog = new JDialog(this, "Thông tin bàn", true);
     dialog.setLayout(new BorderLayout(10, 10));
     dialog.setLocationRelativeTo(this);
 
-    // Font chữ
     Font fontLabel = new Font("Times New Roman", Font.BOLD, 20);
     Font fontValue = new Font("Times New Roman", Font.PLAIN, 20);
     Font fontButton = new Font("Times New Roman", Font.BOLD, 20);
 
     // Panel chứa thông tin
     JPanel infoPanel = new JPanel(new GridBagLayout());
-    infoPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10)); // Thêm padding
+    infoPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
     GridBagConstraints gbc = new GridBagConstraints();
     gbc.insets = new Insets(3, 5, 3, 5);
     gbc.anchor = GridBagConstraints.WEST;
     gbc.fill = GridBagConstraints.HORIZONTAL;
 
-    // Thêm thông tin bàn
     int row = 0;
 
     // Mã bàn
