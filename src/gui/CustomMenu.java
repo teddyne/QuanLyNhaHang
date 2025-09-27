@@ -79,7 +79,7 @@ public class CustomMenu extends JFrame {
         heThong.add(thoat);
 
         menuBar.add(heThong);
-        menuBar.add(Box.createHorizontalStrut(20));
+        menuBar.add(Box.createHorizontalStrut(30));
 
         // Danh Mục
         JMenu danhMuc = createHoverableMenu("Danh Mục");
@@ -115,7 +115,7 @@ public class CustomMenu extends JFrame {
         }
 
         menuBar.add(danhMuc);
-        menuBar.add(Box.createHorizontalStrut(20));
+        menuBar.add(Box.createHorizontalStrut(30));
 
         // Xử Lý
         JMenu xuLy = createHoverableMenu("Xử Lý");
@@ -164,7 +164,7 @@ public class CustomMenu extends JFrame {
             thongKe.add(doanhThu);
 
             menuBar.add(thongKe);
-            menuBar.add(Box.createHorizontalStrut(20));
+            menuBar.add(Box.createHorizontalStrut(30));
         }
 
         menuBar.add(Box.createHorizontalGlue());
@@ -172,6 +172,7 @@ public class CustomMenu extends JFrame {
                 ? "Người dùng: " + FrmDangNhap.getCurrentTaiKhoan().getHoTen()
                 : "Người dùng: Không xác định";
         lblQL = new JLabel(userLabel);
+        lblQL.setIcon(taoIcon("img/nguoidung.png", 30, 30));
         lblQL.setFont(new Font("Times New Roman", Font.BOLD, 22));
         lblQL.setForeground(Color.DARK_GRAY);
         menuBar.add(lblQL);
@@ -201,8 +202,8 @@ public class CustomMenu extends JFrame {
         });
 
         dangXuat.addActionListener(e -> {
-            FrmDangNhap.resetCurrentTaiKhoan(); // Đặt lại currentTaiKhoan
-            resetInstance(); // Đặt lại instance và phanQuyen
+            FrmDangNhap.resetCurrentTaiKhoan();
+            resetInstance();
             new FrmDangNhap().setVisible(true);
             dispose();
         });
@@ -380,6 +381,6 @@ public class CustomMenu extends JFrame {
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new FrmDangNhap().setVisible(true));
+        SwingUtilities.invokeLater(() -> new FrmTrangChu().setVisible(true));
     }
 }

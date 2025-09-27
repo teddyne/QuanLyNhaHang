@@ -78,14 +78,6 @@ public class FrmBan extends JFrame {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        pNor = new JPanel(new BorderLayout());
-        pNor.add(lbltieude = new JLabel("QUẢN LÝ NHÀ HÀNG VANG"));
-        lbltieude.setFont(new Font("Times New Roman", Font.BOLD, 20));
-        lbltieude.setHorizontalAlignment(SwingConstants.LEFT);
-        lbltieude.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        pNor.setBackground(new Color(245, 245, 245));
-        add(pNor, BorderLayout.NORTH);
-
         // ===== Sidebar Menu =====
         sidebar = new JPanel();
         sidebar.setPreferredSize(new Dimension(300, getHeight()));
