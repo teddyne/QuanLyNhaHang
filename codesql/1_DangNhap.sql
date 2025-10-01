@@ -45,6 +45,15 @@ INSERT INTO NhanVien (maNhanVien, hoTen, diaChi, soDienThoai, ngayVaoLam)
 SELECT 'NV003', N'Nguyễn Trương An Thy', N'789 Lê Lợi, TP HCM', '0972606924', '2023-03-01'
 WHERE NOT EXISTS (SELECT 1 FROM NhanVien WHERE maNhanVien = 'NV003');
 
+
+--
+--INSERT INTO NhanVien (maNhanVien, hoTen, diaChi, soDienThoai, ngayVaoLam) VALUES
+--('NV004', N'Bùi Ngọc Hiền', N'Lý Thường Kiệt, Gò Vấp', '0972606925', '2023-09-28'),
+--INSERT INTO TaiKhoan (soDienThoai, matKhau, maNhanVien, phanQuyen) VALUES
+--('0972606925', 'hien123', 'NV004', 'QuanLy'),
+--
+
+
 -- Insert sample data into TaiKhoan
 INSERT INTO TaiKhoan (soDienThoai, matKhau, maNhanVien, phanQuyen)
 SELECT '0972606925', 'Ngochien1708', 'NV001', 'QuanLy'
@@ -119,3 +128,6 @@ INSERT INTO ban (maban, khuvuc, x, y, width, height, soghe, trangthai) VALUES
 ('C8','C', 750, 400, 80, 80, 8, N'Trống'),
 ('C9','C', 850, 400, 80, 80, 8, N'Trống'),
 ('C10','C', 950, 400, 80, 80, 8, N'Trống');
+
+select * from NhanVien
+select * from TaiKhoan
