@@ -70,7 +70,7 @@ public class FrmBan extends JFrame {
     public FrmBan() throws SQLException {
         Connection conn = ConnectSQL.getConnection();
         banDAO = new Ban_DAO(conn);
-        setJMenuBar(CustomMenu.getInstance().getJMenuBar());
+        setJMenuBar(ThanhTacVu.getInstance().getJMenuBar());
 
         setTitle("Phần mềm quản lý nhà hàng");
         setExtendedState(JFrame.MAXIMIZED_BOTH);

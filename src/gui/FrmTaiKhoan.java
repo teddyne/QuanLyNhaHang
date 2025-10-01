@@ -13,7 +13,7 @@ import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.List;
 
-public class FrmTaiKhoan extends CustomMenu {
+public class FrmTaiKhoan extends ThanhTacVu {
     private final TaiKhoan_DAO taiKhoanDAO;
     private final JTable tblTaiKhoan;
     private final JTable tblLichSuDangNhap;
