@@ -179,8 +179,8 @@ public class FrmDangNhap extends JFrame implements ActionListener, MouseListener
                         JOptionPane.showMessageDialog(null, "Đăng nhập thành công! Quyền: " + currentTaiKhoan.getPhanQuyen(), "Thông báo", JOptionPane.INFORMATION_MESSAGE);
                         FrmTrangChu.resetPhanQuyen();
                         FrmTrangChu.setPhanQuyen(currentTaiKhoan.getPhanQuyen());
-                        CustomMenu.resetInstance();
-                        CustomMenu.setPhanQuyen(currentTaiKhoan.getPhanQuyen());
+                        ThanhTacVu.resetInstance();
+                        ThanhTacVu.setPhanQuyen(currentTaiKhoan.getPhanQuyen());
                         FrmTrangChu trangChu = new FrmTrangChu();
                         trangChu.setVisible(true);
                         dispose();

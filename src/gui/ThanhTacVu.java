@@ -8,9 +8,9 @@ import javax.swing.*;
 import connectSQL.ConnectSQL;
 import entity.TaiKhoan;
 
-public class CustomMenu extends JFrame {
+public class ThanhTacVu extends JFrame {
     private static String phanQuyen = null;
-    private static CustomMenu instance;
+    private static ThanhTacVu instance;
     private JMenuBar menuBar;
     private NutBottom btnHome;
     private NutBottom btnQuanLy;
@@ -26,14 +26,14 @@ public class CustomMenu extends JFrame {
         phanQuyen = null; // Đặt lại phanQuyen
     }
 
-    public static CustomMenu getInstance() {
+    public static ThanhTacVu getInstance() {
         if (instance == null) {
-            instance = new CustomMenu();
+            instance = new ThanhTacVu();
         }
         return instance;
     }
 
-    public CustomMenu() {
+    public ThanhTacVu() {
         setTitle("Quản Lý Nhà Hàng Vang");
         setExtendedState(JFrame.MAXIMIZED_BOTH);
         setLocationRelativeTo(null);

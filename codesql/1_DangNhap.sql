@@ -63,59 +63,53 @@ AND NOT EXISTS (SELECT 1 FROM TaiKhoan WHERE soDienThoai = '0972606924');
 
 INSERT INTO TaiKhoan (soDienThoai, matKhau, maNhanVien, phanQuyen) VALUES
 ('0972606921', 'user123', 'NV005', 'LeTan');
-create table Ban (
-    maBan nvarchar(10) primary key,   -- mã bàn (ví dụ: b1, b2...)
-    khuVuc nvarchar(50) not null,     -- khu vực (sảnh, vip, ngoài trời...)
-    x int not null,                   -- tọa độ x (theo pixel)
-    y int not null,                   -- tọa độ y (theo pixel)
-    width int null,                   -- chiều rộng (nếu cần)
-    height int null,                  -- chiều cao (nếu cần)
-    soghe int null,                   -- số ghế
-    tenKhach nvarchar(100) null,      -- tên khách đặt
-    soDienThoai nvarchar(15) null,    -- sđt khách
-    soNguoi int null,                 -- số lượng người
-    ngayDat date null,                -- ngày đặt bàn
-    gioDat time null,                 -- giờ đặt bàn
-    ghiChu nvarchar(255) null,        -- ghi chú thêm
-    trangThai nvarchar(20) not null,  -- trống / đặt / đang phục vụ
-    tienCoc float null,               -- tiền cọc
-    ghiChuCoc nvarchar(255) null      -- ghi chú tiền cọc
+
+CREATE TABLE KhuVuc (
+    maKhuVuc VARCHAR(10) PRIMARY KEY,
+    tenKhuVuc NVARCHAR(50) NOT NULL,
+    soLuongBan INT NOT NULL,
+    trangThai NVARCHAR(20) NOT NULL CHECK (trangThai IN ('Hoạt động', 'Ngừng'))
+);
+UPDATE KhuVuc
+SET trangThai = 'Hoạt động'
+WHERE trangThai NOT IN ('Hoạt động', 'Ngừng');
+ALTER TABLE KhuVuc DROP CONSTRAINT CK__KhuVuc__trangTha__3B40CD36;
+-- Thêm dữ liệu mẫu
+INSERT INTO KhuVuc (maKhuVuc, tenKhuVuc, soLuongBan, trangThai) VALUES
+('KV01', N'Trong nhà', 6, N'Hoạt động'),
+('KV02', N'Sân thường', 4, N'Hoạt động'),
+('KV03', N'Ngoài trời', 2, N'Hoạt động');
+
+CREATE TABLE Ban (
+    maBan VARCHAR(10) PRIMARY KEY,
+    maKhuVuc VARCHAR(10) NOT NULL,
+    soChoNgoi INT NOT NULL,
+    loaiBan NVARCHAR(10) NOT NULL CHECK (loaiBan IN ('Thường', 'VIP')),
+    trangThai NVARCHAR(20) NOT NULL CHECK (trangThai IN ('Trống', 'Đặt', 'Đang phục vụ')),
+    ghiChu NVARCHAR(100),
+    FOREIGN KEY (maKhuVuc) REFERENCES KhuVuc(maKhuVuc)
 );
 
-INSERT INTO ban (maban, khuvuc, x, y, width, height, soghe, trangthai) VALUES
-('A1','A', 50, 100, 80, 80, 4, N'Trống'),
-('A2','A', 150, 100, 80, 80, 4, N'Trống'),
-('A3','A', 250, 100, 80, 80, 4, N'Trống'),
-('A4','A', 350, 100, 80, 80, 4, N'Trống'),
-('A5','A', 450, 100, 80, 80, 4, N'Trống'),
-('A6','A', 550, 100, 80, 80, 4, N'Trống'),
-('A7','A', 650, 100, 80, 80, 4, N'Trống'),
-('A8','A', 750, 100, 80, 80, 4, N'Trống'),
-('A9','A', 850, 100, 80, 80, 4, N'Trống'),
-('A10','A', 950, 100, 80, 80, 4, N'Trống');
+-- Thêm dữ liệu mẫu
+INSERT INTO Ban (maBan, maKhuVuc, soChoNgoi, loaiBan, trangThai, ghiChu) VALUES
+('B01', 'KV01', 4, 'Thường', 'Trống', NULL),
+('B02', 'KV01', 4, 'VIP', 'Trống', N'Bàn góc'),
+('B03', 'KV02', 4, 'Thường', 'Đặt', NULL),
+('B04', 'KV03', 8, 'VIP', 'Đang phục vụ', N'Bàn ngoài trời');
+use QLNH
+CREATE TABLE PhieuDatBan (
+    maPhieu      NVARCHAR(10) PRIMARY KEY,       
+    maBan        VARCHAR(10) NOT NULL,          
+    tenKhach     NVARCHAR(100) NOT NULL,         
+    soDienThoai  NVARCHAR(15) NULL,              
+    soNguoi      INT NOT NULL,                   
+    ngayDen      DATE NOT NULL,                  
+    gioDen       TIME NOT NULL,                  
+    ghiChu       NVARCHAR(200) NULL,             
+    tienCoc      DECIMAL(18,2) DEFAULT 0,        
+    ghiChuCoc    NVARCHAR(200) NULL,             
+    trangThai    NVARCHAR(20) NOT NULL DEFAULT N'Đặt',
+    CONSTRAINT FK_PhieuDatBan_Ban FOREIGN KEY (maBan) REFERENCES Ban(maBan)
+);
 
--- KHU B (10 bàn, 6 ghế mỗi bàn)
-INSERT INTO ban (maban, khuvuc, x, y, width, height, soghe, trangthai) VALUES
-('B1','B', 50, 250, 80, 80, 6, N'Trống'),
-('B2','B', 150, 250, 80, 80, 6, N'Trống'),
-('B3','B', 250, 250, 80, 80, 6, N'Trống'),
-('B4','B', 350, 250, 80, 80, 6, N'Trống'),
-('B5','B', 450, 250, 80, 80, 6, N'Trống'),
-('B6','B', 550, 250, 80, 80, 6, N'Trống'),
-('B7','B', 650, 250, 80, 80, 6, N'Trống'),
-('B8','B', 750, 250, 80, 80, 6, N'Trống'),
-('B9','B', 850, 250, 80, 80, 6, N'Trống'),
-('B10','B', 950, 250, 80, 80, 6, N'Trống');
-
--- KHU C (10 bàn, 8 ghế mỗi bàn)
-INSERT INTO ban (maban, khuvuc, x, y, width, height, soghe, trangthai) VALUES
-('C1','C', 50, 400, 80, 80, 8, N'Trống'),
-('C2','C', 150, 400, 80, 80, 8, N'Trống'),
-('C3','C', 250, 400, 80, 80, 8, N'Trống'),
-('C4','C', 350, 400, 80, 80, 8, N'Trống'),
-('C5','C', 450, 400, 80, 80, 8, N'Trống'),
-('C6','C', 550, 400, 80, 80, 8, N'Trống'),
-('C7','C', 650, 400, 80, 80, 8, N'Trống'),
-('C8','C', 750, 400, 80, 80, 8, N'Trống'),
-('C9','C', 850, 400, 80, 80, 8, N'Trống'),
-('C10','C', 950, 400, 80, 80, 8, N'Trống');
+sp_help PhieuDatBan;

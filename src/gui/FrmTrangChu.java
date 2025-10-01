@@ -39,8 +39,8 @@ public class FrmTrangChu extends JFrame {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        setJMenuBar(CustomMenu.getInstance().getJMenuBar());
-        CustomMenu customMenu = CustomMenu.getInstance();
+        setJMenuBar(ThanhTacVu.getInstance().getJMenuBar());
+        ThanhTacVu customMenu = ThanhTacVu.getInstance();
         add(customMenu.getBottomBar(), BorderLayout.SOUTH);
 
         pCen = new JPanel(new GridLayout(3, 3, 30, 30));

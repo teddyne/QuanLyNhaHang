@@ -13,7 +13,7 @@ import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.List;
 
-public class FrmTaiKhoan extends CustomMenu {
+public class FrmTaiKhoan extends ThanhTacVu {
     private final TaiKhoan_DAO taiKhoanDAO;
     private final JTable tblTaiKhoan;
     private final JTable tblLichSuDangNhap;
@@ -231,7 +231,7 @@ public class FrmTaiKhoan extends CustomMenu {
         btnXoa.addActionListener(e -> xoaTaiKhoan());
         btnLamMoi.addActionListener(e -> lamMoiForm());
         btnLocDangNhapGanNhat.addActionListener(e -> locDangNhapGanNhat());
-        tblTaiKhoan.addMouseListener(new MouseAdapter() {
+        tblTaiKhoan.addMouseListener(new MouseAdapter() { 
             @Override
             public void mouseClicked(MouseEvent e) {
                 int row = tblTaiKhoan.getSelectedRow();
