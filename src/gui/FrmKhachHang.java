@@ -19,8 +19,12 @@ public class FrmKhachHang extends JFrame {
         initUI();
         setTitle("Quản lý khách hàng");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1100, 750);
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
         setLocationRelativeTo(null);
+        setJMenuBar(ThanhTacVu.getInstance().getJMenuBar());
+        ThanhTacVu customMenu = ThanhTacVu.getInstance();
+        add(customMenu.getBottomBar(), BorderLayout.SOUTH);
+
     }
 
     private void initUI() {
@@ -33,8 +37,8 @@ public class FrmKhachHang extends JFrame {
         lblHeader.setOpaque(true);
         lblHeader.setBackground(new Color(178, 41, 41));
         lblHeader.setForeground(Color.WHITE);
-        lblHeader.setFont(new Font("SansSerif", Font.BOLD, 28));
-        lblHeader.setPreferredSize(new Dimension(0, 78));
+        lblHeader.setFont(new Font("Times New Roman", Font.BOLD, 26));
+        lblHeader.setPreferredSize(new Dimension(0, 50));
         lblHeader.setBorder(new MatteBorder(0, 0, 2, 0, Color.BLACK));
         main.add(lblHeader, BorderLayout.NORTH);
 
@@ -50,10 +54,10 @@ public class FrmKhachHang extends JFrame {
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.anchor = GridBagConstraints.WEST;
-        Font labelFont = new Font("SansSerif", Font.BOLD, 18);
+        Font labelFont = new Font("Times New Roman", Font.BOLD, 18);
 
         JLabel lblInfoTitle = new JLabel("Thông tin khách hàng");
-        lblInfoTitle.setFont(new Font("SansSerif", Font.BOLD, 20));
+        lblInfoTitle.setFont(new Font("Times New Roman", Font.BOLD, 20));
         gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
         formPanel.add(lblInfoTitle, gbc);
         gbc.gridwidth = 1;
@@ -66,7 +70,7 @@ public class FrmKhachHang extends JFrame {
 
         gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
         txtMa = new JTextField(20);
-        txtMa.setFont(new Font("SansSerif", Font.PLAIN, 16));
+        txtMa.setFont(new Font("Times New Roman", Font.PLAIN, 16));
         txtMa.setBorder(new LineBorder(Color.GRAY, 1));
         formPanel.add(txtMa, gbc);
 
@@ -78,7 +82,7 @@ public class FrmKhachHang extends JFrame {
 
         gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
         txtTen = new JTextField(20);
-        txtTen.setFont(new Font("SansSerif", Font.PLAIN, 16));
+        txtTen.setFont(new Font("Times New Roman", Font.PLAIN, 16));
         txtTen.setBorder(new LineBorder(Color.GRAY, 1));
         formPanel.add(txtTen, gbc);
 
@@ -90,7 +94,7 @@ public class FrmKhachHang extends JFrame {
 
         gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
         txtPhone = new JTextField(20);
-        txtPhone.setFont(new Font("SansSerif", Font.PLAIN, 16));
+        txtPhone.setFont(new Font("Times New Roman", Font.PLAIN, 16));
         txtPhone.setBorder(new LineBorder(Color.GRAY, 1));
         formPanel.add(txtPhone, gbc);
 

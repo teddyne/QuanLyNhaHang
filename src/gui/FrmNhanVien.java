@@ -31,10 +31,14 @@ public class FrmNhanVien extends JFrame {
 
     public FrmNhanVien() {
         setTitle("Quản lý nhân viên");
-        setSize(1000, 650);
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(new BorderLayout(5,5));
+        
+        setJMenuBar(ThanhTacVu.getInstance().getJMenuBar());
+        ThanhTacVu customMenu = ThanhTacVu.getInstance();
+        add(customMenu.getBottomBar(), BorderLayout.SOUTH);
         
         JLabel lblTitle = new JLabel("QUẢN LÝ NHÂN VIÊN", SwingConstants.CENTER);
         lblTitle.setOpaque(true);
@@ -427,8 +431,8 @@ public class FrmNhanVien extends JFrame {
             if(!tuKhoaChucVu.isEmpty() && !nv.getChucVu().toLowerCase().contains(tuKhoaChucVu)){
                 match = false;
             }
-            if(gioiTinh.equals("Nam") && !nv.isGioiTinh()) match = false;
-            if(gioiTinh.equals("Nữ") && nv.isGioiTinh()) match = false;
+//            if(gioiTinh.equals("Nam") && !nv.isGioiTinh()) match = false;
+//            if(gioiTinh.equals("Nữ") && nv.isGioiTinh()) match = false;
 
             if(match){
                 modelNhanVien.addRow(new Object[]{
