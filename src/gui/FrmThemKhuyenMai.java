@@ -36,7 +36,7 @@ public class FrmThemKhuyenMai extends JFrame {
         setTitle("Thêm Khuyến Mãi");
         setSize(550, 500);
         setLocationRelativeTo(null);
-        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
 
         kmDAO = new KhuyenMai_DAO();
 

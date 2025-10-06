@@ -27,6 +27,8 @@ public class FrmSuaKhuyenMai extends JFrame {
 	private JLabel lblGhiChu;
 	private JLabel lblDoiTuong;
 	private JLabel lblGiaTri;
+	private JPanel pNorth;
+	private JLabel lblTieuDe;
 
     public FrmSuaKhuyenMai(KhuyenMai km) {
         setTitle("Sửa Khuyến Mãi");
@@ -36,7 +38,16 @@ public class FrmSuaKhuyenMai extends JFrame {
 
         kmDAO = new KhuyenMai_DAO();
 
-        JPanel pMain = new JPanel();
+        pNorth = new JPanel();
+		pNorth.add(lblTieuDe = new JLabel("THÊM KHUYẾN MÃI"));
+		Font fo = new Font("Times new Roman", Font.BOLD, 22);
+		lblTieuDe.setFont(fo);
+		lblTieuDe.setForeground(Color.WHITE);
+		Color c = new Color(169, 55, 68);
+		pNorth.setBackground(c);
+		add(pNorth, BorderLayout.NORTH);
+        
+		JPanel pMain = new JPanel();
         pMain.setLayout(new BoxLayout(pMain, BoxLayout.Y_AXIS));
         pMain.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
 
@@ -83,7 +94,7 @@ public class FrmSuaKhuyenMai extends JFrame {
         p4.add(spDenNgay);
         pMain.add(p4);
 
-        // --- Dòng Trạng thái + Đối tượng ---
+        //Dòng Trạng thái + Đối tượng
         JPanel p5 = new JPanel(new FlowLayout(FlowLayout.LEFT));
         p5.add(lblTrangThai = new JLabel("Trạng thái: "));
         cmbTrangThai = new JComboBox<>(new String[]{"Đang áp dụng","Sắp áp dụng","Hết hạn"});
@@ -95,14 +106,14 @@ public class FrmSuaKhuyenMai extends JFrame {
         p5.add(cmbDoiTuongApDung);
         pMain.add(p5);
 
-        // --- Dòng Đơn hàng từ ---
+        //Dòng Đơn hàng từ
         JPanel p6 = new JPanel(new FlowLayout(FlowLayout.LEFT));
         p6.add(lblDonHangTu = new JLabel("Đơn hàng từ: "));
         txtDonHangTu = new JTextField(15);
         p6.add(txtDonHangTu);
         pMain.add(p6);
 
-        // --- Dòng Món1 + Món2 ---
+        //Dòng Món1 + Món2
         JPanel p7 = new JPanel(new FlowLayout(FlowLayout.LEFT));
         p7.add(lblMon1 = new JLabel("Món1: "));
         txtMon1 = new JTextField(15);
@@ -114,7 +125,7 @@ public class FrmSuaKhuyenMai extends JFrame {
         p7.add(txtMon2);
         pMain.add(p7);
 
-        // --- Dòng Món tặng + Ghi chú ---
+        //Dòng Món tặng + Ghi chú
         JPanel p8 = new JPanel(new FlowLayout(FlowLayout.LEFT));
         p8.add(lblMonTang = new JLabel("Món tặng: "));
         txtMonTang = new JTextField(15);
@@ -149,11 +160,16 @@ public class FrmSuaKhuyenMai extends JFrame {
         JPanel p9 = new JPanel(new FlowLayout(FlowLayout.CENTER));
         btnLuu = new JButton("Lưu");
         btnHuy = new JButton("Hủy");
-        p9.add(btnLuu);
         p9.add(btnHuy);
+        p9.add(Box.createHorizontalStrut(320));
+        p9.add(btnLuu);
         pMain.add(p9);
 
-        add(pMain);
+		btnLuu.setForeground(Color.WHITE);
+        btnLuu.setBackground(new Color(102, 210, 74));
+        btnHuy.setForeground(Color.WHITE);
+        btnHuy.setBackground(new Color(169, 55, 68));
+        add(pMain, BorderLayout.CENTER);
 
         // --- Khởi tạo trạng thái ---
         capNhatTrangThaiField();
@@ -165,7 +181,7 @@ public class FrmSuaKhuyenMai extends JFrame {
             }
         });
 
-        // --- Action ---
+        // --- Action -
         btnHuy.addActionListener(e -> dispose());
         btnLuu.addActionListener(e -> {
             try {

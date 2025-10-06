@@ -47,12 +47,12 @@ public class FrmKhuyenMai extends JFrame implements ActionListener, MouseListene
         setJMenuBar(ThanhTacVu.getInstance().getJMenuBar());
         ThanhTacVu customMenu = ThanhTacVu.getInstance();
         add(customMenu.getBottomBar(), BorderLayout.SOUTH);
-        pMain = new JPanel();
         
+        pMain = new JPanel();//chứa tất cả nd trong trang
         
         pNorth = new JPanel();
 		pNorth.add(lblTieuDe = new JLabel("DANH SÁCH KHUYẾN MÃI"));
-		Font fo = new Font("Times new Roman", Font.BOLD, 26);
+		Font fo = new Font("Times new Roman", Font.BOLD, 28);
 		lblTieuDe.setFont(fo);
 		lblTieuDe.setForeground(Color.WHITE);
 		Color c = new Color(169, 55, 68);
@@ -65,17 +65,17 @@ public class FrmKhuyenMai extends JFrame implements ActionListener, MouseListene
         // Panel filter bên trái
         JPanel pLeft = new JPanel();
         pLeft.setLayout(new BoxLayout(pLeft, BoxLayout.Y_AXIS));
-		pLeft.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(new Color(165, 42, 42), 2),"Thông Tin Tài Khoản", 0, 0, new Font("Times New Roman", Font.BOLD, 24)));
+		pLeft.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(new Color(165, 42, 42), 2),"Bộ Lọc Khuyến Mãi", 0, 0, new Font("Times New Roman", Font.BOLD, 24)));
 
         // ======== Dòng 1: Mã KM + Món ========
         JPanel p1 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        txtMaKM = new JTextField(25);
-        txtMon = new JTextField(25);
-        p1.add(Box.createHorizontalStrut(30));
+        txtMaKM = new JTextField(28);
+        txtMon = new JTextField(28);
+        p1.add(Box.createHorizontalStrut(25));
 
         p1.add(lblMa = new JLabel("Mã khuyến mãi:   "));
         p1.add(txtMaKM);
-        p1.add(Box.createHorizontalStrut(50));
+        p1.add(Box.createHorizontalStrut(100));
 
         p1.add(lblMon = new JLabel("Món ăn:     "));
         p1.add(txtMon);
@@ -85,18 +85,18 @@ public class FrmKhuyenMai extends JFrame implements ActionListener, MouseListene
         JPanel p2 = new JPanel(new FlowLayout(FlowLayout.LEFT));
         cmbLoaiKM = new JComboBox<>(new String[]{"Tất cả","Phần trăm","Giảm trực tiếp","Sinh nhật","Tặng món"});
         cmbTrangThai = new JComboBox<>(new String[]{"Tất cả","Đang áp dụng","Sắp áp dụng","Hết hạn"});
-        p2.add(Box.createHorizontalStrut(30));
+        p2.add(Box.createHorizontalStrut(25));
 
         p2.add(lblLoai = new JLabel("Loại khuyến mãi: "));
         p2.add(cmbLoaiKM);
-        p2.add(Box.createHorizontalStrut(50));
+        p2.add(Box.createHorizontalStrut(100));
 
         p2.add(lblTrangThai = new JLabel("Trạng thái: "));
         p2.add(cmbTrangThai);
 
         // Ngày bắt đầu / kết thúc với checkbox
         JPanel p3 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        p3.add(Box.createHorizontalStrut(30));
+        p3.add(Box.createHorizontalStrut(20));
         spTuNgay = new JSpinner(new SpinnerDateModel());
         spTuNgay.setEditor(new JSpinner.DateEditor(spTuNgay,"dd/MM/yyyy"));
         
@@ -110,19 +110,21 @@ public class FrmKhuyenMai extends JFrame implements ActionListener, MouseListene
         p3.add(chkDenNgay); p3.add(spDenNgay);
  
 		Font foBoLoc = new Font("Times new Roman", Font.BOLD, 22);
-		txtMaKM.setFont(foBoLoc); 
+		Font foTxt = new Font("Times new Roman", Font.PLAIN, 22);
+
+		txtMaKM.setFont(foTxt); 
 		lblMa.setFont(foBoLoc); 
 		lblMon.setFont(foBoLoc); 
-		txtMon.setFont(foBoLoc);
+		txtMon.setFont(foTxt);
 		lblLoai.setFont(foBoLoc); 
 		lblTrangThai.setFont(foBoLoc); 
-		cmbLoaiKM.setFont(foBoLoc);
+		cmbLoaiKM.setFont(foTxt);
 		chkTuNgay.setFont(foBoLoc); 
 		chkDenNgay.setFont(foBoLoc);
-		spTuNgay.setFont(foBoLoc); 
-		spDenNgay.setFont(foBoLoc);
+		spTuNgay.setFont(foTxt); 
+		spDenNgay.setFont(foTxt);
 		cmbLoaiKM.setPreferredSize(new Dimension(450, 30));// rộng cao
-		cmbTrangThai.setFont(foBoLoc);
+		cmbTrangThai.setFont(foTxt);
 		cmbTrangThai.setPreferredSize(new Dimension(450, 30));
 		spTuNgay.setPreferredSize(new Dimension(173, 30));
 		spDenNgay.setPreferredSize(new Dimension(173, 30));
@@ -138,15 +140,15 @@ public class FrmKhuyenMai extends JFrame implements ActionListener, MouseListene
         pRight.setLayout(new BoxLayout(pRight, BoxLayout.Y_AXIS));
         pRight.setBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10));//trên trái dưới phải
 
-        Font btnFont = new Font("Times New Roman", Font.BOLD, 20);
+        Font btnFont = new Font("Times New Roman", Font.BOLD, 22);
         btnThem = new JButton("Thêm");
         btnSua = new JButton("Sửa");
         btnTraCuu = new JButton("Tra cứu");
         btnTatCa = new JButton("Tất cả");
         btnLamMoi = new JButton("Làm mới");
-        //btnSua.setPreferredSize(new Dimension(150, 50));
 
-        Dimension btnSize = new Dimension(150, 50);
+
+        Dimension btnSize = new Dimension(180, 50);
         for (JButton btn : new JButton[]{btnThem, btnSua, btnTraCuu, btnTatCa, btnLamMoi}) {
             btn.setMaximumSize(btnSize);
             btn.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -155,6 +157,17 @@ public class FrmKhuyenMai extends JFrame implements ActionListener, MouseListene
             pRight.add(Box.createVerticalStrut(10));
             btn.addActionListener(this);
         }
+        
+        btnThem.setForeground(Color.WHITE);
+        btnThem.setBackground(new Color(102, 210, 74));
+        btnSua.setForeground(Color.WHITE);
+        btnSua.setBackground(new Color(216, 154, 161));
+        btnLamMoi.setForeground(Color.WHITE);
+        btnLamMoi.setBackground(new Color(210, 201, 74));
+        btnTraCuu.setForeground(Color.WHITE);
+        btnTraCuu.setBackground(new Color(62, 64, 194));
+        btnTatCa.setForeground(Color.WHITE);
+        btnTatCa.setBackground(new Color(169, 55, 68));
 
         pCenter.add(pLeft, BorderLayout.CENTER);
         pCenter.add(pRight, BorderLayout.EAST);
@@ -174,7 +187,7 @@ public class FrmKhuyenMai extends JFrame implements ActionListener, MouseListene
         JScrollPane scroll = new JScrollPane(tblKhuyenMai);
         JPanel tablePanel = new JPanel(new BorderLayout());
         tablePanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-		tablePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(new Color(165, 42, 42), 2),"Thông Tin Tài Khoản", 0, 0, new Font("Times New Roman", Font.BOLD, 24)));
+		tablePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(new Color(165, 42, 42), 2),"Danh Sách Khuyến Mãi", 0, 0, new Font("Times New Roman", Font.BOLD, 24)));
         tablePanel.add(scroll, BorderLayout.CENTER);
         //add(tablePanel, BorderLayout.SOUTH);
 
