@@ -21,35 +21,36 @@ public class Ban_DAO {
 
     public List<Ban> getAllBan(String maKhuVuc) throws SQLException {
         List<Ban> list = new ArrayList<>();
-        String sql = "SELECT b.MaBan, b.MaKhuVuc, b.SoChoNgoi, b.LoaiBan, b.TrangThai, b.GhiChu, k.TenKhuVuc " +
+        String sql = "SELECT b.maBan, b.maKhuVuc, b.soChoNgoi, b.loaiBan, b.trangThai, b.ghiChu, k.tenKhuVuc " +
                      "FROM Ban b " +
-                     "LEFT JOIN KhuVuc k ON b.MaKhuVuc = k.MaKhuVuc " +
-                     "WHERE b.MaKhuVuc = ? OR ? IS NULL";
+                     "LEFT JOIN KhuVuc k ON b.maKhuVuc = k.maKhuVuc " +
+                     "WHERE b.maKhuVuc = ? OR ? IS NULL";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, maKhuVuc);
             pstmt.setString(2, maKhuVuc);
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
                     Ban b = new Ban();
-                    b.setMaBan(rs.getString("MaBan"));
-                    b.setMaKhuVuc(rs.getString("MaKhuVuc"));
-                    b.setSoChoNgoi(rs.getInt("SoChoNgoi"));
-                    b.setLoaiBan(rs.getString("LoaiBan"));
-                    b.setTrangThai(rs.getString("TrangThai"));
-                    b.setGhiChu(rs.getString("GhiChu"));
-                    b.setTenKhuVuc(rs.getString("TenKhuVuc"));
+                    b.setMaBan(rs.getString("maBan"));
+                    b.setMaKhuVuc(rs.getString("maKhuVuc"));
+                    b.setSoChoNgoi(rs.getInt("soChoNgoi"));
+                    b.setLoaiBan(rs.getString("loaiBan"));
+                    b.setTrangThai(rs.getString("trangThai"));
+                    b.setGhiChu(rs.getString("ghiChu"));
+                    b.setTenKhuVuc(rs.getString("tenKhuVuc"));
                     list.add(b);
                 }
             }
         }
         return list;
     }
+
     public boolean checkTrung(String maBan, Date ngay, Time gio) throws SQLException {
-        String sql = "SELECT COUNT(*) FROM DatBan WHERE MaBan = ? AND NgayDen = ? AND GioDen = CAST(? AS TIME) AND TrangThai NOT IN ('Hủy')";
+        String sql = "SELECT COUNT(*) FROM PhieuDatBan WHERE maBan = ? AND ngayDen = ? AND gioDen = ? AND trangThai NOT IN ('Hủy')";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, maBan);
             pstmt.setDate(2, ngay);
-            pstmt.setString(3, gio.toString()); // Sử dụng String để tránh xung đột TIME/DATETIME
+            pstmt.setTime(3, gio);
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
                     return rs.getInt(1) > 0;
@@ -60,22 +61,22 @@ public class Ban_DAO {
     }
 
     public Ban getBanByMa(String maBan) throws SQLException {
-        String sql = "SELECT b.MaBan, b.MaKhuVuc, b.SoChoNgoi, b.LoaiBan, b.TrangThai, b.GhiChu, k.TenKhuVuc " +
+        String sql = "SELECT b.maBan, b.maKhuVuc, b.soChoNgoi, b.loaiBan, b.trangThai, b.ghiChu, k.tenKhuVuc " +
                      "FROM Ban b " +
-                     "LEFT JOIN KhuVuc k ON b.MaKhuVuc = k.MaKhuVuc " +
-                     "WHERE b.MaBan = ?";
+                     "LEFT JOIN KhuVuc k ON b.maKhuVuc = k.maKhuVuc " +
+                     "WHERE b.maBan = ?";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, maBan);
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
                     Ban b = new Ban();
-                    b.setMaBan(rs.getString("MaBan"));
-                    b.setMaKhuVuc(rs.getString("MaKhuVuc"));
-                    b.setSoChoNgoi(rs.getInt("SoChoNgoi"));
-                    b.setLoaiBan(rs.getString("LoaiBan"));
-                    b.setTrangThai(rs.getString("TrangThai"));
-                    b.setGhiChu(rs.getString("GhiChu"));
-                    b.setTenKhuVuc(rs.getString("TenKhuVuc"));
+                    b.setMaBan(rs.getString("maBan"));
+                    b.setMaKhuVuc(rs.getString("maKhuVuc"));
+                    b.setSoChoNgoi(rs.getInt("soChoNgoi"));
+                    b.setLoaiBan(rs.getString("loaiBan"));
+                    b.setTrangThai(rs.getString("trangThai"));
+                    b.setGhiChu(rs.getString("ghiChu"));
+                    b.setTenKhuVuc(rs.getString("tenKhuVuc"));
                     return b;
                 }
             }
@@ -84,7 +85,7 @@ public class Ban_DAO {
     }
 
     public void themBan(Ban b) throws SQLException {
-        String sql = "INSERT INTO Ban (MaBan, MaKhuVuc, SoChoNgoi, LoaiBan, TrangThai, GhiChu) " +
+        String sql = "INSERT INTO Ban (maBan, maKhuVuc, soChoNgoi, loaiBan, trangThai, ghiChu) " +
                      "VALUES (?, ?, ?, ?, ?, ?)";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, b.getMaBan());
@@ -98,8 +99,8 @@ public class Ban_DAO {
     }
 
     public void capNhatBan(Ban b) throws SQLException {
-        String sql = "UPDATE Ban SET MaKhuVuc = ?, SoChoNgoi = ?, LoaiBan = ?, TrangThai = ?, GhiChu = ? " +
-                     "WHERE MaBan = ?";
+        String sql = "UPDATE Ban SET maKhuVuc = ?, soChoNgoi = ?, loaiBan = ?, trangThai = ?, ghiChu = ? " +
+                     "WHERE maBan = ?";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, b.getMaKhuVuc());
             pstmt.setInt(2, b.getSoChoNgoi());
@@ -112,38 +113,98 @@ public class Ban_DAO {
     }
 
     public void xoaBan(String maBan) throws SQLException {
-        String sql = "DELETE FROM Ban WHERE MaBan = ?";
+        String sql = "DELETE FROM Ban WHERE maBan = ?";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, maBan);
             pstmt.executeUpdate();
         }
     }
 
- public void gopBan(String banChinh, String banGop) throws SQLException {
-     // Chuyển lịch đặt bàn từ banGop sang banChinh
-     String sqlUpdate = "UPDATE DatBan SET MaBan = ? WHERE MaBan = ?";
-     try (PreparedStatement pstmt = conn.prepareStatement(sqlUpdate)) {
-         pstmt.setString(1, banChinh);
-         pstmt.setString(2, banGop);
-         pstmt.executeUpdate();
-     }
-     // Xóa banGop
-     xoaBan(banGop);
- }
+    public void gopBan(String banChinh, String banGop) throws SQLException {
+        String sqlUpdate = "UPDATE PhieuDatBan SET maBan = ? WHERE maBan = ?";
+        try (PreparedStatement pstmt = conn.prepareStatement(sqlUpdate)) {
+            pstmt.setString(1, banChinh);
+            pstmt.setString(2, banGop);
+            pstmt.executeUpdate();
+        }
+        xoaBan(banGop);
+    }
 
- public void chuyenBan(String banCu, String banMoi) throws SQLException {
-     // Chuyển lịch đặt bàn từ banCu sang banMoi
-     String sqlUpdate = "UPDATE DatBan SET MaBan = ? WHERE MaBan = ?";
-     try (PreparedStatement pstmt = conn.prepareStatement(sqlUpdate)) {
-         pstmt.setString(1, banMoi);
-         pstmt.setString(2, banCu);
-         pstmt.executeUpdate();
-     }
-     // Cập nhật bàn cũ (nếu cần, ví dụ set TrangThai = 'Trống')
-     String sqlBan = "UPDATE Ban SET TrangThai = 'Trống' WHERE MaBan = ?";
-     try (PreparedStatement pstmt = conn.prepareStatement(sqlBan)) {
-         pstmt.setString(1, banCu);
-         pstmt.executeUpdate();
-     }
- }
- }
+    public void chuyenBan(String banCu, String banMoi) throws SQLException {
+        String sqlUpdate = "UPDATE PhieuDatBan SET maBan = ? WHERE maBan = ?";
+        try (PreparedStatement pstmt = conn.prepareStatement(sqlUpdate)) {
+            pstmt.setString(1, banMoi);
+            pstmt.setString(2, banCu);
+            pstmt.executeUpdate();
+        }
+        String sqlBan = "UPDATE Ban SET trangThai = 'Trống' WHERE maBan = ?";
+        try (PreparedStatement pstmt = conn.prepareStatement(sqlBan)) {
+            pstmt.setString(1, banCu);
+            pstmt.executeUpdate();
+        }
+    }
+
+    public List<Ban> getBanTrong() throws SQLException {
+        List<Ban> list = new ArrayList<>();
+        Date today = new Date(System.currentTimeMillis());
+        String sql = "SELECT b.maBan, b.maKhuVuc, b.soChoNgoi, b.loaiBan, b.trangThai, b.ghiChu, k.tenKhuVuc " +
+                     "FROM Ban b " +
+                     "LEFT JOIN KhuVuc k ON b.maKhuVuc = k.maKhuVuc " +
+                     "WHERE b.maBan NOT IN (" +
+                     "   SELECT maBan FROM PhieuDatBan " +
+                     "   WHERE ngayDen = ? AND trangThai IN ('Đặt', 'Phục vụ')" +
+                     ") OR b.maBan IS NULL";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setDate(1, today);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    Ban b = new Ban();
+                    b.setMaBan(rs.getString("maBan"));
+                    b.setMaKhuVuc(rs.getString("maKhuVuc"));
+                    b.setSoChoNgoi(rs.getInt("soChoNgoi"));
+                    b.setLoaiBan(rs.getString("loaiBan"));
+                    b.setTrangThai(rs.getString("trangThai"));
+                    b.setGhiChu(rs.getString("ghiChu"));
+                    b.setTenKhuVuc(rs.getString("tenKhuVuc"));
+                    list.add(b);
+                }
+            }
+        }
+        return list;
+    }
+
+    public List<Ban> getAll() throws SQLException {
+        List<Ban> list = new ArrayList<>();
+        String sql = "SELECT b.maBan, b.maKhuVuc, b.soChoNgoi, b.loaiBan, b.trangThai, b.ghiChu, k.tenKhuVuc " +
+                     "FROM Ban b " +
+                     "LEFT JOIN KhuVuc k ON b.maKhuVuc = k.maKhuVuc";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+            while (rs.next()) {
+                Ban b = new Ban();
+                b.setMaBan(rs.getString("maBan"));
+                b.setMaKhuVuc(rs.getString("maKhuVuc"));
+                b.setSoChoNgoi(rs.getInt("soChoNgoi"));
+                b.setLoaiBan(rs.getString("loaiBan"));
+                b.setTrangThai(rs.getString("trangThai"));
+                b.setGhiChu(rs.getString("ghiChu"));
+                b.setTenKhuVuc(rs.getString("tenKhuVuc"));
+                list.add(b);
+            }
+        }
+        return list;
+    }
+
+    public String layMaBan(String maBan) throws SQLException {
+        String sql = "SELECT maBan FROM Ban WHERE maBan = ?";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, maBan);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("maBan");
+                }
+            }
+        }
+        return null;
+    }
+}
