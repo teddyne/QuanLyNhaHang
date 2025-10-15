@@ -144,35 +144,32 @@ public class Ban_DAO {
         }
     }
 
-    public List<Ban> getBanTrong() throws SQLException {
-        List<Ban> list = new ArrayList<>();
-        Date today = new Date(System.currentTimeMillis());
-        String sql = "SELECT b.maBan, b.maKhuVuc, b.soChoNgoi, b.loaiBan, b.trangThai, b.ghiChu, k.tenKhuVuc " +
-                     "FROM Ban b " +
-                     "LEFT JOIN KhuVuc k ON b.maKhuVuc = k.maKhuVuc " +
-                     "WHERE b.maBan NOT IN (" +
-                     "   SELECT maBan FROM PhieuDatBan " +
-                     "   WHERE ngayDen = ? AND trangThai IN ('Đặt', 'Phục vụ')" +
-                     ") OR b.maBan IS NULL";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setDate(1, today);
-            try (ResultSet rs = pstmt.executeQuery()) {
-                while (rs.next()) {
-                    Ban b = new Ban();
-                    b.setMaBan(rs.getString("maBan"));
-                    b.setMaKhuVuc(rs.getString("maKhuVuc"));
-                    b.setSoChoNgoi(rs.getInt("soChoNgoi"));
-                    b.setLoaiBan(rs.getString("loaiBan"));
-                    b.setTrangThai(rs.getString("trangThai"));
-                    b.setGhiChu(rs.getString("ghiChu"));
-                    b.setTenKhuVuc(rs.getString("tenKhuVuc"));
-                    list.add(b);
-                }
-            }
-        }
-        return list;
-    }
-
+    // Trong lớp Ban_DAO
+	public List<Ban> getBanTrong() throws SQLException {
+	    List<Ban> danhSachBan = new ArrayList<>();
+	    String sql = "SELECT b.maBan, b.soChoNgoi, b.loaiBan, k.tenKhuVuc " +
+	                 "FROM Ban b " +
+	                 "LEFT JOIN KhuVuc k ON b.maKhuVuc = k.maKhuVuc " +
+	                 "LEFT JOIN PhieuDatBan pdb ON b.maBan = pdb.maBan " +
+	                 "AND pdb.ngayDen = CAST(GETDATE() AS DATE) " +
+	                 "WHERE pdb.maPhieu IS NULL OR pdb.trangThai NOT IN (N'Đặt', N'Đang phục vụ')";
+	
+        PreparedStatement stmt = conn.prepareStatement(sql);
+	    ResultSet rs = stmt.executeQuery();
+	
+	    while (rs.next()) {
+	        Ban ban = new Ban();
+	        ban.setMaBan(rs.getString("maBan"));
+	        ban.setSoChoNgoi(rs.getInt("soChoNgoi"));
+	        ban.setLoaiBan(rs.getString("loaiBan"));
+	        String tenKhuVuc = rs.getString("tenKhuVuc");
+	        ban.setTenKhuVuc(tenKhuVuc != null ? tenKhuVuc : "Không xác định");
+	        danhSachBan.add(ban);
+	    }
+	    rs.close();
+	    stmt.close();
+	    return danhSachBan;
+	}
     public List<Ban> getAll() throws SQLException {
         List<Ban> list = new ArrayList<>();
         String sql = "SELECT b.maBan, b.maKhuVuc, b.soChoNgoi, b.loaiBan, b.trangThai, b.ghiChu, k.tenKhuVuc " +
@@ -206,5 +203,52 @@ public class Ban_DAO {
             }
         }
         return null;
+    }
+    
+    public List<Ban> traCuuBan(String maBan, String maKhuVuc, String trangThai, String loaiBan) throws SQLException {
+        List<Ban> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(
+            "SELECT b.maBan, b.maKhuVuc, b.soChoNgoi, b.loaiBan, b.trangThai, b.ghiChu, k.tenKhuVuc " +
+            "FROM Ban b " +
+            "LEFT JOIN KhuVuc k ON b.maKhuVuc = k.maKhuVuc WHERE 1=1"
+        );
+
+        List<String> params = new ArrayList<>();
+        if (maBan != null && !maBan.isEmpty()) {
+            sql.append(" AND b.maBan LIKE ?");
+            params.add("%" + maBan + "%");
+        }
+        if (maKhuVuc != null && !maKhuVuc.isEmpty()) {
+            sql.append(" AND b.maKhuVuc = ?");
+            params.add(maKhuVuc);
+        }
+        if (trangThai != null && !trangThai.isEmpty()) {
+            sql.append(" AND b.trangThai = ?");
+            params.add(trangThai);
+        }
+        if (loaiBan != null && !loaiBan.isEmpty()) {
+            sql.append(" AND b.loaiBan = ?");
+            params.add(loaiBan);
+        }
+
+        try (PreparedStatement pstmt = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                pstmt.setString(i + 1, params.get(i));
+            }
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    Ban b = new Ban();
+                    b.setMaBan(rs.getString("maBan"));
+                    b.setMaKhuVuc(rs.getString("maKhuVuc"));
+                    b.setSoChoNgoi(rs.getInt("soChoNgoi"));
+                    b.setLoaiBan(rs.getString("loaiBan"));
+                    b.setTrangThai(rs.getString("trangThai"));
+                    b.setGhiChu(rs.getString("ghiChu"));
+                    b.setTenKhuVuc(rs.getString("tenKhuVuc"));
+                    list.add(b);
+                }
+            }
+        }
+        return list;
     }
 }

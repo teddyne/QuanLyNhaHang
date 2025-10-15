@@ -2,6 +2,7 @@ package gui;
 
 import connectSQL.ConnectSQL;
 import entity.TaiKhoan;
+import dao.TaiKhoan_DAO;
 
 import javax.swing.*;
 import java.awt.*;
@@ -19,6 +20,7 @@ public class FrmDangNhap extends JFrame implements ActionListener, MouseListener
     private final JPasswordField txtPass;
     private final JButton btnDangNhap;
     private final JButton btnThoat;
+    private final JButton btnQuenMatKhau;
     private final JLabel iconEye;
 
     private boolean isPasswordVisible = false;
@@ -29,7 +31,7 @@ public class FrmDangNhap extends JFrame implements ActionListener, MouseListener
     }
 
     public static void resetCurrentTaiKhoan() {
-        currentTaiKhoan = null; // Đặt lại currentTaiKhoan khi đăng xuất
+        currentTaiKhoan = null;
     }
 
     public FrmDangNhap() {
@@ -70,6 +72,7 @@ public class FrmDangNhap extends JFrame implements ActionListener, MouseListener
 
         txtTaiKhoan = new JTextField();
         txtTaiKhoan.setBounds(180, 220, 290, 35);
+        txtTaiKhoan.setFont(new Font("Arial", Font.PLAIN, 20));
         pRight.add(txtTaiKhoan);
 
         lblMatKhau = new JLabel("Mật khẩu:");
@@ -85,7 +88,6 @@ public class FrmDangNhap extends JFrame implements ActionListener, MouseListener
 
         txtPass = new JPasswordField();
         txtPass.setBounds(180, 350, 300, 30);
-        txtTaiKhoan.setFont(new Font("Arial", Font.PLAIN, 20));
         txtPass.setFont(new Font("Arial", Font.PLAIN, 20));
         pRight.add(txtPass);
 
@@ -105,6 +107,17 @@ public class FrmDangNhap extends JFrame implements ActionListener, MouseListener
 
         iconEye.addMouseListener(this);
 
+        // Thêm nút Quên mật khẩu
+        btnQuenMatKhau = new JButton("Quên mật khẩu?");
+        btnQuenMatKhau.setBackground(Color.white);
+        btnQuenMatKhau.setForeground(Color.BLUE);
+        btnQuenMatKhau.setFocusPainted(false);
+        btnQuenMatKhau.setFont(new Font("Times New Roman", Font.PLAIN, 22));
+        btnQuenMatKhau.setBorder(null);
+        btnQuenMatKhau.setBounds(340, 390, 150, 30);
+        pRight.add(btnQuenMatKhau);
+        btnQuenMatKhau.addActionListener(this);
+
         JPanel tacVu = new JPanel(new FlowLayout(FlowLayout.CENTER, 30, 20));
         tacVu.setBackground(Color.white);
         btnDangNhap = new JButton("Đăng nhập");
@@ -120,6 +133,9 @@ public class FrmDangNhap extends JFrame implements ActionListener, MouseListener
         btnThoat.setFocusPainted(false);
         btnThoat.setFont(new Font("Times New Roman", Font.BOLD, 25));
         btnThoat.setPreferredSize(new Dimension(160, 50));
+
+        txtTaiKhoan.addActionListener(e -> txtPass.requestFocus());
+        txtPass.addActionListener(e -> btnDangNhap.doClick());
 
         tacVu.add(btnDangNhap);
         tacVu.add(btnThoat);
@@ -137,7 +153,173 @@ public class FrmDangNhap extends JFrame implements ActionListener, MouseListener
             dangNhap();
         } else if (e.getSource() == btnThoat) {
             exit();
+        } else if (e.getSource() == btnQuenMatKhau) {
+            showQuenMatKhauDialog();
         }
+    }
+
+    private void showQuenMatKhauDialog() {
+        JDialog dialog = new JDialog(this, "Quên mật khẩu", true);
+        dialog.setSize(400, 350);
+        dialog.setLocationRelativeTo(this);
+        dialog.setLayout(null);
+
+        // Tiêu đề
+        JLabel lblTitle = new JLabel("Đặt lại mật khẩu");
+        lblTitle.setFont(new Font("Times New Roman", Font.BOLD, 24));
+        lblTitle.setBounds(30, 10, 340, 30);
+        lblTitle.setHorizontalAlignment(SwingConstants.CENTER);
+        dialog.add(lblTitle);
+
+        // Nhập số điện thoại
+        JLabel lblSDT = new JLabel("Số điện thoại:");
+        lblSDT.setFont(new Font("Times New Roman", Font.BOLD, 18));
+        lblSDT.setBounds(30, 50, 120, 30);
+        dialog.add(lblSDT);
+
+        JTextField txtSoDienThoai = new JTextField();
+        txtSoDienThoai.setBounds(30, 80, 340, 30);
+        txtSoDienThoai.setFont(new Font("Arial", Font.PLAIN, 18));
+        dialog.add(txtSoDienThoai);
+
+        // Nhập mã xác nhận cố định
+        JLabel lblMa = new JLabel("Mã xác nhận:");
+        lblMa.setFont(new Font("Times New Roman", Font.BOLD, 18));
+        lblMa.setBounds(30, 120, 120, 30);
+        dialog.add(lblMa);
+
+        JTextField txtMaXacNhan = new JTextField();
+        txtMaXacNhan.setBounds(30, 150, 340, 30);
+        txtMaXacNhan.setFont(new Font("Arial", Font.PLAIN, 18));
+        dialog.add(txtMaXacNhan);
+
+        // Nút tiếp tục
+        JButton btnTiepTuc = new JButton("Tiếp tục");
+        btnTiepTuc.setBackground(new Color(46, 204, 113));
+        btnTiepTuc.setForeground(Color.WHITE);
+        btnTiepTuc.setFont(new Font("Times New Roman", Font.BOLD, 18));
+        btnTiepTuc.setBounds(30, 190, 120, 30);
+        btnTiepTuc.setFocusPainted(false);
+        dialog.add(btnTiepTuc);
+
+        // Nút hủy
+        JButton btnHuy = new JButton("Hủy");
+        btnHuy.setBackground(new Color(231, 76, 60));
+        btnHuy.setForeground(Color.WHITE);
+        btnHuy.setFont(new Font("Times New Roman", Font.BOLD, 18));
+        btnHuy.setBounds(250, 190, 120, 30);
+        btnHuy.setFocusPainted(false);
+        dialog.add(btnHuy);
+
+        String[] soDienThoai = {null};
+        final String MA_XAC_NHAN_CO_DINH = "nhaHangVang"; // Mã cố định cho quán
+
+        btnTiepTuc.addActionListener(e -> {
+            soDienThoai[0] = txtSoDienThoai.getText().trim();
+            String maNhap = txtMaXacNhan.getText().trim();
+
+            TaiKhoan_DAO dao = new TaiKhoan_DAO();
+            if (soDienThoai[0].isEmpty()) {
+                JOptionPane.showMessageDialog(dialog, "Vui lòng nhập số điện thoại!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            if (!dao.kiemTraSoDienThoaiTonTai(soDienThoai[0])) {
+                JOptionPane.showMessageDialog(dialog, "Số điện thoại không tồn tại!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            if (!maNhap.equals(MA_XAC_NHAN_CO_DINH)) {
+                JOptionPane.showMessageDialog(dialog, "Mã xác nhận không đúng!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            dialog.dispose();
+            showDoiMatKhauDialog(soDienThoai[0]);
+        });
+
+        btnHuy.addActionListener(e -> dialog.dispose());
+        dialog.setVisible(true);
+    }
+
+    private void showDoiMatKhauDialog(String soDienThoai) {
+        JDialog dialog = new JDialog(this, "Đổi mật khẩu", true);
+        dialog.setSize(400, 350);
+        dialog.setLocationRelativeTo(this);
+        dialog.setLayout(null);
+        dialog.getContentPane().setBackground(new Color(245, 245, 245));
+
+        // Tiêu đề
+        JLabel lblTitle = new JLabel("Đổi mật khẩu mới");
+        lblTitle.setFont(new Font("Times New Roman", Font.BOLD, 24));
+        lblTitle.setBounds(30, 10, 340, 30);
+        
+        lblTitle.setHorizontalAlignment(SwingConstants.CENTER);
+        dialog.add(lblTitle);
+
+        // Nhập mật khẩu mới
+        JLabel lblMKMoi = new JLabel("Mật khẩu mới:");
+        lblMKMoi.setFont(new Font("Times New Roman", Font.BOLD, 20));
+        lblMKMoi.setBounds(30, 50, 220, 30);
+        dialog.add(lblMKMoi);
+
+        JPasswordField txtMatKhauMoi = new JPasswordField();
+        txtMatKhauMoi.setBounds(30, 80, 340, 30);
+        txtMatKhauMoi.setFont(new Font("Arial", Font.PLAIN, 18));
+        txtMatKhauMoi.setBorder(BorderFactory.createLineBorder(new Color(149, 165, 166)));
+        dialog.add(txtMatKhauMoi);
+
+        // Xác nhận mật khẩu
+        JLabel lblXacNhanMK = new JLabel("Xác nhận mật khẩu:");
+        lblXacNhanMK.setFont(new Font("Times New Roman", Font.BOLD, 20));
+        lblXacNhanMK.setBounds(30, 120, 220, 30);
+        dialog.add(lblXacNhanMK);
+
+        JPasswordField txtXacNhanMK = new JPasswordField();
+        txtXacNhanMK.setBounds(30, 150, 340, 30);
+        txtXacNhanMK.setFont(new Font("Arial", Font.PLAIN, 18));
+        dialog.add(txtXacNhanMK);
+
+        // Nút đổi mật khẩu
+        JButton btnDoiMK = new JButton("Xác nhận");
+        btnDoiMK.setBackground(new Color(46, 204, 113));
+        btnDoiMK.setForeground(Color.WHITE);
+        btnDoiMK.setFont(new Font("Times New Roman", Font.BOLD, 18));
+        btnDoiMK.setBounds(30, 190, 120, 30);
+        btnDoiMK.setFocusPainted(false);
+        dialog.add(btnDoiMK);
+
+        // Nút hủy
+        JButton btnHuy = new JButton("Hủy");
+        btnHuy.setBackground(new Color(231, 76, 60));
+        btnHuy.setForeground(Color.WHITE);
+        btnHuy.setFont(new Font("Times New Roman", Font.BOLD, 16));
+        btnHuy.setBounds(250, 190, 120, 30);
+        btnHuy.setFocusPainted(false);
+        dialog.add(btnHuy);
+
+        btnDoiMK.addActionListener(e -> {
+            String mkMoi = String.valueOf(txtMatKhauMoi.getPassword());
+            String xacNhanMK = String.valueOf(txtXacNhanMK.getPassword());
+
+            if (mkMoi.isEmpty() || xacNhanMK.isEmpty()) {
+                JOptionPane.showMessageDialog(dialog, "Vui lòng nhập mật khẩu!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            if (!mkMoi.equals(xacNhanMK)) {
+                JOptionPane.showMessageDialog(dialog, "Mật khẩu không khớp!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            TaiKhoan_DAO dao = new TaiKhoan_DAO();
+            if (dao.capNhatMatKhauTheoSDT(soDienThoai, mkMoi)) {
+                JOptionPane.showMessageDialog(dialog, "Đổi mật khẩu thành công! Bạn có thể đăng nhập với mật khẩu mới.", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                dialog.dispose();
+            } else {
+                JOptionPane.showMessageDialog(dialog, "Lỗi khi đổi mật khẩu!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        btnHuy.addActionListener(e -> dialog.dispose());
+        dialog.setVisible(true);
     }
 
     public void exit() {

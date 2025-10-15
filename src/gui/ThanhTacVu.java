@@ -1,11 +1,16 @@
 package gui;
-
 import java.awt.*;
 import java.awt.event.*;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.List;
 import javax.swing.*;
 import connectSQL.ConnectSQL;
+import dao.Ban_DAO;
+import dao.KhuVuc_DAO;
+import dao.PhieuDatBan_DAO;
+import entity.Ban;
+import entity.PhieuDatBan;
 import entity.TaiKhoan;
 
 public class ThanhTacVu extends JFrame {
@@ -15,15 +20,15 @@ public class ThanhTacVu extends JFrame {
     private NutBottom btnHome;
     private NutBottom btnQuanLy;
     private JPanel bottomBar;
-    private JLabel lblQL; // Lưu lblQL để cập nhật sau
+    private JLabel lblQL;
 
     public static void setPhanQuyen(String quyen) {
         phanQuyen = quyen;
     }
 
     public static void resetInstance() {
-        instance = null; // Đặt lại instance để tạo mới CustomMenu
-        phanQuyen = null; // Đặt lại phanQuyen
+        instance = null;
+        phanQuyen = null;
     }
 
     public static ThanhTacVu getInstance() {
@@ -86,35 +91,56 @@ public class ThanhTacVu extends JFrame {
         danhMuc.setIcon(taoIcon("img/danhmuc.png", 30, 30));
         danhMuc.setFont(fontMenu);
 
-        JMenuItem monAn = new JMenuItem("Món Ăn");
+        JMenuItem monAn = new JMenuItem("Thực đơn");
         monAn.setFont(fontItem);
         monAn.setIcon(taoIcon("img/thucdon.png", 30, 30));
 
+        JMenuItem khuVuc = new JMenuItem("Khu Vực");
+        khuVuc.setFont(fontItem);
+        khuVuc.setIcon(taoIcon("img/khuvuc.png", 30, 30));
+        
+        JMenuItem ban = new JMenuItem("Bàn");
+        ban.setFont(fontItem);
+        ban.setIcon(taoIcon("img/ban.png", 30, 30));
+        
         JMenuItem hoaDon = new JMenuItem("Hóa Đơn");
         hoaDon.setFont(fontItem);
         hoaDon.setIcon(taoIcon("img/hoadon.png", 30, 30));
-
-        JMenuItem khachHang = new JMenuItem("Khách Hàng");
-        khachHang.setFont(fontItem);
-        khachHang.setIcon(taoIcon("img/khachhang.png", 30, 30));
-
+        
         JMenuItem nhanVien = new JMenuItem("Nhân Viên");
         nhanVien.setFont(fontItem);
         nhanVien.setIcon(taoIcon("img/nhanvien.png", 30, 30));
 
+        danhMuc.add(ban);
+        danhMuc.add(monAn);
+        danhMuc.add(hoaDon);
+        if ("QuanLy".equals(phanQuyen)) {
+            danhMuc.add(khuVuc);
+            danhMuc.add(nhanVien);
+        }
+
+        menuBar.add(danhMuc);
+        menuBar.add(Box.createHorizontalStrut(30));
+        
+        // Cập nhật
+        JMenu capNhat = createHoverableMenu("Cập Nhật");
+        capNhat.setIcon(taoIcon("img/capnhat.png", 30, 30));
+        capNhat.setFont(fontMenu);
+        
+        JMenuItem khachHang = new JMenuItem("Khách Hàng");
+        khachHang.setFont(fontItem);
+        khachHang.setIcon(taoIcon("img/khachhang.png", 30, 30));
+        
         JMenuItem khuyenMai = new JMenuItem("Khuyến Mãi");
         khuyenMai.setFont(fontItem);
         khuyenMai.setIcon(taoIcon("img/khuyenmai.png", 30, 30));
 
-        danhMuc.add(monAn);
-        danhMuc.add(hoaDon);
-        danhMuc.add(khachHang);
+        capNhat.add(khachHang);
         if ("QuanLy".equals(phanQuyen)) {
-            danhMuc.add(nhanVien);
-            danhMuc.add(khuyenMai);
+            capNhat.add(khuyenMai);
         }
-
-        menuBar.add(danhMuc);
+        
+        menuBar.add(capNhat);
         menuBar.add(Box.createHorizontalStrut(30));
 
         // Xử Lý
@@ -122,13 +148,42 @@ public class ThanhTacVu extends JFrame {
         xuLy.setIcon(taoIcon("img/xuly.png", 30, 30));
         xuLy.setFont(fontMenu);
 
-        JMenuItem ban = new JMenuItem("Bàn");
-        ban.setFont(fontItem);
-        ban.setIcon(taoIcon("img/ban.png", 30, 30));
+        JMenuItem dban = new JMenuItem("Đặt Bàn");
+        dban.setFont(fontItem);
+        dban.setIcon(taoIcon("img/ban.png", 30, 30));
 
-        xuLy.add(ban);
+        JMenuItem thanhToan = new JMenuItem("Thanh Toán");
+        thanhToan.setFont(fontItem);
+        thanhToan.setIcon(taoIcon("img/hoadon.png", 30, 30));
+        
+        xuLy.add(dban);
+        xuLy.add(thanhToan);
 
         menuBar.add(xuLy);
+        menuBar.add(Box.createHorizontalStrut(20));
+
+        // Tìm Kiếm
+        JMenu timKiem = createHoverableMenu("Tìm Kiếm");
+        timKiem.setIcon(taoIcon("img/timkiem.png", 30, 30));
+        timKiem.setFont(fontMenu);
+
+        JMenuItem tban = new JMenuItem("Bàn");
+        tban.setFont(fontItem);
+        tban.setIcon(taoIcon("img/ban.png", 30, 30));
+        
+        JMenuItem tmon = new JMenuItem("Món");
+        tmon.setFont(fontItem);
+        tmon.setIcon(taoIcon("img/thucdon.png", 30, 30));
+        
+        JMenuItem tkh = new JMenuItem("Khách Hàng");
+        tkh.setFont(fontItem);
+        tkh.setIcon(taoIcon("img/khachhang.png", 30, 30));
+        
+        timKiem.add(tban);
+        timKiem.add(tmon);
+        timKiem.add(tkh);
+        
+        menuBar.add(timKiem);
         menuBar.add(Box.createHorizontalStrut(20));
 
         if ("QuanLy".equals(phanQuyen)) {
@@ -182,6 +237,7 @@ public class ThanhTacVu extends JFrame {
         bottomBar = taoBottomBar();
         add(bottomBar, BorderLayout.SOUTH);
 
+        // Xử lý sự kiện menu
         trangChu.addActionListener(e -> {
             new FrmTrangChu().setVisible(true);
             dispose();
@@ -215,12 +271,25 @@ public class ThanhTacVu extends JFrame {
             }
         });
 
-        ban.addActionListener(e -> {
+        dban.addActionListener(e -> {
             try {
                 new FrmBan().setVisible(true);
             } catch (SQLException e1) {
                 e1.printStackTrace();
             }
+            dispose();
+        });
+        
+        khuVuc.addActionListener(e -> {
+            new FrmKhuVuc().setVisible(true);
+            dispose();
+        });
+        
+        ban.addActionListener(e -> {
+            Connection conn = ConnectSQL.getConnection();
+            Ban_DAO banDAO = new Ban_DAO(conn);
+            KhuVuc_DAO khuVucDAO = new KhuVuc_DAO(conn);
+            new FrmQLBan(banDAO, khuVucDAO, null).setVisible(true);
             dispose();
         });
 
@@ -256,6 +325,290 @@ public class ThanhTacVu extends JFrame {
                 JOptionPane.showMessageDialog(this, "Bạn không có quyền truy cập!", "Thông báo", JOptionPane.WARNING_MESSAGE);
             }
         });
+
+        tban.addActionListener(e -> {
+            try {
+                moFormNhapMaBan();
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(this, "Lỗi khi mở form tìm kiếm bàn: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+    }
+
+    private void moFormNhapMaBan() throws SQLException {
+	    JDialog dlg = new JDialog(this, "Nhập Mã Bàn", false);
+	    dlg.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 20));
+	    dlg.setSize(500, 120);
+	    dlg.setLocationRelativeTo(this);
+	    dlg.setResizable(false);
+	
+	    Connection conn = ConnectSQL.getConnection();
+	    Ban_DAO banDAO = new Ban_DAO(conn);
+	    PhieuDatBan_DAO phieuDatBanDAO = new PhieuDatBan_DAO(conn);
+	
+	    JLabel lblMaBan = new JLabel("Mã bàn:");
+	    lblMaBan.setFont(new Font("Times New Roman", Font.BOLD, 22));
+	
+	    JTextField txtMaBan = new JTextField(15);
+	    txtMaBan.setFont(new Font("Times New Roman", Font.PLAIN, 22));
+	    
+	    JButton btnTim = new JButton("Tìm");
+	    btnTim.setFont(new Font("Times New Roman", Font.BOLD, 22));
+	    btnTim.setBackground(new Color(102, 210, 74));
+	    btnTim.setForeground(Color.WHITE);
+	    btnTim.setFocusPainted(false);
+	    btnTim.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+	
+	    dlg.add(lblMaBan);
+	    dlg.add(txtMaBan);
+	    dlg.add(btnTim);
+	
+	    btnTim.addActionListener(e -> {
+	        String maBan = txtMaBan.getText().trim();
+	        if (maBan.isEmpty()) {
+	            JOptionPane.showMessageDialog(dlg, "Vui lòng nhập mã bàn!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+	            return;
+	        }
+	
+	        try {
+	            Ban ban = banDAO.getBanByMa(maBan);
+	            if (ban == null) {
+	                JOptionPane.showMessageDialog(dlg, "Không tìm thấy bàn với mã: " + maBan, "Thông báo", JOptionPane.ERROR_MESSAGE);
+	                return;
+	            }
+	
+	            moFormHienThiThongTinBan(ban, phieuDatBanDAO);
+	            dlg.dispose();
+	        } catch (SQLException ex) {
+	            JOptionPane.showMessageDialog(dlg, "Lỗi khi tìm kiếm bàn: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+	        }
+	    });
+	
+	    txtMaBan.addKeyListener(new KeyAdapter() {
+	        @Override
+	        public void keyPressed(KeyEvent e) {
+	            if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+	                btnTim.doClick();
+	            }
+	        }
+	    });
+	
+	    dlg.setVisible(true);
+	}
+
+    private void moFormHienThiThongTinBan(Ban ban, PhieuDatBan_DAO phieuDatBanDAO) {
+        JDialog dlg = new JDialog(this, "Thông Tin Bàn", false);
+        dlg.setLayout(new BorderLayout(10, 10));
+        dlg.getContentPane().setBackground(Color.white);
+        dlg.setSize(600, 500);
+        dlg.setLocationRelativeTo(this);
+        dlg.setResizable(false);
+
+        JPanel pnlThongTin = new JPanel(new GridBagLayout());
+        pnlThongTin.setBackground(Color.WHITE);
+        pnlThongTin.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(new Color(128, 0, 0), 2), "Thông tin bàn", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.TOP, new Font("Times New Roman", Font.BOLD, 24)));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        Font fontLabel = new Font("Times New Roman", Font.BOLD, 20);
+        Font fontValue = new Font("Times New Roman", Font.PLAIN, 20);
+
+        String trangThai = layTrangThaiHienTai(ban.getMaBan(), phieuDatBanDAO);
+
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        JLabel lblMaBanTitle = new JLabel("Mã bàn:");
+        lblMaBanTitle.setFont(fontLabel);
+        pnlThongTin.add(lblMaBanTitle, gbc);
+        gbc.gridx = 1;
+        JLabel lblMaBanValue = new JLabel(ban.getMaBan());
+        lblMaBanValue.setFont(fontValue);
+        pnlThongTin.add(lblMaBanValue, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        JLabel lblTrangThaiTitle = new JLabel("Trạng thái:");
+        lblTrangThaiTitle.setFont(fontLabel);
+        pnlThongTin.add(lblTrangThaiTitle, gbc);
+        gbc.gridx = 1;
+        JLabel lblTrangThaiValue = new JLabel(trangThai);
+        lblTrangThaiValue.setFont(fontValue);
+        pnlThongTin.add(lblTrangThaiValue, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        JLabel lblLoaiBanTitle = new JLabel("Loại bàn:");
+        lblLoaiBanTitle.setFont(fontLabel);
+        pnlThongTin.add(lblLoaiBanTitle, gbc);
+        gbc.gridx = 1;
+        JLabel lblLoaiBanValue = new JLabel(ban.getLoaiBan());
+        lblLoaiBanValue.setFont(fontValue);
+        pnlThongTin.add(lblLoaiBanValue, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        JLabel lblSoChoNgoiTitle = new JLabel("Số chỗ ngồi:");
+        lblSoChoNgoiTitle.setFont(fontLabel);
+        pnlThongTin.add(lblSoChoNgoiTitle, gbc);
+        gbc.gridx = 1;
+        JLabel lblSoChoNgoiValue = new JLabel(String.valueOf(ban.getSoChoNgoi()));
+        lblSoChoNgoiValue.setFont(fontValue);
+        pnlThongTin.add(lblSoChoNgoiValue, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        JLabel lblKhuVucTitle = new JLabel("Khu vực:");
+        lblKhuVucTitle.setFont(fontLabel);
+        pnlThongTin.add(lblKhuVucTitle, gbc);
+        gbc.gridx = 1;
+        JLabel lblKhuVucValue = new JLabel(ban.getTenKhuVuc());
+        lblKhuVucValue.setFont(fontValue);
+        pnlThongTin.add(lblKhuVucValue, gbc);
+
+        if (!trangThai.equals("Trống")) {
+            try {
+                java.util.Date today = new java.util.Date();
+                List<PhieuDatBan> list = phieuDatBanDAO.getDatBanByBanAndNgay(ban.getMaBan(), new java.sql.Date(today.getTime()));
+                if (!list.isEmpty()) {
+                    PhieuDatBan pdb = list.get(0);
+
+                    gbc.gridx = 0;
+                    gbc.gridy = 5;
+                    gbc.gridwidth = 2;
+                    JLabel lblDatBan = new JLabel("Thông tin đặt bàn:");
+                    lblDatBan.setFont(new Font("Times New Roman", Font.BOLD, 22));
+                    pnlThongTin.add(lblDatBan, gbc);
+
+                    gbc.gridwidth = 1;
+                    gbc.gridy = 6;
+                    JLabel lblTenKhachTitle = new JLabel("Tên khách:");
+                    lblTenKhachTitle.setFont(fontLabel);
+                    pnlThongTin.add(lblTenKhachTitle, gbc);
+                    gbc.gridx = 1;
+                    JLabel lblTenKhachValue = new JLabel(pdb.getTenKhach());
+                    lblTenKhachValue.setFont(fontValue);
+                    pnlThongTin.add(lblTenKhachValue, gbc);
+
+                    gbc.gridx = 0;
+                    gbc.gridy = 7;
+                    JLabel lblSoDienThoaiTitle = new JLabel("Số điện thoại:");
+                    lblSoDienThoaiTitle.setFont(fontLabel);
+                    pnlThongTin.add(lblSoDienThoaiTitle, gbc);
+                    gbc.gridx = 1;
+                    JLabel lblSoDienThoaiValue = new JLabel(pdb.getSoDienThoai() != null ? pdb.getSoDienThoai() : "Không có");
+                    lblSoDienThoaiValue.setFont(fontValue);
+                    pnlThongTin.add(lblSoDienThoaiValue, gbc);
+
+                    gbc.gridx = 0;
+                    gbc.gridy = 8;
+                    JLabel lblSoNguoiTitle = new JLabel("Số người:");
+                    lblSoNguoiTitle.setFont(fontLabel);
+                    pnlThongTin.add(lblSoNguoiTitle, gbc);
+                    gbc.gridx = 1;
+                    JLabel lblSoNguoiValue = new JLabel(String.valueOf(pdb.getSoNguoi()));
+                    lblSoNguoiValue.setFont(fontValue);
+                    pnlThongTin.add(lblSoNguoiValue, gbc);
+
+                    gbc.gridx = 0;
+                    gbc.gridy = 9;
+                    JLabel lblGioDenTitle = new JLabel("Giờ đến:");
+                    lblGioDenTitle.setFont(fontLabel);
+                    pnlThongTin.add(lblGioDenTitle, gbc);
+                    gbc.gridx = 1;
+                    JLabel lblGioDenValue = new JLabel(pdb.getGioDen().toString());
+                    lblGioDenValue.setFont(fontValue);
+                    pnlThongTin.add(lblGioDenValue, gbc);
+
+                    gbc.gridx = 0;
+                    gbc.gridy = 10;
+                    JLabel lblGhiChuTitle = new JLabel("Ghi chú:");
+                    lblGhiChuTitle.setFont(fontLabel);
+                    pnlThongTin.add(lblGhiChuTitle, gbc);
+                    gbc.gridx = 1;
+                    JLabel lblGhiChuValue = new JLabel(pdb.getGhiChu() != null ? pdb.getGhiChu() : "Không có");
+                    lblGhiChuValue.setFont(fontValue);
+                    pnlThongTin.add(lblGhiChuValue, gbc);
+
+                    gbc.gridx = 0;
+                    gbc.gridy = 11;
+                    JLabel lblTienCocTitle = new JLabel("Tiền cọc:");
+                    lblTienCocTitle.setFont(fontLabel);
+                    pnlThongTin.add(lblTienCocTitle, gbc);
+                    gbc.gridx = 1;
+                    JLabel lblTienCocValue = new JLabel(String.format("%,.0f VNĐ", pdb.getTienCoc()));
+                    lblTienCocValue.setFont(fontValue);
+                    pnlThongTin.add(lblTienCocValue, gbc);
+
+                    gbc.gridx = 0;
+                    gbc.gridy = 12;
+                    JLabel lblGhiChuCocTitle = new JLabel("Ghi chú cọc:");
+                    lblGhiChuCocTitle.setFont(fontLabel);
+                    pnlThongTin.add(lblGhiChuCocTitle, gbc);
+                    gbc.gridx = 1;
+                    JLabel lblGhiChuCocValue = new JLabel(pdb.getGhiChuCoc() != null ? pdb.getGhiChuCoc() : "Không có");
+                    lblGhiChuCocValue.setFont(fontValue);
+                    pnlThongTin.add(lblGhiChuCocValue, gbc);
+                }
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(dlg, "Lỗi khi lấy thông tin phiếu đặt bàn: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+
+        JScrollPane scrollThongTin = new JScrollPane(pnlThongTin);
+        scrollThongTin.setBorder(null);
+        dlg.add(scrollThongTin, BorderLayout.CENTER);
+
+        // Panel nút
+        JPanel pnlButtons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
+        pnlButtons.setBackground(Color.WHITE);
+
+        JButton btnDiChuyen = new JButton("Quản lý đặt bàn");
+        btnDiChuyen.setFont(new Font("Times New Roman", Font.BOLD, 20));
+        btnDiChuyen.setBackground(new Color(55, 212, 23));
+        btnDiChuyen.setForeground(Color.WHITE);
+        btnDiChuyen.setFocusPainted(false);
+        btnDiChuyen.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        pnlButtons.add(btnDiChuyen);
+
+        JButton btnDong = new JButton("Đóng");
+        btnDong.setFont(new Font("Times New Roman", Font.BOLD, 20));
+        btnDong.setBackground(new Color(236, 66, 48));
+        btnDong.setForeground(Color.WHITE);
+        btnDong.setFocusPainted(false);
+        btnDong.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        pnlButtons.add(btnDong);
+
+        dlg.add(pnlButtons, BorderLayout.SOUTH);
+
+        btnDong.addActionListener(e -> dlg.dispose());
+
+        btnDiChuyen.addActionListener(e -> {
+            try {
+                new FrmBan().setVisible(true);
+                dlg.dispose();
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(dlg, "Lỗi khi mở FrmBan: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        // Hiển thị dialog
+        dlg.setVisible(true);
+    }
+
+    private String layTrangThaiHienTai(String maBan, PhieuDatBan_DAO phieuDatBanDAO) {
+        try {
+            java.util.Date today = new java.util.Date();
+            List<PhieuDatBan> list = phieuDatBanDAO.getDatBanByBanAndNgay(maBan, new java.sql.Date(today.getTime()));
+            boolean hasPhucVu = list.stream().anyMatch(d -> "Đang phục vụ".equals(d.getTrangThai()));
+            if (hasPhucVu) return "Đang phục vụ";
+            boolean hasDat = list.stream().anyMatch(d -> "Đặt".equals(d.getTrangThai()));
+            if (hasDat) return "Đặt";
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return "Trống";
     }
 
     private JMenu createHoverableMenu(String title) {
@@ -381,6 +734,8 @@ public class ThanhTacVu extends JFrame {
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new FrmTrangChu().setVisible(true));
+        SwingUtilities.invokeLater(() -> {
+            new FrmTrangChu().setVisible(true);
+        });
     }
 }

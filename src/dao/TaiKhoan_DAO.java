@@ -47,6 +47,35 @@ public class TaiKhoan_DAO {
         }
     }
 
+    // Cập nhật mật khẩu theo số điện thoại (dùng cho quên mật khẩu)
+    public boolean capNhatMatKhauTheoSDT(String soDienThoai, String matKhauMoi) {
+        String sql = "UPDATE TaiKhoan SET matKhau = ? WHERE soDienThoai = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, matKhauMoi);
+            ps.setString(2, soDienThoai);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // Kiểm tra số điện thoại tồn tại
+    public boolean kiemTraSoDienThoaiTonTai(String soDienThoai) {
+        String sql = "SELECT COUNT(*) FROM TaiKhoan WHERE soDienThoai = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, soDienThoai);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
     // Xóa tài khoản (bao gồm xóa lịch sử đăng nhập liên quan)
     public boolean xoaTaiKhoan(String maTaiKhoan) {
         String deleteLichSu = "DELETE FROM LichSuDangNhap WHERE maTaiKhoan = ?";

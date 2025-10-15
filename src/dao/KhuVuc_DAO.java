@@ -17,7 +17,11 @@ public class KhuVuc_DAO {
         this.conn = conn;
     }
 
-    public List<KhuVuc> getAll() throws SQLException {
+    public KhuVuc_DAO() {
+		// TODO Auto-generated constructor stub
+	}
+
+	public List<KhuVuc> getAll() throws SQLException {
         List<KhuVuc> list = new ArrayList<>();
         String sql = "SELECT MaKhuVuc, TenKhuVuc, SoLuongBan, TrangThai FROM KhuVuc";
         try (PreparedStatement pstmt = conn.prepareStatement(sql);

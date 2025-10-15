@@ -12,6 +12,6 @@
 			<attribute name="module" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="C:/Users/DELL/Documents/Phat Trien Ung Dung/QuanLyNhaHang/lib/jcalendar-1.4.jar"/>
+	<classpathentry kind="lib" path="D:/QuanLyNhaHang/lib/jcalendar-1.4.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
