@@ -112,6 +112,85 @@ public class HoaDon_DAO {
         }
         return list;
     }
+    
 
+    public List<Object[]> getHoaDonTheoThoiGian(Date ngayBatDau, Date ngayKetThuc) {
+        List<Object[]> ds = new ArrayList<>();
+        // SQL Server cần +1 ngày cho ngày kết thúc để lấy trọn vẹn ngày đó
+        // Chuyển đổi java.util.Date thành java.sql.Date
+        java.sql.Date sqlNgayBatDau = new java.sql.Date(ngayBatDau.getTime());
+        java.sql.Date sqlNgayKetThuc = new java.sql.Date(ngayKetThuc.getTime());
+
+        String sql = "SELECT hd.maHD, b.maBan, hd.ngayLap, kh.tenKH, kh.sdt, nv.hoTen, km.tenKM, " +
+                     "ISNULL(SUM(ct.soLuong * ct.donGia), 0) AS tongTien " +
+                     "FROM HoaDon hd " +
+                     "LEFT JOIN KhachHang kh ON hd.maKH = kh.maKH " +
+                     "LEFT JOIN NhanVien nv ON hd.maNhanVien = nv.maNhanVien " +
+                     "LEFT JOIN KhuyenMai km ON hd.maKM = km.maKM " +
+                     "LEFT JOIN PhieuDatBan p ON hd.maPhieu = p.maPhieu " +
+                     "LEFT JOIN Ban b ON p.maBan = b.maBan " +
+                     "LEFT JOIN ChiTietHoaDon ct ON hd.maHD = ct.maHD " +
+                     "WHERE CONVERT(date, hd.ngayLap) BETWEEN ? AND ? " + // Thêm điều kiện lọc theo ngày
+                     "GROUP BY hd.maHD, b.maBan, hd.ngayLap, kh.tenKH, kh.sdt, nv.hoTen, km.tenKM";
+
+        try (Connection con = ConnectSQL.getConnection(); 
+             PreparedStatement stmt = con.prepareStatement(sql)) {
+
+            stmt.setDate(1, sqlNgayBatDau);
+            stmt.setDate(2, sqlNgayKetThuc);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Object[] row = {
+                        rs.getString("maHD"),
+                        rs.getString("maBan"),
+                        rs.getDate("ngayLap"),
+                        rs.getString("tenKH"),
+                        rs.getString("sdt"),
+                        rs.getString("hoTen"),
+                        rs.getString("tenKM"),
+                        rs.getDouble("tongTien")
+                    };
+                    ds.add(row);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return ds;
+    }
+    
+    public List<Object[]> getTopMonAnBanChay(java.sql.Date ngayBatDau, java.sql.Date ngayKetThuc) {
+        List<Object[]> ds = new ArrayList<>();
+        String sql = """
+                     SELECT TOP 10 ma.tenMon, SUM(ct.soLuong) AS TongSoLuong
+                     FROM ChiTietHoaDon ct
+                     JOIN MonAn ma ON ct.maMon = ma.maMon
+                     JOIN HoaDon hd ON ct.maHD = hd.maHD
+                     WHERE CONVERT(date, hd.ngayLap) BETWEEN ? AND ?
+                     GROUP BY ma.tenMon
+                     ORDER BY TongSoLuong DESC
+                     """;
+
+        try (Connection con = ConnectSQL.getConnection();
+             PreparedStatement stmt = con.prepareStatement(sql)) {
+
+            stmt.setDate(1, ngayBatDau);
+            stmt.setDate(2, ngayKetThuc);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Object[] row = {
+                        rs.getString("tenMon"),
+                        rs.getInt("TongSoLuong")
+                    };
+                    ds.add(row);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return ds;
+    }
 
 }

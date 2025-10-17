@@ -1,6 +1,6 @@
 package dao;
 
-import connectSQL.ConnectSQL;
+import connectSQL.ConnectSQL; 
 import entity.KhachHang;
 
 import java.sql.*;
@@ -8,138 +8,115 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class KhachHang_DAO {
-    private Connection conn;
 
-    public KhachHang_DAO() {
-        this.conn = ConnectSQL.getConnection();
-    }
-
-    // Thêm khách hàng
-    public boolean themKhachHang(KhachHang kh) {
-        String sql = "INSERT INTO KhachHang (maKH, tenKH, sdt, email, cccd) VALUES (?, ?, ?, ?, ?)";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, kh.getMaKH());
-            ps.setString(2, kh.getTenKH());
-            ps.setString(3, kh.getSdt());
-            ps.setString(4, kh.getEmail());
-            ps.setString(5, kh.getCccd());
-            return ps.executeUpdate() > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    // Sửa khách hàng
-    public boolean suaKhachHang(KhachHang kh) {
-        String sql = "UPDATE KhachHang SET tenKH = ?, sdt = ?, email = ?, cccd = ? WHERE maKH = ?";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, kh.getTenKH());
-            ps.setString(2, kh.getSdt());
-            ps.setString(3, kh.getEmail());
-            ps.setString(4, kh.getCccd());
-            ps.setString(5, kh.getMaKH());
-            return ps.executeUpdate() > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    // Xóa khách hàng
-    public boolean xoaKhachHang(String maKH) {
-        String sql = "DELETE FROM KhachHang WHERE maKH = ?";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, maKH);
-            return ps.executeUpdate() > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    // Lấy danh sách tất cả khách hàng
-    public List<KhachHang> layDanhSachKhachHang() {
-        List<KhachHang> ds = new ArrayList<>();
+    /**
+     * Lấy danh sách tất cả khách hàng từ cơ sở dữ liệu.
+     */
+    public List<KhachHang> getAllKhachHang() throws SQLException {
+        List<KhachHang> dsKhachHang = new ArrayList<>();
         String sql = "SELECT * FROM KhachHang";
-        try (PreparedStatement ps = conn.prepareStatement(sql);
+
+        try (Connection conn = ConnectSQL.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
+
             while (rs.next()) {
-                KhachHang kh = new KhachHang(
-                        rs.getString("maKH"),
-                        rs.getString("tenKH"),
-                        rs.getString("sdt"),
-                        rs.getString("email"),
-                        rs.getString("cccd")
-                );
-                ds.add(kh);
+                KhachHang kh = mapRowToKhachHang(rs);
+                dsKhachHang.add(kh);
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
-        return ds;
+        return dsKhachHang;
     }
 
-    // Tìm kiếm khách hàng theo tên hoặc CCCD hoặc SDT
-    public List<KhachHang> timKiemKhachHang(String keyword) {
+    /**
+     * Thêm một khách hàng mới vào cơ sở dữ liệu.
+     */
+    public boolean themKhachHang(KhachHang kh) throws SQLException {
+        String sql = "INSERT INTO KhachHang (maKH, tenKH, email, sdt, cccd, loaiKH) VALUES (?, ?, ?, ?, ?, ?)";
+        try (Connection conn = ConnectSQL.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setNString(1, kh.getMaKH());
+            ps.setNString(2, kh.getTenKH());
+            ps.setNString(3, kh.getEmail());
+            ps.setString(4, kh.getSdt());
+            ps.setString(5, kh.getCccd());
+            ps.setNString(6, kh.getLoaiKH());
+
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+    /**
+     * Cập nhật thông tin của một khách hàng đã có trong cơ sở dữ liệu.
+     */
+    public boolean suaKhachHang(KhachHang kh) throws SQLException {
+        String sql = "UPDATE KhachHang SET tenKH = ?, email = ?, sdt = ?, cccd = ?, loaiKH = ? WHERE maKH = ?";
+        try (Connection conn = ConnectSQL.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setNString(1, kh.getTenKH());
+            ps.setNString(2, kh.getEmail());
+            ps.setString(3, kh.getSdt());
+            ps.setString(4, kh.getCccd());
+            ps.setNString(5, kh.getLoaiKH());
+            ps.setNString(6, kh.getMaKH()); 
+
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+    /**
+     * Xóa một khách hàng khỏi cơ sở dữ liệu dựa trên mã KH.
+     */
+    public boolean xoaKhachHang(String maKH) throws SQLException {
+        String sql = "DELETE FROM KhachHang WHERE maKH = ?";
+        try (Connection conn = ConnectSQL.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setNString(1, maKH);
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+    /**
+     * Tìm kiếm khách hàng theo từ khóa.
+     */
+    public List<KhachHang> timKiemKhachHang(String keyword) throws SQLException {
         List<KhachHang> ds = new ArrayList<>();
-        String sql = "SELECT * FROM KhachHang WHERE tenKH LIKE ? OR cccd LIKE ? OR sdt LIKE ?";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, "%" + keyword + "%");
-            ps.setString(2, "%" + keyword + "%");
-            ps.setString(3, "%" + keyword + "%");
+        String sql = "SELECT * FROM KhachHang WHERE maKH LIKE ? OR tenKH LIKE ? OR cccd LIKE ? OR sdt LIKE ?";
+        String searchTerm = "%" + keyword + "%";
+
+        try (Connection conn = ConnectSQL.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setNString(1, searchTerm);
+            ps.setNString(2, searchTerm);
+            ps.setString(3, searchTerm);
+            ps.setString(4, searchTerm);
+
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    KhachHang kh = new KhachHang(
-                            rs.getString("maKH"),
-                            rs.getString("tenKH"),
-                            rs.getString("sdt"),
-                            rs.getString("email"),
-                            rs.getString("cccd")
-                    );
-                    ds.add(kh);
+                    ds.add(mapRowToKhachHang(rs));
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
         return ds;
     }
 
-    // Tạo mã khách hàng mới dạng KH001
-    public String taoMaKhachHangMoi() {
-        String sql = "SELECT ISNULL(MAX(CAST(SUBSTRING(maKH, 3, LEN(maKH)) AS INT)), 0) AS maxId FROM KhachHang WHERE maKH LIKE 'KH[0-9][0-9][0-9]'";
-        try (PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            if (rs.next()) {
-                int maxId = rs.getInt("maxId");
-                return String.format("KH%03d", maxId + 1);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return "KH001"; // Nếu không có mã nào, bắt đầu từ KH001
-    }
+    /**
+     * Phương thức helper để ánh xạ dữ liệu từ một dòng ResultSet sang một đối tượng KhachHang.
+     */
+    private KhachHang mapRowToKhachHang(ResultSet rs) throws SQLException {
 
-    // Lấy thông tin khách hàng theo mã
-    public KhachHang layKhachHangTheoMa(String maKH) {
-        String sql = "SELECT * FROM KhachHang WHERE maKH = ?";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, maKH);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return new KhachHang(
-                            rs.getString("maKH"),
-                            rs.getString("tenKH"),
-                            rs.getString("sdt"),
-                            rs.getString("email"),
-                            rs.getString("cccd")
-                    );
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return null;
+        String maKH = rs.getNString("maKH");
+        String tenKH = rs.getNString("tenKH");
+        String sdt = rs.getString("sdt");
+        String email = rs.getNString("email");
+        String cccd = rs.getString("cccd");
+        String loaiKH = rs.getNString("loaiKH");
+
+        return new KhachHang(maKH, tenKH, sdt, cccd, email, loaiKH);
     }
 }
+
