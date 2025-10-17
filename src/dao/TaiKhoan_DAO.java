@@ -147,7 +147,7 @@ public class TaiKhoan_DAO {
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     LichSuDangNhap ls = new LichSuDangNhap();
-                    ls.setMaLichSu(rs.getInt("maLichSu"));
+                    ls.setMaLichSu(rs.getString("maLichSu"));
                     ls.setMaTaiKhoan(rs.getString("maTaiKhoan"));
                     ls.setThoiGianDangNhap(rs.getTimestamp("thoiGianDangNhap"));
                     ls.setTrangThai(rs.getBoolean("trangThai"));
@@ -184,6 +184,32 @@ public class TaiKhoan_DAO {
                      "ORDER BY l.thoiGianDangNhap DESC";
         try (PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                TaiKhoan tk = new TaiKhoan();
+                tk.setMaTaiKhoan(rs.getString("maTaiKhoan"));
+                tk.setSoDienThoai(rs.getString("soDienThoai"));
+                tk.setMatKhau(rs.getString("matKhau"));
+                tk.setMaNhanVien(rs.getString("maNhanVien"));
+                tk.setPhanQuyen(rs.getString("phanQuyen"));
+                tk.setHoTen(rs.getString("hoTen"));
+                return tk;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    // Lấy tài khoản đăng nhập nhiều nhất
+    public TaiKhoan layTaiKhoanDangNhapNhieuNhat() {
+        String sql = "SELECT TOP 1 t.maTaiKhoan, t.soDienThoai, t.matKhau, t.maNhanVien, t.phanQuyen, n.hoTen, COUNT(ls.maLichSu) as soLanDangNhap " +
+                     "FROM TaiKhoan t " +
+                     "INNER JOIN NhanVien n ON t.maNhanVien = n.maNhanVien " +
+                     "LEFT JOIN LichSuDangNhap ls ON t.maTaiKhoan = ls.maTaiKhoan " +
+                     "GROUP BY t.maTaiKhoan, t.soDienThoai, t.matKhau, t.maNhanVien, t.phanQuyen, n.hoTen " +
+                     "ORDER BY soLanDangNhap DESC";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
                 TaiKhoan tk = new TaiKhoan();
                 tk.setMaTaiKhoan(rs.getString("maTaiKhoan"));

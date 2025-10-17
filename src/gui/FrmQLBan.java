@@ -1,9 +1,10 @@
 package gui;
-
 import dao.Ban_DAO;
 import dao.KhuVuc_DAO;
+import dao.LoaiBan_DAO;
 import entity.Ban;
 import entity.KhuVuc;
+import entity.LoaiBan;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import connectSQL.ConnectSQL;
@@ -14,219 +15,279 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class FrmQLBan extends JFrame implements ActionListener, MouseListener {
+public class FrmQLBan extends ThanhTacVu {
     private final Ban_DAO banDAO;
     private final KhuVuc_DAO khuVucDAO;
+    private final LoaiBan_DAO loaiBanDAO;
     private final DefaultTableModel modelBan;
     private final JTable tblBan;
-    private JTextField txtMaBan, txtGhiChu, txtSoCho;
-    private JComboBox<String> cbKhuVuc, cbTrangThai, cbLoaiBan;
-    private final JButton btnThem, btnXoa, btnSua, btnLuu, btnTraCuu, btnLamMoi;
-    private JPanel pNorth, pMain;
+    private final JTextField txtMaBan, txtGhiChu, txtSoCho;
+    private final JComboBox<String> cbKhuVuc, cbTrangThai, cbLoaiBan;
+    private final JButton btnThem, btnXoa, btnSua, btnLamMoi, btnLoaiBan, btnTraCuu;
     private final Consumer<Void> refreshCallback;
+	private JTable table;
 
-    public FrmQLBan(Ban_DAO banDAO, KhuVuc_DAO khuVucDAO, Consumer<Void> refreshCallback) {
-        super("Quản Lý Bàn");
+    public FrmQLBan(Ban_DAO banDAO, KhuVuc_DAO khuVucDAO, LoaiBan_DAO loaiBanDAO, Consumer<Void> refreshCallback) throws SQLException {
+        super();
+        setTitle("Quản Lý Bàn");
+        ConnectSQL.getInstance().connect();
         this.banDAO = banDAO;
         this.khuVucDAO = khuVucDAO;
-		this.btnLamMoi = new JButton();
+        this.loaiBanDAO = loaiBanDAO;
         this.refreshCallback = refreshCallback;
 
-        setExtendedState(JFrame.MAXIMIZED_BOTH);
-        setLocationRelativeTo(null);
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
-
-        // Menu
-        setJMenuBar(ThanhTacVu.getInstance().getJMenuBar());
-        ThanhTacVu customMenu = ThanhTacVu.getInstance();
-        add(customMenu.getBottomBar(), BorderLayout.SOUTH);
+        // Panel chính
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
+        mainPanel.setBackground(Color.WHITE);
+        add(mainPanel, BorderLayout.CENTER);
 
         // Panel tiêu đề
-        pNorth = new JPanel();
-        pNorth.add(new JLabel("QUẢN LÝ BÀN"));
-        Font fo = new Font("Times New Roman", Font.BOLD, 28);
-        pNorth.getComponent(0).setFont(fo);
-        pNorth.getComponent(0).setForeground(Color.WHITE);
-        pNorth.setBackground(new Color(169, 55, 68));
-        add(pNorth, BorderLayout.NORTH);
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.setBackground(Color.WHITE);
 
-        // Panel chính
-        pMain = new JPanel(new BorderLayout());
-        JPanel pCenter = new JPanel(new BorderLayout());
+        JPanel titlePanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        titlePanel.setBackground(new Color(169, 55, 68));
+        JLabel lblTieuDe = new JLabel("QUẢN LÝ BÀN");
+        lblTieuDe.setFont(new Font("Times New Roman", Font.BOLD, 28));
+        lblTieuDe.setForeground(Color.WHITE);
+        titlePanel.add(lblTieuDe);
+        topPanel.add(titlePanel, BorderLayout.NORTH);
 
-        // Panel lọc (Bộ Lọc Bàn)
-        JPanel pLeft = new JPanel(new GridBagLayout());
-        pLeft.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createLineBorder(new Color(165, 42, 42), 2),
-            "Bộ Lọc Bàn", 0, 0, new Font("Times New Roman", Font.BOLD, 24)));
-        pLeft.setBackground(new Color(240, 240, 240));
+        // Panel nhập liệu
+        JPanel inputPanel = new JPanel(new BorderLayout());
+        inputPanel.setBackground(Color.WHITE);
+        inputPanel.setBorder(BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(new Color(165, 42, 42), 2), "Thông Tin Bàn",
+                0, 0, new Font("Times New Roman", Font.BOLD, 24)));
+        inputPanel.setPreferredSize(new Dimension(0, 220));
 
-        Font foBoLoc = new Font("Times New Roman", Font.BOLD, 20);
-        Font foTxt = new Font("Times New Roman", Font.PLAIN, 20);
-        Dimension fieldSize = new Dimension(200, 30);
+        JPanel fieldsPanel = new JPanel(new GridBagLayout());
+        fieldsPanel.setBackground(Color.WHITE);
+        fieldsPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 15, 10, 15);
+        gbc.insets = new Insets(5, 10, 5, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.anchor = GridBagConstraints.WEST;
+        gbc.weightx = 1.0;
 
-        JLabel lblMaBan = new JLabel("Mã bàn:");
-        lblMaBan.setFont(foBoLoc);
-        txtMaBan = new JTextField();
-        txtMaBan.setFont(foTxt);
-        txtMaBan.setPreferredSize(fieldSize);
+        Font labelFont = new Font("Times New Roman", Font.BOLD, 22);
+        Font fieldFont = new Font("Times New Roman", Font.PLAIN, 18);
 
-        JLabel lblKhuVuc = new JLabel("Khu vực:");
-        lblKhuVuc.setFont(foBoLoc);
+        // Cột 1
+        // Mã bàn
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        JLabel lblMaBan = new JLabel("Mã bàn");
+        lblMaBan.setFont(labelFont);
+        fieldsPanel.add(lblMaBan, gbc);
+        txtMaBan = new JTextField(15);
+        txtMaBan.setFont(fieldFont);
+        gbc.gridx = 1;
+        fieldsPanel.add(txtMaBan, gbc);
+
+        // Khu vực
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        JLabel lblKhuVuc = new JLabel("Khu vực");
+        lblKhuVuc.setFont(labelFont);
+        fieldsPanel.add(lblKhuVuc, gbc);
         cbKhuVuc = new JComboBox<>();
-        cbKhuVuc.setFont(foTxt);
-        cbKhuVuc.setPreferredSize(fieldSize);
+        cbKhuVuc.setFont(fieldFont);
+        cbKhuVuc.addItem("Tất cả");
         try {
             List<KhuVuc> khuVucs = khuVucDAO.getAll();
-            cbKhuVuc.addItem("Tất cả");
             for (KhuVuc k : khuVucs) {
                 cbKhuVuc.addItem(k.getMaKhuVuc() + " - " + k.getTenKhuVuc());
             }
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(this, "Lỗi tải danh sách khu vực: " + ex.getMessage());
         }
-
-        JLabel lblTrangThai = new JLabel("Trạng thái:");
-        lblTrangThai.setFont(foBoLoc);
-        cbTrangThai = new JComboBox<>(new String[]{"Tất cả", "Trống", "Đặt", "Đang phục vụ"});
-        cbTrangThai.setFont(foTxt);
-        cbTrangThai.setPreferredSize(fieldSize);
-
-        JLabel lblLoaiBan = new JLabel("Loại bàn:");
-        lblLoaiBan.setFont(foBoLoc);
-        cbLoaiBan = new JComboBox<>(new String[]{"Tất cả", "Thường", "VIP"});
-        cbLoaiBan.setFont(foTxt);
-        cbLoaiBan.setPreferredSize(fieldSize);
-
-        JLabel lblGhiChu = new JLabel("Ghi chú:");
-        lblGhiChu.setFont(foBoLoc);
-        txtGhiChu = new JTextField();
-        txtGhiChu.setFont(foTxt);
-        txtGhiChu.setPreferredSize(fieldSize);
-
-        JLabel lblSoCho = new JLabel("Số chỗ ngồi:");
-        lblSoCho.setFont(foBoLoc);
-        txtSoCho = new JTextField();
-        txtSoCho.setFont(foTxt);
-        txtSoCho.setPreferredSize(fieldSize);
-
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.weightx = 0.0;
-        pLeft.add(lblMaBan, gbc);
-
         gbc.gridx = 1;
-        gbc.weightx = 0.5; 
-        pLeft.add(txtMaBan, gbc);
+        fieldsPanel.add(cbKhuVuc, gbc);
 
-        gbc.gridx = 2;
-        gbc.weightx = 0.0; 
-        pLeft.add(lblKhuVuc, gbc);
-
-        gbc.gridx = 3;
-        gbc.weightx = 0.5; 
-        pLeft.add(cbKhuVuc, gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        gbc.weightx = 0.0;
-        pLeft.add(lblTrangThai, gbc);
-
-        gbc.gridx = 1;
-        gbc.weightx = 0.5;
-        pLeft.add(cbTrangThai, gbc);
-
-        gbc.gridx = 2;
-        gbc.weightx = 0.0;
-        pLeft.add(lblLoaiBan, gbc);
-
-        gbc.gridx = 3;
-        gbc.weightx = 0.5;
-        pLeft.add(cbLoaiBan, gbc);
-
+        // Trạng thái
         gbc.gridx = 0;
         gbc.gridy = 2;
-        gbc.weightx = 0.0;
-        pLeft.add(lblGhiChu, gbc);
-
+        JLabel lblTrangThai = new JLabel("Trạng thái");
+        lblTrangThai.setFont(labelFont);
+        fieldsPanel.add(lblTrangThai, gbc);
+        cbTrangThai = new JComboBox<>(new String[]{"Tất cả", "Trống", "Đặt", "Đang phục vụ"});
+        cbTrangThai.setFont(fieldFont);
         gbc.gridx = 1;
+        fieldsPanel.add(cbTrangThai, gbc);
+
+        // Spacer giữa cột
         gbc.weightx = 0.5;
-        pLeft.add(txtGhiChu, gbc);
-
-        gbc.gridx = 2;
-        gbc.weightx = 0.0;
-        pLeft.add(lblSoCho, gbc);
-
-        gbc.gridx = 3;
-        gbc.weightx = 0.5;
-        pLeft.add(txtSoCho, gbc);
-
-        gbc.gridx = 4;
-        gbc.weightx = 0.1;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        pLeft.add(new JPanel(), gbc);
-        // Panel nút thao tác bên phải
-        JPanel pRight = new JPanel();
-        pRight.setLayout(new BoxLayout(pRight, BoxLayout.Y_AXIS));
-        pRight.setBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10));
-
-        Font btnFont = new Font("Times New Roman", Font.BOLD, 20);
-        Dimension btnSize = new Dimension(150, 40);
-        btnThem = new JButton("Thêm");
-        btnXoa = new JButton("Xóa");
-        btnSua = new JButton("Sửa");
-        btnLuu = new JButton("Lưu");
-        btnTraCuu = new JButton("Tra cứu");
-
-        for (JButton btn : new JButton[]{btnThem, btnXoa, btnSua, btnLuu, btnTraCuu}) {
-            btn.setMaximumSize(btnSize);
-            btn.setAlignmentX(Component.CENTER_ALIGNMENT);
-            btn.setFont(btnFont);
-            pRight.add(btn);
-            pRight.add(Box.createVerticalStrut(10));
-            btn.addActionListener(this);
+        for (int y = 0; y <= 2; y++) {
+            gbc.gridx = 2;
+            gbc.gridy = y;
+            fieldsPanel.add(Box.createHorizontalStrut(50), gbc);
         }
+        gbc.weightx = 1.0;
 
-        btnThem.setForeground(Color.WHITE);
-        btnThem.setBackground(new Color(102, 210, 74));
-        btnXoa.setForeground(Color.WHITE);
-        btnXoa.setBackground(new Color(230, 126, 34));
-        btnSua.setForeground(Color.WHITE);
-        btnSua.setBackground(new Color(192, 57, 43));
-        btnLuu.setForeground(Color.WHITE);
-        btnLuu.setBackground(new Color(41, 128, 185));
-        btnTraCuu.setForeground(Color.WHITE);
-        btnTraCuu.setBackground(new Color(62, 64, 194));
-        
+        // Cột 2
+        // Loại bàn
+        gbc.gridx = 3;
+        gbc.gridy = 0;
+        JLabel lblLoaiBan = new JLabel("Loại bàn");
+        lblLoaiBan.setFont(labelFont);
+        fieldsPanel.add(lblLoaiBan, gbc);
+        cbLoaiBan = new JComboBox<>();
+        cbLoaiBan.setFont(fieldFont);
+        loadLoaiBan();
+        gbc.gridx = 4;
+        fieldsPanel.add(cbLoaiBan, gbc);
 
-        pCenter.add(pLeft, BorderLayout.CENTER);
-        pCenter.add(pRight, BorderLayout.EAST);
+        // Ghi chú
+        gbc.gridx = 3;
+        gbc.gridy = 1;
+        JLabel lblGhiChu = new JLabel("Ghi chú");
+        lblGhiChu.setFont(labelFont);
+        fieldsPanel.add(lblGhiChu, gbc);
+        txtGhiChu = new JTextField(15);
+        txtGhiChu.setFont(fieldFont);
+        gbc.gridx = 4;
+        fieldsPanel.add(txtGhiChu, gbc);
 
-        // Bảng dữ liệu
+        // Số chỗ ngồi
+        gbc.gridx = 3;
+        gbc.gridy = 2;
+        JLabel lblSoCho = new JLabel("Số chỗ ngồi");
+        lblSoCho.setFont(labelFont);
+        fieldsPanel.add(lblSoCho, gbc);
+        txtSoCho = new JTextField(15);
+        txtSoCho.setFont(fieldFont);
+        gbc.gridx = 4;
+        fieldsPanel.add(txtSoCho, gbc);
+
+        // Panel nút thao tác
+        JPanel buttonPanel = new JPanel(new GridLayout(3, 2, 10, 10));
+        buttonPanel.setBackground(Color.WHITE);
+        buttonPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+
+        Dimension buttonSize = new Dimension(150, 50);
+        Font buttonFont = new Font("Times New Roman", Font.BOLD, 20);
+
+        // === Khởi tạo nút ===
+        btnThem = taoNut("Thêm", new Color(46, 204, 113), buttonSize, buttonFont);       // xanh lá
+        btnSua = taoNut("Sửa", new Color(52, 152, 219), buttonSize, buttonFont);         // xanh dương
+        btnXoa = taoNut("Xóa", new Color(231, 76, 60), buttonSize, buttonFont);          // đỏ
+        btnLamMoi = taoNut("Làm mới", new Color(149, 165, 166), buttonSize, buttonFont); // xám nhạt
+        btnLoaiBan = taoNut("Loại Bàn", new Color(255, 193, 7), buttonSize, buttonFont); // vàng
+        btnTraCuu = taoNut("Tra cứu", new Color(121, 89, 229), buttonSize, buttonFont);  // tím
+
+        buttonPanel.add(btnThem);
+        buttonPanel.add(btnSua);
+        buttonPanel.add(btnXoa);
+        buttonPanel.add(btnLamMoi);
+        buttonPanel.add(btnLoaiBan);
+        buttonPanel.add(btnTraCuu);
+
+        inputPanel.add(fieldsPanel, BorderLayout.CENTER);
+        inputPanel.add(buttonPanel, BorderLayout.EAST);
+
+        // Bảng danh sách bàn
+        JPanel tablePanel = new JPanel(new BorderLayout());
+        tablePanel.setBorder(BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(new Color(165, 42, 42), 2),
+                "Danh Sách Bàn", 0, 0, new Font("Times New Roman", Font.BOLD, 24)));
+        tablePanel.setBackground(Color.WHITE);
+
         String[] columns = {"Mã bàn", "Khu vực", "Trạng thái", "Ghi chú", "Số chỗ ngồi", "Loại bàn"};
         modelBan = new DefaultTableModel(columns, 0);
         tblBan = new JTable(modelBan);
         tblBan.setFont(new Font("Times New Roman", Font.PLAIN, 16));
         tblBan.setRowHeight(30);
-        tblBan.addMouseListener(this);
+        JScrollPane scrollBan = new JScrollPane(tblBan);
+        tablePanel.add(scrollBan, BorderLayout.CENTER);
 
-        JScrollPane scroll = new JScrollPane(tblBan);
-        JPanel tablePanel = new JPanel(new BorderLayout());
-        tablePanel.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createLineBorder(new Color(165, 42, 42), 2),
-            "Danh Sách Bàn", 0, 0, new Font("Times New Roman", Font.BOLD, 24)));
-        tablePanel.add(scroll, BorderLayout.CENTER);
-
-        pMain.add(pCenter, BorderLayout.NORTH);
-        pMain.add(tablePanel, BorderLayout.CENTER);
-        add(pMain, BorderLayout.CENTER);
+        topPanel.add(inputPanel, BorderLayout.CENTER);
+        mainPanel.add(topPanel, BorderLayout.NORTH);
+        mainPanel.add(tablePanel, BorderLayout.CENTER);
 
         // Load dữ liệu
         loadData();
+
+        // Sự kiện nút
+        btnThem.addActionListener(e -> themBan());
+        btnSua.addActionListener(e -> luuBan());
+        btnXoa.addActionListener(e -> xoaBan());
+        btnLamMoi.addActionListener(e -> lamMoiForm());
+        btnLoaiBan.addActionListener(e -> {
+            try {
+                new FrmLoaiBan(loaiBanDAO, v -> loadLoaiBan()).setVisible(true);
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        });
+        btnTraCuu.addActionListener(e -> traCuuBan());
+
+        // Sự kiện bảng
+        tblBan.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                int row = tblBan.getSelectedRow();
+                if (row >= 0) {
+                    txtMaBan.setEditable(false);
+                    txtMaBan.setText((String) modelBan.getValueAt(row, 0));
+                    String khuVuc = (String) modelBan.getValueAt(row, 1);
+                    try {
+                        List<KhuVuc> khuVucs = khuVucDAO.getAll();
+                        for (int i = 0; i < khuVucs.size(); i++) {
+                            if (khuVucs.get(i).getTenKhuVuc().equals(khuVuc)) {
+                                cbKhuVuc.setSelectedIndex(i + 1);
+                                break;
+                            }
+                        }
+                    } catch (SQLException ex) {
+                        ex.printStackTrace();
+                    }
+                    cbTrangThai.setSelectedItem(modelBan.getValueAt(row, 2));
+                    txtGhiChu.setText((String) modelBan.getValueAt(row, 3));
+                    txtSoCho.setText(modelBan.getValueAt(row, 4).toString());
+                    cbLoaiBan.setSelectedItem(modelBan.getValueAt(row, 5));
+                }
+            }
+        });
+    }
+
+    private JButton taoNut(String text, Color baseColor, Dimension size, Font font) {
+	    JButton btn = new JButton(text);
+	    btn.setFont(font);
+	    btn.setPreferredSize(size);
+	    btn.setForeground(Color.WHITE);
+	    btn.setBackground(baseColor);
+	    btn.setFocusPainted(false);
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btn.setContentAreaFilled(false);
+        btn.setOpaque(true);
+        
+	    // Hiệu ứng hover
+	    btn.addMouseListener(new MouseAdapter() {
+	        @Override
+	        public void mouseEntered(MouseEvent e) {
+	            btn.setBackground(baseColor.darker());
+	        }
+	
+	        @Override
+	        public void mouseExited(MouseEvent e) {
+	            btn.setBackground(baseColor);
+	        }
+	    });
+	
+	    return btn;
+	}
+	private void loadLoaiBan() {
+        cbLoaiBan.removeAllItems();
+        cbLoaiBan.addItem("Tất cả");
+        try {
+            List<LoaiBan> loaiBans = loaiBanDAO.getAll();
+            for (LoaiBan lb : loaiBans) {
+                cbLoaiBan.addItem(lb.getTenLoai());
+            }
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "Lỗi tải danh sách loại bàn: " + ex.getMessage());
+        }
     }
 
     private void loadData() {
@@ -235,16 +296,44 @@ public class FrmQLBan extends JFrame implements ActionListener, MouseListener {
             List<Ban> list = banDAO.getAll();
             for (Ban b : list) {
                 modelBan.addRow(new Object[]{
-                    b.getMaBan(),
-                    b.getTenKhuVuc(),
-                    b.getTrangThai(),
-                    b.getGhiChu(),
-                    b.getSoChoNgoi(),
-                    b.getLoaiBan()
+                        b.getMaBan(),
+                        b.getTenKhuVuc(),
+                        b.getTrangThai(),
+                        b.getGhiChu(),
+                        b.getSoChoNgoi(),
+                        b.getTenLoai()
                 });
             }
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(this, "Lỗi tải dữ liệu: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+    }
+
+    private void traCuuBan() {
+        String maBan = txtMaBan.getText().trim();
+        String maKhuVuc = cbKhuVuc.getSelectedIndex() > 0 ? cbKhuVuc.getSelectedItem().toString().split(" - ")[0] : "";
+        String trangThai = cbTrangThai.getSelectedIndex() > 0 ? cbTrangThai.getSelectedItem().toString() : "";
+        String loaiBan = cbLoaiBan.getSelectedIndex() > 0 ? cbLoaiBan.getSelectedItem().toString() : "";
+
+        modelBan.setRowCount(0);
+        try {
+            List<Ban> list = banDAO.traCuuBan(maBan, maKhuVuc, trangThai, loaiBan);
+            for (Ban b : list) {
+                modelBan.addRow(new Object[]{
+                        b.getMaBan(),
+                        b.getTenKhuVuc(),
+                        b.getTrangThai(),
+                        b.getGhiChu(),
+                        b.getSoChoNgoi(),
+                        b.getMaBan()
+                });
+            }
+            if (list.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Không tìm thấy bàn phù hợp!");
+            }
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "Lỗi tra cứu bàn: " + ex.getMessage());
             ex.printStackTrace();
         }
     }
@@ -260,60 +349,37 @@ public class FrmQLBan extends JFrame implements ActionListener, MouseListener {
     }
 
     private void xoaBan() {
-        int row = tblBan.getSelectedRow();
-        if (row >= 0) {
-            String maBan = (String) modelBan.getValueAt(row, 0);
-            int confirm = JOptionPane.showConfirmDialog(this, "Xóa bàn " + maBan + "?", "Xác nhận", JOptionPane.YES_NO_OPTION);
-            if (confirm == JOptionPane.YES_OPTION) {
-                try {
-                    if (banDAO.checkTrung(maBan, new java.sql.Date(System.currentTimeMillis()), new java.sql.Time(System.currentTimeMillis()))) {
-                        JOptionPane.showMessageDialog(this, "Không thể xóa bàn đang có lịch đặt!");
-                        return;
-                    }
-                    banDAO.xoaBan(maBan);
-                    modelBan.removeRow(row);
-                    refreshCallback.accept(null);
-                    JOptionPane.showMessageDialog(this, "Xóa bàn thành công!");
-                } catch (SQLException ex) {
-                    JOptionPane.showMessageDialog(this, "Lỗi xóa bàn: " + ex.getMessage());
-                    ex.printStackTrace();
-                }
-            }
-        } else {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn bàn để xóa!");
-        }
-    }
-
-    private void suaBan() {
-        int row = tblBan.getSelectedRow();
-        if (row >= 0) {
-            txtMaBan.setEditable(false);
-            txtMaBan.setText((String) modelBan.getValueAt(row, 0));
-            String khuVuc = (String) modelBan.getValueAt(row, 1);
-            try {
-                List<KhuVuc> khuVucs = khuVucDAO.getAll();
-                for (int i = 0; i < khuVucs.size(); i++) {
-                    if (khuVucs.get(i).getTenKhuVuc().equals(khuVuc)) {
-                        cbKhuVuc.setSelectedIndex(i + 1);
-                        break;
-                    }
-                }
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-            }
-            cbTrangThai.setSelectedItem(modelBan.getValueAt(row, 2));
-            txtGhiChu.setText((String) modelBan.getValueAt(row, 3));
-            txtSoCho.setText(modelBan.getValueAt(row, 4).toString());
-            cbLoaiBan.setSelectedItem(modelBan.getValueAt(row, 5));
-        } else {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn bàn để sửa!");
-        }
-    }
+	    int selectedRow = table.getSelectedRow();
+	    if (selectedRow >= 0) {
+	        String maBan = (String) table.getValueAt(selectedRow, 0);
+	        try {
+	            // Kiểm tra xem bàn có đang được đặt hoặc phục vụ không
+	            java.util.Date today = new java.util.Date();
+	            java.sql.Date sqlDate = new java.sql.Date(today.getTime());
+	            java.sql.Time sqlTime = new java.sql.Time(today.getTime());
+	            if (banDAO.checkTrung(maBan, sqlDate, sqlTime)) {
+	                JOptionPane.showMessageDialog(this, "Không thể xóa bàn " + maBan + " vì đang có lịch đặt hoặc phục vụ!");
+	                return;
+	            }
+	            int confirm = JOptionPane.showConfirmDialog(this, "Bạn có chắc chắn muốn xóa bàn " + maBan + "?", "Xác nhận xóa", JOptionPane.YES_NO_OPTION);
+	            if (confirm == JOptionPane.YES_OPTION) {
+	                banDAO.xoaBan(maBan);
+	                loadData();
+	                JOptionPane.showMessageDialog(this, "Xóa bàn thành công!");
+	            }
+	        } catch (SQLException e) {
+	            e.printStackTrace();
+	            JOptionPane.showMessageDialog(this, "Lỗi khi xóa bàn: " + e.getMessage());
+	        }
+	    } else {
+	        JOptionPane.showMessageDialog(this, "Vui lòng chọn bàn để xóa!");
+	    }
+	}
 
     private void luuBan() {
         String maBan = txtMaBan.getText().trim();
         String maKhuVuc = cbKhuVuc.getSelectedItem() != null && cbKhuVuc.getSelectedIndex() > 0 ?
-            cbKhuVuc.getSelectedItem().toString().split(" - ")[0] : "";
+                cbKhuVuc.getSelectedItem().toString().split(" - ")[0] : "";
         String trangThai = cbTrangThai.getSelectedItem().toString();
         String ghiChu = txtGhiChu.getText().trim();
         String soChoStr = txtSoCho.getText().trim();
@@ -343,7 +409,7 @@ public class FrmQLBan extends JFrame implements ActionListener, MouseListener {
             ban.setTrangThai(trangThai);
             ban.setGhiChu(ghiChu);
             ban.setSoChoNgoi(soCho);
-            ban.setLoaiBan(loaiBan);
+            ban.setMaBan(loaiBan);
 
             if (txtMaBan.isEditable()) {
                 if (banDAO.getBanByMa(maBan) != null) {
@@ -385,85 +451,26 @@ public class FrmQLBan extends JFrame implements ActionListener, MouseListener {
         loadData();
     }
 
-    private void traCuuBan() {
-        String maBan = txtMaBan.getText().trim();
-        String maKhuVuc = cbKhuVuc.getSelectedIndex() > 0 ? cbKhuVuc.getSelectedItem().toString().split(" - ")[0] : null;
-        String trangThai = cbTrangThai.getSelectedIndex() > 0 ? cbTrangThai.getSelectedItem().toString() : null;
-        String loaiBan = cbLoaiBan.getSelectedIndex() > 0 ? cbLoaiBan.getSelectedItem().toString() : null;
-
-        try {
-            List<Ban> list = banDAO.traCuuBan(maBan, maKhuVuc, trangThai, loaiBan);
-            modelBan.setRowCount(0);
-            for (Ban b : list) {
-                modelBan.addRow(new Object[]{
-                    b.getMaBan(),
-                    b.getTenKhuVuc(),
-                    b.getTrangThai(),
-                    b.getGhiChu(),
-                    b.getSoChoNgoi(),
-                    b.getLoaiBan()
-                });
-            }
-        } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, "Lỗi tra cứu bàn: " + ex.getMessage());
-            ex.printStackTrace();
-        }
-    }
-
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        Object src = e.getSource();
-        if (src == btnThem) {
-            themBan();
-        } else if (src == btnXoa) {
-            xoaBan();
-        } else if (src == btnSua) {
-            suaBan();
-        } else if (src == btnLuu) {
-            luuBan();
-        } else if (src == btnTraCuu) {
-            traCuuBan();
-        } 
-    }
-
-    @Override
-    public void mouseClicked(MouseEvent e) {
-        int row = tblBan.getSelectedRow();
-        if (row >= 0) {
-            txtMaBan.setEditable(false);
-            txtMaBan.setText((String) modelBan.getValueAt(row, 0));
-            String khuVuc = (String) modelBan.getValueAt(row, 1);
-            try {
-                List<KhuVuc> khuVucs = khuVucDAO.getAll();
-                for (int i = 0; i < khuVucs.size(); i++) {
-                    if (khuVucs.get(i).getTenKhuVuc().equals(khuVuc)) {
-                        cbKhuVuc.setSelectedIndex(i + 1);
-                        break;
-                    }
-                }
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-            }
-            cbTrangThai.setSelectedItem(modelBan.getValueAt(row, 2));
-            txtGhiChu.setText((String) modelBan.getValueAt(row, 3));
-            txtSoCho.setText(modelBan.getValueAt(row, 4).toString());
-            cbLoaiBan.setSelectedItem(modelBan.getValueAt(row, 5));
-        }
-    }
-
-    @Override
-    public void mousePressed(MouseEvent e) {}
-    @Override
-    public void mouseReleased(MouseEvent e) {}
-    @Override
-    public void mouseEntered(MouseEvent e) {}
-    @Override
-    public void mouseExited(MouseEvent e) {}
-
     public static void main(String[] args) {
-        Connection conn = ConnectSQL.getConnection();
-        Ban_DAO banDAO = new Ban_DAO(conn);
-        KhuVuc_DAO khuVucDAO = new KhuVuc_DAO(conn);
-        new FrmQLBan(banDAO, khuVucDAO, null).setVisible(true);
+    	 UIManager.put("TableHeader.font", new Font("Times New Roman", Font.BOLD, 20));
+			try {
+				UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+			} catch (ClassNotFoundException | InstantiationException | IllegalAccessException
+					| UnsupportedLookAndFeelException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+        SwingUtilities.invokeLater(() -> {
+            try {
+            	
+                Connection conn = ConnectSQL.getConnection();
+                Ban_DAO banDAO = new Ban_DAO(conn);
+                KhuVuc_DAO khuVucDAO = new KhuVuc_DAO(conn);
+                LoaiBan_DAO loaiBanDAO = new LoaiBan_DAO(conn);
+                new FrmQLBan(banDAO, khuVucDAO, loaiBanDAO, null).setVisible(true);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        });
     }
 }

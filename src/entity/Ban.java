@@ -3,43 +3,87 @@ package entity;
 public class Ban {
     private String maBan;
     private String maKhuVuc;
+    private String tenKhuVuc;
+    private String maLoai;
+    private String tenLoai;
     private int soChoNgoi;
-    private String loaiBan;
     private String trangThai;
     private String ghiChu;
-    private String tenKhuVuc; // Thêm để lưu tên khu vực từ join với KhuVuc
-
     // Constructors
     public Ban() {}
 
-    public Ban(String maBan, String maKhuVuc, int soChoNgoi, String loaiBan, String trangThai, String ghiChu) {
-        this.maBan = maBan;
-        this.maKhuVuc = maKhuVuc;
-        this.soChoNgoi = soChoNgoi;
-        this.loaiBan = loaiBan;
-        this.trangThai = trangThai;
-        this.ghiChu = ghiChu;
+    public Ban(String maBan, String maKhuVuc, String tenKhuVuc, String maLoai, String tenLoai, int soChoNgoi, String trangThai, String ghiChi) {
+    	this.maBan = maBan;
+    	this.maKhuVuc = maKhuVuc;
+    	this.tenKhuVuc = tenKhuVuc;
+    	this.maLoai = maLoai;
+    	this.tenLoai = tenLoai;
+    	this.trangThai = trangThai;
+    	this.ghiChu = ghiChu;
     }
 
-    // Getters and Setters
-    public String getMaBan() { return maBan; }
-    public void setMaBan(String maBan) { this.maBan = maBan; }
+	public String getMaBan() {
+		return maBan;
+	}
 
-    public String getMaKhuVuc() { return maKhuVuc; }
-    public void setMaKhuVuc(String maKhuVuc) { this.maKhuVuc = maKhuVuc; }
+	public void setMaBan(String maBan) {
+		this.maBan = maBan;
+	}
 
-    public int getSoChoNgoi() { return soChoNgoi; }
-    public void setSoChoNgoi(int soChoNgoi) { this.soChoNgoi = soChoNgoi; }
+	public String getMaKhuVuc() {
+		return maKhuVuc;
+	}
 
-    public String getLoaiBan() { return loaiBan; }
-    public void setLoaiBan(String loaiBan) { this.loaiBan = loaiBan; }
+	public void setMaKhuVuc(String maKhuVuc) {
+		this.maKhuVuc = maKhuVuc;
+	}
 
-    public String getTrangThai() { return trangThai; }
-    public void setTrangThai(String trangThai) { this.trangThai = trangThai; }
+	public String getTenKhuVuc() {
+		return tenKhuVuc;
+	}
 
-    public String getGhiChu() { return ghiChu; }
-    public void setGhiChu(String ghiChu) { this.ghiChu = ghiChu; }
+	public void setTenKhuVuc(String tenKhuVuc) {
+		this.tenKhuVuc = tenKhuVuc;
+	}
 
-    public String getTenKhuVuc() { return tenKhuVuc; }
-    public void setTenKhuVuc(String tenKhuVuc) { this.tenKhuVuc = tenKhuVuc; }
+	public String getMaLoai() {
+		return maLoai;
+	}
+
+	public void setMaLoai(String maLoai) {
+		this.maLoai = maLoai;
+	}
+
+	public String getTenLoai() {
+		return tenLoai;
+	}
+
+	public void setTenLoai(String tenLoai) {
+		this.tenLoai = tenLoai;
+	}
+
+	public int getSoChoNgoi() {
+		return soChoNgoi;
+	}
+
+	public void setSoChoNgoi(int soChoNgoi) {
+		this.soChoNgoi = soChoNgoi;
+	}
+
+	public String getTrangThai() {
+		return trangThai;
+	}
+
+	public void setTrangThai(String trangThai) {
+		this.trangThai = trangThai;
+	}
+
+	public String getGhiChu() {
+		return ghiChu;
+	}
+
+	public void setGhiChu(String ghiChu) {
+		this.ghiChu = ghiChu;
+	}
+    
 }

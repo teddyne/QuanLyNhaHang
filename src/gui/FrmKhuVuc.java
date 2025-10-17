@@ -12,209 +12,242 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class FrmKhuVuc extends JFrame implements ActionListener, MouseListener {
-    private KhuVuc_DAO khuDAO;
-    private DefaultTableModel model;
-    private JTable tblKhuVuc;
-    private JTextField txtMaKhuVuc, txtTenKhuVuc, txtSoLuongBan;
-    private JComboBox<String> cbTrangThai;
-    private JButton btnThem, btnXoa, btnSua, btnLuu, btnTraCuu, btnLamMoi;
-    private JPanel pNorth, pMain;
-    private Consumer<Void> refreshCallback = null;
+public class FrmKhuVuc extends ThanhTacVu {
+    private final KhuVuc_DAO khuDAO;
+    private final DefaultTableModel model;
+    private final JTable tblKhuVuc;
+    private final JTextField txtMaKhuVuc, txtTenKhuVuc, txtSoLuongBan;
+    private final JComboBox<String> cbTrangThai;
+    private final JButton btnThem, btnXoa, btnSua, btnLuu, btnTraCuu, btnLamMoi;
+    private final Consumer<Void> refreshCallback;
 
-    public FrmKhuVuc() {
-        this(null);
+    public FrmKhuVuc() throws SQLException {
+        this(null, null);
+    }
+
+    public FrmKhuVuc(Consumer<Void> refreshCallback) throws SQLException {
+        this(null, refreshCallback);
     }
     
-    public FrmKhuVuc(Consumer<Void> refreshCallback) {
-        super("Quản Lý Khu Vực");
-        this.refreshCallback = refreshCallback;
-
-        try {
+    public FrmKhuVuc(KhuVuc_DAO khuDAO, Consumer<Void> refreshCallback) throws SQLException {
+        super();
+        setTitle("Quản Lý Khu Vực");
+        ConnectSQL.getInstance().connect();
+        
+        // Khởi tạo DAO nếu null
+        if (khuDAO == null) {
             Connection conn = ConnectSQL.getConnection();
             if (conn == null) {
-                JOptionPane.showMessageDialog(null, "Không thể kết nối cơ sở dữ liệu!");
-                return;
+                throw new SQLException("Không thể kết nối cơ sở dữ liệu");
             }
             this.khuDAO = new KhuVuc_DAO(conn);
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(null, "Lỗi kết nối database: " + e.getMessage());
-            e.printStackTrace();
-            return;
+        } else {
+            this.khuDAO = khuDAO;
         }
-
-        setExtendedState(JFrame.MAXIMIZED_BOTH);
-        setLocationRelativeTo(null);
-        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-
-        try {
-            setJMenuBar(ThanhTacVu.getInstance().getJMenuBar());
-            ThanhTacVu customMenu = ThanhTacVu.getInstance();
-            add(customMenu.getBottomBar(), BorderLayout.SOUTH);
-        } catch (Exception e) {
-            // Bỏ qua nếu không có ThanhTacVu
-        }
-
-        initComponents();
-        loadData();
-    }
-
-    private void initComponents() {
-        // Panel tiêu đề
-        pNorth = new JPanel();
-        pNorth.add(new JLabel("QUẢN LÝ KHU VỰC"));
-        Font fo = new Font("Times New Roman", Font.BOLD, 28);
-        pNorth.getComponent(0).setFont(fo);
-        pNorth.getComponent(0).setForeground(Color.WHITE);
-        pNorth.setBackground(new Color(169, 55, 68));
-        add(pNorth, BorderLayout.NORTH);
-
+        
+        this.refreshCallback = refreshCallback;
+        
         // Panel chính
-        pMain = new JPanel(new BorderLayout());
-        JPanel pCenter = new JPanel(new BorderLayout());
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
+        mainPanel.setBackground(Color.WHITE);
+        add(mainPanel, BorderLayout.CENTER);
 
-        // Panel bộ lọc (Thông tin khu vực)
-        JPanel pLeft = new JPanel(new GridBagLayout());
-        pLeft.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createLineBorder(new Color(165, 42, 42), 2),
-            "Thông Tin Khu Vực", 0, 0, new Font("Times New Roman", Font.BOLD, 24)));
-        pLeft.setBackground(new Color(240, 240, 240));
+        // Panel tiêu đề
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.setBackground(Color.WHITE);
 
-        Font foBoLoc = new Font("Times New Roman", Font.BOLD, 20);
-        Font foTxt = new Font("Times New Roman", Font.PLAIN, 20);
-        Dimension fieldSize = new Dimension(200, 30);
+        JPanel titlePanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        titlePanel.setBackground(new Color(169, 55, 68));
+        JLabel lblTieuDe = new JLabel("QUẢN LÝ KHU VỰC");
+        lblTieuDe.setFont(new Font("Times New Roman", Font.BOLD, 28));
+        lblTieuDe.setForeground(Color.WHITE);
+        titlePanel.add(lblTieuDe);
+        topPanel.add(titlePanel, BorderLayout.NORTH);
+
+        // Panel nhập liệu
+        JPanel inputPanel = new JPanel(new BorderLayout());
+        inputPanel.setBackground(Color.WHITE);
+        inputPanel.setBorder(BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(new Color(165, 42, 42), 2), 
+                "Thông Tin Khu Vực",
+                0, 0, new Font("Times New Roman", Font.BOLD, 24)));
+        inputPanel.setPreferredSize(new Dimension(0, 220));
+
+        JPanel fieldsPanel = new JPanel(new GridBagLayout());
+        fieldsPanel.setBackground(Color.WHITE);
+        fieldsPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 15, 10, 15);
+        gbc.insets = new Insets(5, 10, 5, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.anchor = GridBagConstraints.WEST;
+        gbc.weightx = 1.0;
 
-        // Các trường nhập liệu
-        JLabel lblMaKhuVuc = new JLabel("Mã khu vực:");
-        lblMaKhuVuc.setFont(foBoLoc);
-        txtMaKhuVuc = new JTextField();
-        txtMaKhuVuc.setFont(foTxt);
-        txtMaKhuVuc.setPreferredSize(fieldSize);
+        Font labelFont = new Font("Times New Roman", Font.BOLD, 22);
+        Font fieldFont = new Font("Times New Roman", Font.PLAIN, 18);
 
-        JLabel lblTenKhuVuc = new JLabel("Tên khu vực:");
-        lblTenKhuVuc.setFont(foBoLoc);
-        txtTenKhuVuc = new JTextField();
-        txtTenKhuVuc.setFont(foTxt);
-        txtTenKhuVuc.setPreferredSize(fieldSize);
-
-        JLabel lblSoLuongBan = new JLabel("Số lượng bàn:");
-        lblSoLuongBan.setFont(foBoLoc);
-        txtSoLuongBan = new JTextField();
-        txtSoLuongBan.setFont(foTxt);
-        txtSoLuongBan.setPreferredSize(fieldSize);
-
-        JLabel lblTrangThai = new JLabel("Trạng thái:");
-        lblTrangThai.setFont(foBoLoc);
-        cbTrangThai = new JComboBox<>(new String[]{"Hoạt động", "Ngừng"});
-        cbTrangThai.setFont(foTxt);
-        cbTrangThai.setPreferredSize(fieldSize);
-
-        // Thêm vào panel
+        // Mã khu vực
         gbc.gridx = 0;
         gbc.gridy = 0;
-        gbc.weightx = 0.0;
-        pLeft.add(lblMaKhuVuc, gbc);
-
+        JLabel lblMaKhuVuc = new JLabel("Mã khu vực");
+        lblMaKhuVuc.setFont(labelFont);
+        fieldsPanel.add(lblMaKhuVuc, gbc);
+        
+        txtMaKhuVuc = new JTextField(15);
+        txtMaKhuVuc.setFont(fieldFont);
         gbc.gridx = 1;
-        gbc.weightx = 0.5;
-        pLeft.add(txtMaKhuVuc, gbc);
+        fieldsPanel.add(txtMaKhuVuc, gbc);
 
+        // Tên khu vực
         gbc.gridx = 0;
         gbc.gridy = 1;
-        gbc.weightx = 0.0;
-        pLeft.add(lblTenKhuVuc, gbc);
-
+        JLabel lblTenKhuVuc = new JLabel("Tên khu vực");
+        lblTenKhuVuc.setFont(labelFont);
+        fieldsPanel.add(lblTenKhuVuc, gbc);
+        
+        txtTenKhuVuc = new JTextField(15);
+        txtTenKhuVuc.setFont(fieldFont);
         gbc.gridx = 1;
-        gbc.weightx = 0.5;
-        pLeft.add(txtTenKhuVuc, gbc);
+        fieldsPanel.add(txtTenKhuVuc, gbc);
 
+        // Số lượng bàn
         gbc.gridx = 0;
         gbc.gridy = 2;
-        gbc.weightx = 0.0;
-        pLeft.add(lblSoLuongBan, gbc);
-
+        JLabel lblSoLuongBan = new JLabel("Số lượng bàn");
+        lblSoLuongBan.setFont(labelFont);
+        fieldsPanel.add(lblSoLuongBan, gbc);
+        
+        txtSoLuongBan = new JTextField(15);
+        txtSoLuongBan.setFont(fieldFont);
         gbc.gridx = 1;
-        gbc.weightx = 0.5;
-        pLeft.add(txtSoLuongBan, gbc);
+        fieldsPanel.add(txtSoLuongBan, gbc);
 
+        // Spacer giữa cột
+        gbc.weightx = 0.5;
+        for (int y = 0; y <= 2; y++) {
+            gbc.gridx = 2;
+            gbc.gridy = y;
+            fieldsPanel.add(Box.createHorizontalStrut(50), gbc);
+        }
+        gbc.weightx = 1.0;
+
+        // Trạng thái
         gbc.gridx = 0;
         gbc.gridy = 3;
-        gbc.weightx = 0.0;
-        pLeft.add(lblTrangThai, gbc);
-
-        gbc.gridx = 1;
-        gbc.weightx = 0.5;
-        pLeft.add(cbTrangThai, gbc);
-
-        gbc.gridx = 2;
-        gbc.weightx = 0.1;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        pLeft.add(new JPanel(), gbc);
-
-        // Panel nút thao tác bên phải
-        JPanel pRight = new JPanel();
-        pRight.setLayout(new BoxLayout(pRight, BoxLayout.Y_AXIS));
-        pRight.setBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10));
-
-        Font btnFont = new Font("Times New Roman", Font.BOLD, 20);
-        Dimension btnSize = new Dimension(150, 40);
+        JLabel lblTrangThai = new JLabel("Trạng thái");
+        lblTrangThai.setFont(labelFont);
+        fieldsPanel.add(lblTrangThai, gbc);
         
-        btnThem = new JButton("Thêm");
-        btnXoa = new JButton("Xóa");
-        btnSua = new JButton("Sửa");
-        btnLuu = new JButton("Lưu");
-        btnTraCuu = new JButton("Tra cứu");
-        btnLamMoi = new JButton("Làm mới");
+        cbTrangThai = new JComboBox<>(new String[]{"Hoạt động", "Ngừng"});
+        cbTrangThai.setFont(fieldFont);
+        gbc.gridx = 1;
+        fieldsPanel.add(cbTrangThai, gbc);
 
-        JButton[] buttons = {btnThem, btnXoa, btnSua, btnLuu, btnTraCuu, btnLamMoi};
-        for (JButton btn : buttons) {
-            btn.setMaximumSize(btnSize);
-            btn.setAlignmentX(Component.CENTER_ALIGNMENT);
-            btn.setFont(btnFont);
-            pRight.add(btn);
-            pRight.add(Box.createVerticalStrut(10));
-            btn.addActionListener(this);
-        }
+        // Panel nút thao tác
+        JPanel buttonPanel = new JPanel(new GridLayout(3, 2, 10, 10));
+        buttonPanel.setBackground(Color.WHITE);
+        buttonPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
 
-        // Styling cho các nút
-        btnThem.setForeground(Color.WHITE);
-        btnThem.setBackground(new Color(102, 210, 74));
-        btnXoa.setForeground(Color.WHITE);
-        btnXoa.setBackground(new Color(230, 126, 34));
-        btnSua.setForeground(Color.WHITE);
-        btnSua.setBackground(new Color(192, 57, 43));
-        btnLuu.setForeground(Color.WHITE);
-        btnLuu.setBackground(new Color(41, 128, 185));
-        btnTraCuu.setForeground(Color.WHITE);
-        btnTraCuu.setBackground(new Color(62, 64, 194));
-        btnLamMoi.setForeground(Color.WHITE);
-        btnLamMoi.setBackground(new Color(52, 152, 219));
+        Font buttonFont = new Font("Times New Roman", Font.BOLD, 20);
+        Dimension buttonSize = new Dimension(150, 50);
 
-        pCenter.add(pLeft, BorderLayout.CENTER);
-        pCenter.add(pRight, BorderLayout.EAST);
+        // Khởi tạo các nút
+        btnThem = taoNut("Thêm", new Color(46, 204, 113), buttonSize, buttonFont);       // xanh lá
+        btnSua = taoNut("Sửa", new Color(52, 152, 219), buttonSize, buttonFont);         // xanh dương
+        btnXoa = taoNut("Xóa", new Color(231, 76, 60), buttonSize, buttonFont);          // đỏ
+        btnLamMoi = taoNut("Làm mới", new Color(149, 165, 166), buttonSize, buttonFont); // xám nhạt
+        btnLuu = taoNut("Lưu", new Color(255, 193, 7), buttonSize, buttonFont); 		// vàng
+        btnTraCuu = taoNut("Tra cứu", new Color(121, 89, 229), buttonSize, buttonFont);  // tím
 
-        // Bảng dữ liệu
+        buttonPanel.add(btnThem);
+        buttonPanel.add(btnSua);
+        buttonPanel.add(btnXoa);
+        buttonPanel.add(btnLamMoi);
+        buttonPanel.add(btnLuu);
+        buttonPanel.add(btnTraCuu);
+
+        inputPanel.add(fieldsPanel, BorderLayout.CENTER);
+        inputPanel.add(buttonPanel, BorderLayout.EAST);
+
+        // Bảng danh sách khu vực
+        JPanel tablePanel = new JPanel(new BorderLayout());
+        tablePanel.setBorder(BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(new Color(165, 42, 42), 2),
+                "Danh Sách Khu Vực", 0, 0, new Font("Times New Roman", Font.BOLD, 24)));
+        tablePanel.setBackground(Color.WHITE);
+
         String[] columns = {"Mã khu vực", "Tên khu vực", "Số lượng bàn", "Trạng thái"};
         model = new DefaultTableModel(columns, 0);
         tblKhuVuc = new JTable(model);
         tblKhuVuc.setFont(new Font("Times New Roman", Font.PLAIN, 16));
         tblKhuVuc.setRowHeight(30);
-        tblKhuVuc.addMouseListener(this);
+        JScrollPane scrollKhuVuc = new JScrollPane(tblKhuVuc);
+        tablePanel.add(scrollKhuVuc, BorderLayout.CENTER);
 
-        JScrollPane scroll = new JScrollPane(tblKhuVuc);
-        JPanel tablePanel = new JPanel(new BorderLayout());
-        tablePanel.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createLineBorder(new Color(165, 42, 42), 2),
-            "Danh Sách Khu Vực", 0, 0, new Font("Times New Roman", Font.BOLD, 24)));
-        tablePanel.add(scroll, BorderLayout.CENTER);
+        topPanel.add(inputPanel, BorderLayout.CENTER);
+        mainPanel.add(topPanel, BorderLayout.NORTH);
+        mainPanel.add(tablePanel, BorderLayout.CENTER);
 
-        pMain.add(pCenter, BorderLayout.NORTH);
-        pMain.add(tablePanel, BorderLayout.CENTER);
-        add(pMain, BorderLayout.CENTER);
+        // Load dữ liệu ban đầu
+        loadData();
+
+        // Sự kiện cho các nút
+        btnThem.addActionListener(e -> themKhuVuc());
+        btnXoa.addActionListener(e -> xoaKhuVuc());
+        btnSua.addActionListener(e -> suaKhuVuc());
+        btnLuu.addActionListener(e -> luuKhuVuc());
+        btnTraCuu.addActionListener(e -> traCuuKhuVuc());
+        btnLamMoi.addActionListener(e -> lamMoiForm());
+
+        // Sự kiện click bảng
+        tblKhuVuc.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                int row = tblKhuVuc.getSelectedRow();
+                if (row >= 0) {
+                    txtMaKhuVuc.setEditable(false);
+                    txtMaKhuVuc.setText((String) model.getValueAt(row, 0));
+                    txtTenKhuVuc.setText((String) model.getValueAt(row, 1));
+                    txtSoLuongBan.setText(model.getValueAt(row, 2).toString());
+                    cbTrangThai.setSelectedItem(model.getValueAt(row, 3));
+                }
+            }
+        });
+    }
+
+    private JButton taoNut(String text, Color baseColor, Dimension size, Font font) {
+	    JButton btn = new JButton(text);
+	    btn.setFont(font);
+	    btn.setPreferredSize(size);
+	    btn.setForeground(Color.WHITE);
+	    btn.setBackground(baseColor);
+	    btn.setFocusPainted(false);
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btn.setContentAreaFilled(false);
+        btn.setOpaque(true);
+        
+	    // Hiệu ứng hover
+	    btn.addMouseListener(new MouseAdapter() {
+	        @Override
+	        public void mouseEntered(MouseEvent e) {
+	            btn.setBackground(baseColor.darker());
+	        }
+	
+	        @Override
+	        public void mouseExited(MouseEvent e) {
+	            btn.setBackground(baseColor);
+	        }
+	    });
+	
+	    return btn;
+	}
+
+	private JButton createButton(String text, Color bgColor, Font font, Dimension size) {
+        JButton btn = new JButton(text);
+        btn.setBackground(bgColor);
+        btn.setForeground(Color.WHITE);
+        btn.setFont(font);
+        btn.setPreferredSize(size);
+        return btn;
     }
 
     private void loadData() {
@@ -254,7 +287,9 @@ public class FrmKhuVuc extends JFrame implements ActionListener, MouseListener {
                 try {
                     khuDAO.delete(maKhuVuc);
                     model.removeRow(row);
-                    refreshCallback.accept(null);
+                    if (refreshCallback != null) {
+                        refreshCallback.accept(null);
+                    }
                     JOptionPane.showMessageDialog(this, "Xóa khu vực thành công!");
                     lamMoiForm();
                 } catch (SQLException ex) {
@@ -326,7 +361,9 @@ public class FrmKhuVuc extends JFrame implements ActionListener, MouseListener {
                 }
                 JOptionPane.showMessageDialog(this, "Cập nhật khu vực thành công!");
             }
-            refreshCallback.accept(null);
+            if (refreshCallback != null) {
+                refreshCallback.accept(null);
+            }
             lamMoiForm();
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(this, "Lỗi lưu khu vực: " + ex.getMessage());
@@ -344,65 +381,30 @@ public class FrmKhuVuc extends JFrame implements ActionListener, MouseListener {
     }
 
     private void traCuuKhuVuc() {
+        // TODO: Implement tra cứu theo mã, tên và trạng thái
         String ma = txtMaKhuVuc.getText().trim();
         String ten = txtTenKhuVuc.getText().trim();
-        String trangThai = cbTrangThai.getSelectedIndex() >= 0 ? 
-            (String) cbTrangThai.getSelectedItem() : null;
-
-        try {
-            // Implement logic tra cứu theo mã, tên và trạng thái
-            // Tạm thời load tất cả dữ liệu
-            loadData();
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Lỗi tra cứu: " + ex.getMessage());
-            ex.printStackTrace();
-        }
+        // Tạm thời load tất cả dữ liệu
+        loadData();
     }
-
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        Object src = e.getSource();
-        if (src == btnThem) {
-            themKhuVuc();
-        } else if (src == btnXoa) {
-            xoaKhuVuc();
-        } else if (src == btnSua) {
-            suaKhuVuc();
-        } else if (src == btnLuu) {
-            luuKhuVuc();
-        } else if (src == btnTraCuu) {
-            traCuuKhuVuc();
-        } else if (src == btnLamMoi) {
-            lamMoiForm();
-        }
-    }
-
-    @Override
-    public void mouseClicked(MouseEvent e) {
-        int row = tblKhuVuc.getSelectedRow();
-        if (row >= 0) {
-            txtMaKhuVuc.setEditable(false);
-            txtMaKhuVuc.setText((String) model.getValueAt(row, 0));
-            txtTenKhuVuc.setText((String) model.getValueAt(row, 1));
-            txtSoLuongBan.setText(model.getValueAt(row, 2).toString());
-            cbTrangThai.setSelectedItem(model.getValueAt(row, 3));
-        }
-    }
-
-    @Override
-    public void mousePressed(MouseEvent e) {}
-    @Override
-    public void mouseReleased(MouseEvent e) {}
-    @Override
-    public void mouseEntered(MouseEvent e) {}
-    @Override
-    public void mouseExited(MouseEvent e) {}
 
     public static void main(String[] args) {
-        try {
-            new FrmKhuVuc(null).setVisible(true);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        SwingUtilities.invokeLater(() -> {
+       	 UIManager.put("TableHeader.font", new Font("Times New Roman", Font.BOLD, 20));
+			try {
+				UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+			} catch (ClassNotFoundException | InstantiationException | IllegalAccessException
+					| UnsupportedLookAndFeelException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+            try {
+                new FrmKhuVuc().setExtendedState(JFrame.MAXIMIZED_BOTH);
+                new FrmKhuVuc().setVisible(true);
+            } catch (SQLException e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(null, "Lỗi khởi tạo: " + e.getMessage());
+            }
+        });
     }
 }

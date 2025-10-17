@@ -2,10 +2,14 @@ package gui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.Time;
@@ -37,6 +41,10 @@ public class FrmDatBan extends JDialog {
     private String maBan;
     private PhieuDatBan editD;
     private Font fontBig = new Font("Times New Roman", Font.BOLD, 22);
+	private JButton btnDatMon;
+	private JButton btnLuu;
+	private JButton btnHuy;
+	private JButton btnCheckKH;
 
     public FrmDatBan(JFrame parent, String maBan, PhieuDatBan editD, PhieuDatBan_DAO phieuDatBanDAO, Ban_DAO banDAO) throws SQLException {
         super(parent, editD == null ? "Đặt bàn" : "Sửa đặt bàn", true);
@@ -75,10 +83,8 @@ public class FrmDatBan extends JDialog {
         txtTen.setFont(fontBig);
         JTextField txtSDT = new JTextField(editD != null ? editD.getSoDienThoai() : "", 15);
         txtSDT.setFont(fontBig);
-        JButton btnCheckKH = new JButton("Kiểm tra");
-        btnCheckKH.setFont(fontBig);
-        btnCheckKH.setBackground(new Color(100, 149, 237));
-        btnCheckKH.setForeground(Color.WHITE);
+        
+        btnCheckKH = taoNut("Kiểm tra", new Color(100, 149, 237), null, fontBig);
 
         SpinnerDateModel dateModel = new SpinnerDateModel(editD != null ? editD.getNgayDen() : new java.util.Date(), new java.util.Date(), null, Calendar.DAY_OF_MONTH);
         JSpinner spnNgay = new JSpinner(dateModel);
@@ -104,70 +110,65 @@ public class FrmDatBan extends JDialog {
         txtGhiChuCK.setFont(fontBig);
         txtGhiChuCK.setEnabled(chkCK.isSelected());
 
-        JButton btnDatMon = new JButton("Đặt món");
-        btnDatMon.setFont(fontBig);
-        btnDatMon.setBackground(new Color(50, 205, 50));
-        btnDatMon.setForeground(Color.WHITE);
-        JButton btnLuu = new JButton("Lưu");
-        btnLuu.setFont(fontBig);
-        btnLuu.setBackground(new Color(100, 149, 237));
-        btnLuu.setForeground(Color.WHITE);
-        JButton btnHuy = new JButton("Hủy");
-        btnHuy.setFont(fontBig);
-        btnHuy.setBackground(new Color(220, 20, 60));
-        btnHuy.setForeground(Color.WHITE);
+        Font buttonFont = new Font("Times New Roman", Font.BOLD, 20);
+        Dimension buttonSize = new Dimension(120, 35);
+        btnDatMon = taoNut("Đặt món", new Color(50, 205, 50), buttonSize, fontBig);       // xanh lá
+
+        btnLuu = taoNut("Đặt Bàn", new Color(100, 149, 237), buttonSize, fontBig);
+        
+        btnHuy= taoNut("Hủy", new Color(220, 20, 60), buttonSize, fontBig);
 
         // Layout
         int row = 0;
         gbc.gridx = 0; gbc.gridy = row;
-        JLabel lblMaPhieu = new JLabel("Mã phiếu:");
+        JLabel lblMaPhieu = new JLabel("Mã phiếu");
         lblMaPhieu.setFont(fontBig);
         pForm.add(lblMaPhieu, gbc);
         gbc.gridx = 1; pForm.add(txtMaPhieu, gbc); row++;
         gbc.gridx = 0; gbc.gridy = row;
-        JLabel lblTenKH = new JLabel("Tên KH:");
+        JLabel lblTenKH = new JLabel("Tên KH");
         lblTenKH.setFont(fontBig);
         pForm.add(lblTenKH, gbc);
         gbc.gridx = 1; pForm.add(txtTen, gbc); row++;
         gbc.gridx = 0; gbc.gridy = row;
-        JLabel lblSDTLabel = new JLabel("SĐT:");
+        JLabel lblSDTLabel = new JLabel("SĐT");
         lblSDTLabel.setFont(fontBig);
         pForm.add(lblSDTLabel, gbc);
         gbc.gridx = 1; pForm.add(txtSDT, gbc);
         gbc.gridx = 2; pForm.add(btnCheckKH, gbc); row++;
         gbc.gridx = 0; gbc.gridy = row;
-        JLabel lblNgayDen = new JLabel("Ngày đến:");
+        JLabel lblNgayDen = new JLabel("Ngày đến");
         lblNgayDen.setFont(fontBig);
         pForm.add(lblNgayDen, gbc);
         gbc.gridx = 1; pForm.add(spnNgay, gbc); row++;
         gbc.gridx = 0; gbc.gridy = row;
-        JLabel lblGioDen = new JLabel("Giờ đến:");
+        JLabel lblGioDen = new JLabel("Giờ đến");
         lblGioDen.setFont(fontBig);
         pForm.add(lblGioDen, gbc);
         gbc.gridx = 1; pForm.add(spnGio, gbc); row++;
         gbc.gridx = 0; gbc.gridy = row;
-        JLabel lblSoNguoiLabel = new JLabel("Số người:");
+        JLabel lblSoNguoiLabel = new JLabel("Số người");
         lblSoNguoiLabel.setFont(fontBig);
         pForm.add(lblSoNguoiLabel, gbc);
         gbc.gridx = 1; pForm.add(txtSoNguoi, gbc); row++;
         gbc.gridx = 0; gbc.gridy = row;
-        JLabel lblGhiChu = new JLabel("Ghi chú:");
+        JLabel lblGhiChu = new JLabel("Ghi chú");
         lblGhiChu.setFont(fontBig);
         pForm.add(lblGhiChu, gbc);
         gbc.gridx = 1; pForm.add(new JScrollPane(txtGhiChu), gbc); row++;
         gbc.gridx = 0; gbc.gridy = row;
-        JLabel lblTienCocLabel = new JLabel("Tiền cọc:");
+        JLabel lblTienCocLabel = new JLabel("Tiền cọc");
         lblTienCocLabel.setFont(fontBig);
         pForm.add(lblTienCocLabel, gbc);
         gbc.gridx = 1; pForm.add(txtTienCoc, gbc);
         gbc.gridx = 2; pForm.add(chkCK, gbc); row++;
         gbc.gridx = 0; gbc.gridy = row;
-        JLabel lblGhiChuCK = new JLabel("Ghi chú CK:");
+        JLabel lblGhiChuCK = new JLabel("Ghi chú CK");
         lblGhiChuCK.setFont(fontBig);
         pForm.add(lblGhiChuCK, gbc);
         gbc.gridx = 1; pForm.add(new JScrollPane(txtGhiChuCK), gbc); row++;
         gbc.gridx = 0; gbc.gridy = row;
-        JLabel lblMonAn = new JLabel("Món ăn:");
+        JLabel lblMonAn = new JLabel("Món ăn");
         lblMonAn.setFont(fontBig);
         pForm.add(lblMonAn, gbc);
         gbc.gridx = 1; pForm.add(btnDatMon, gbc);
@@ -224,7 +225,7 @@ public class FrmDatBan extends JDialog {
                 } else {
                     phieuDatBanDAO.add(dNew);
                 }
-                JOptionPane.showMessageDialog(this, "Lưu thành công!");
+                JOptionPane.showMessageDialog(this, "Đặt bàn thành công!");
                 dispose();
             } catch (Exception ex) {
                 ex.printStackTrace();
@@ -234,4 +235,30 @@ public class FrmDatBan extends JDialog {
 
         btnHuy.addActionListener(e -> dispose());
     }
+    private JButton taoNut(String text, Color baseColor, Dimension size, Font font) {
+	    JButton btn = new JButton(text);
+	    btn.setFont(font);
+	    btn.setPreferredSize(size);
+	    btn.setForeground(Color.WHITE);
+	    btn.setBackground(baseColor);
+	    btn.setFocusPainted(false);
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btn.setContentAreaFilled(false);
+        btn.setOpaque(true);
+        
+	    // Hiệu ứng hover
+	    btn.addMouseListener(new MouseAdapter() {
+	        @Override
+	        public void mouseEntered(MouseEvent e) {
+	            btn.setBackground(baseColor.darker());
+	        }
+	
+	        @Override
+	        public void mouseExited(MouseEvent e) {
+	            btn.setBackground(baseColor);
+	        }
+	    });
+	
+	    return btn;
+	}
 }

@@ -3,7 +3,7 @@ package entity;
 import java.sql.Timestamp;
 
 public class LichSuDangNhap {
-    private int maLichSu;
+    private String maLichSu;
     private String maTaiKhoan;
     private Timestamp thoiGianDangNhap;
     private boolean trangThai;
@@ -13,7 +13,7 @@ public class LichSuDangNhap {
     }
 
     // Constructor đầy đủ
-    public LichSuDangNhap(int maLichSu, String maTaiKhoan, Timestamp thoiGianDangNhap, boolean trangThai) {
+    public LichSuDangNhap(String maLichSu, String maTaiKhoan, Timestamp thoiGianDangNhap, boolean trangThai) {
         this.maLichSu = maLichSu;
         this.maTaiKhoan = maTaiKhoan;
         this.thoiGianDangNhap = thoiGianDangNhap;
@@ -21,11 +21,11 @@ public class LichSuDangNhap {
     }
 
     // Getters và Setters
-    public int getMaLichSu() {
+    public String getMaLichSu() {
         return maLichSu;
     }
 
-    public void setMaLichSu(int maLichSu) {
+    public void setMaLichSu(String maLichSu) {
         this.maLichSu = maLichSu;
     }
 

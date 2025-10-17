@@ -118,10 +118,10 @@ public class FrmPhucVu extends JDialog {
         lblLoaiBanLabel.setFont(fontLabel);
         pnlBan.add(lblLoaiBanLabel, banGbc);
         banGbc.gridx = 1;
-        JLabel lblLoai = new JLabel(ban.getLoaiBan());
+        JLabel lblLoai = new JLabel(ban.getMaBan());
         lblLoai.setFont(fontValue);
-        if ("VIP".equals(ban.getLoaiBan())) {
-            lblLoai.setForeground(Color.yellow);
+        if ("VIP".equals(ban.getMaBan())) {
+            lblLoai.setForeground(new Color(218, 165, 32));
         }
         pnlBan.add(lblLoai, banGbc);
 

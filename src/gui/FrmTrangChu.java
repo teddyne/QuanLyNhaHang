@@ -17,11 +17,11 @@ public class FrmTrangChu extends JFrame {
     private RoundedButton btnKho;
     private RoundedButton btnHoaDon;
     private RoundedButton btnThongKe;
-    private RoundedButton btnDangXuat;
     private RoundedButton btnTaiKhoan;
     private JPanel pSou;
     private JButton btnHome;
     private JButton btnQuanLy;
+	private RoundedButton btnKhuVuc;
     private static String phanQuyen = null;
 
     public static void setPhanQuyen(String quyen) {
@@ -55,7 +55,7 @@ public class FrmTrangChu extends JFrame {
         btnHoaDon = new RoundedButton("Hóa Đơn", "img/hoadon.png");
         btnThongKe = new RoundedButton("Thống Kê", "img/thongke.png");
         btnTaiKhoan = new RoundedButton("Tài khoản", "img/quanlytaikhoan.png");
-        btnDangXuat = new RoundedButton("Đăng Xuất", "img/dangxuat.png");
+        btnKhuVuc = new RoundedButton("Khu Vực", "img/khuvuc.png");
 
         pCen.add(btnBan);
         pCen.add(btnThucDon);
@@ -71,16 +71,17 @@ public class FrmTrangChu extends JFrame {
             pCen.add(btnKhach);
         }
 
-        pCen.add(btnDangXuat);
+        pCen.add(btnKhuVuc);
 
         add(pCen, BorderLayout.CENTER);
 
         btnBan.addActionListener(e -> {
             try {
-                new FrmBan().setVisible(true);
-            } catch (SQLException e1) {
-                e1.printStackTrace();
-            }
+				new FrmBan().setVisible(true);
+			} catch (SQLException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
             dispose();
         });
 
@@ -140,10 +141,19 @@ public class FrmTrangChu extends JFrame {
             }
         });
 
-        btnDangXuat.addActionListener(e -> {
-            new FrmDangNhap().setVisible(true);
-            dispose();
-        });
+        btnKhuVuc.addActionListener(e -> {
+        	 if ("QuanLy".equals(phanQuyen)) {
+                 try {
+					new FrmKhuVuc().setVisible(true);
+				} catch (SQLException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+                 dispose();
+             } else {
+                 JOptionPane.showMessageDialog(this, "Bạn không có quyền truy cập!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+             }
+         });
     }
 
     class RoundedButton extends JButton {

@@ -119,20 +119,11 @@ public class FrmDangNhap extends JFrame implements ActionListener, MouseListener
         btnQuenMatKhau.addActionListener(this);
 
         JPanel tacVu = new JPanel(new FlowLayout(FlowLayout.CENTER, 30, 20));
-        tacVu.setBackground(Color.white);
-        btnDangNhap = new JButton("Đăng nhập");
-        btnDangNhap.setBackground(new Color(46, 204, 113));
-        btnDangNhap.setForeground(Color.WHITE);
-        btnDangNhap.setFocusPainted(false);
-        btnDangNhap.setFont(new Font("Times New Roman", Font.BOLD, 25));
-        btnDangNhap.setPreferredSize(new Dimension(160, 50));
-
-        btnThoat = new JButton("Thoát");
-        btnThoat.setBackground(new Color(231, 76, 60));
-        btnThoat.setForeground(Color.WHITE);
-        btnThoat.setFocusPainted(false);
-        btnThoat.setFont(new Font("Times New Roman", Font.BOLD, 25));
-        btnThoat.setPreferredSize(new Dimension(160, 50));
+        Font buttonFont = new Font("Times New Roman", Font.BOLD, 25);
+        Dimension buttonSize = new Dimension(200, 60);
+        
+        btnDangNhap = taoNut("Đăng Nhập", new Color(46, 204, 113), buttonSize, buttonFont);
+        btnThoat = taoNut("Thoát", new Color(231, 76, 60), buttonSize, buttonFont);
 
         txtTaiKhoan.addActionListener(e -> txtPass.requestFocus());
         txtPass.addActionListener(e -> btnDangNhap.doClick());
@@ -141,13 +132,41 @@ public class FrmDangNhap extends JFrame implements ActionListener, MouseListener
         tacVu.add(btnThoat);
         tacVu.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Chọn tác vụ", 0, 0, new Font("Times New Roman", Font.BOLD, 30)));
         tacVu.setBounds(140, 450, 500, 150);
+        tacVu.setBackground(Color.white);
         pRight.add(tacVu);
         btnDangNhap.addActionListener(this);
         btnThoat.addActionListener(this);
         setVisible(true);
     }
 
-    @Override
+    private JButton taoNut(String text, Color baseColor, Dimension size, Font font) {
+	    JButton btn = new JButton(text);
+	    btn.setFont(font);
+	    btn.setPreferredSize(size);
+	    btn.setForeground(Color.WHITE);
+	    btn.setBackground(baseColor);
+	    btn.setFocusPainted(false);
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btn.setContentAreaFilled(false);
+        btn.setOpaque(true);
+        
+	    // Hiệu ứng hover
+	    btn.addMouseListener(new MouseAdapter() {
+	        @Override
+	        public void mouseEntered(MouseEvent e) {
+	            btn.setBackground(baseColor.brighter());
+	        }
+	
+	        @Override
+	        public void mouseExited(MouseEvent e) {
+	            btn.setBackground(baseColor);
+	        }
+	    });
+	
+	    return btn;
+	}
+
+	@Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == btnDangNhap) {
             dangNhap();
@@ -492,6 +511,14 @@ public class FrmDangNhap extends JFrame implements ActionListener, MouseListener
     public void mouseExited(MouseEvent e) {}
 
     public static void main(String[] args) {
+		try {
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException
+				| UnsupportedLookAndFeelException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
         SwingUtilities.invokeLater(() -> new FrmDangNhap().setVisible(true));
     }
 }

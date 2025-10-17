@@ -85,4 +85,9 @@ public class KhuVuc_DAO {
             pstmt.executeUpdate();
         }
     }
+
+	public String getTenKhuVucByMa(String maKhuVuc) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

@@ -1,4 +1,5 @@
 package gui;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.sql.Connection;
@@ -8,6 +9,7 @@ import javax.swing.*;
 import connectSQL.ConnectSQL;
 import dao.Ban_DAO;
 import dao.KhuVuc_DAO;
+import dao.LoaiBan_DAO; // Added import for LoaiBan_DAO
 import dao.PhieuDatBan_DAO;
 import entity.Ban;
 import entity.PhieuDatBan;
@@ -273,24 +275,43 @@ public class ThanhTacVu extends JFrame {
 
         dban.addActionListener(e -> {
             try {
-                new FrmBan().setVisible(true);
-            } catch (SQLException e1) {
-                e1.printStackTrace();
-            }
+				new FrmBan().setVisible(true);
+			} catch (SQLException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
             dispose();
         });
         
         khuVuc.addActionListener(e -> {
-            new FrmKhuVuc().setVisible(true);
-            dispose();
+            try {
+                Connection conn = ConnectSQL.getConnection();
+                if (conn != null) {
+                    KhuVuc_DAO khuDAO = new KhuVuc_DAO(conn);
+                    new FrmKhuVuc(khuDAO, null).setExtendedState(JFrame.MAXIMIZED_BOTH);
+                    new FrmKhuVuc(khuDAO, null).setVisible(true);
+                    dispose();
+                } else {
+                    JOptionPane.showMessageDialog(this, "Không thể kết nối cơ sở dữ liệu!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(this, "Lỗi khi mở quản lý khu vực: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
+            }
         });
         
         ban.addActionListener(e -> {
-            Connection conn = ConnectSQL.getConnection();
-            Ban_DAO banDAO = new Ban_DAO(conn);
-            KhuVuc_DAO khuVucDAO = new KhuVuc_DAO(conn);
-            new FrmQLBan(banDAO, khuVucDAO, null).setVisible(true);
-            dispose();
+            try {
+                Connection conn = ConnectSQL.getConnection();
+                Ban_DAO banDAO = new Ban_DAO(conn);
+                KhuVuc_DAO khuVucDAO = new KhuVuc_DAO(conn);
+                LoaiBan_DAO loaiBanDAO = new LoaiBan_DAO(conn); // Initialize LoaiBan_DAO
+                new FrmQLBan(banDAO, khuVucDAO, loaiBanDAO, null).setVisible(true);
+                dispose();
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(this, "Lỗi khi mở quản lý bàn: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
+            }
         });
 
         monAn.addActionListener(e -> {
@@ -353,8 +374,7 @@ public class ThanhTacVu extends JFrame {
 	    txtMaBan.setFont(new Font("Times New Roman", Font.PLAIN, 22));
 	    
 	    JButton btnTim = new JButton("Tìm");
-	    btnTim.setFont(new Font("Times New Roman", Font.BOLD, 22));
-	    btnTim.setBackground(new Color(102, 210, 74));
+        kieuNut(btnTim, new Color(102, 210, 74));
 	    btnTim.setForeground(Color.WHITE);
 	    btnTim.setFocusPainted(false);
 	    btnTim.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
@@ -443,7 +463,7 @@ public class ThanhTacVu extends JFrame {
         lblLoaiBanTitle.setFont(fontLabel);
         pnlThongTin.add(lblLoaiBanTitle, gbc);
         gbc.gridx = 1;
-        JLabel lblLoaiBanValue = new JLabel(ban.getLoaiBan());
+        JLabel lblLoaiBanValue = new JLabel(ban.getMaBan());
         lblLoaiBanValue.setFont(fontValue);
         pnlThongTin.add(lblLoaiBanValue, gbc);
 
@@ -565,18 +585,14 @@ public class ThanhTacVu extends JFrame {
         pnlButtons.setBackground(Color.WHITE);
 
         JButton btnDiChuyen = new JButton("Quản lý đặt bàn");
-        btnDiChuyen.setFont(new Font("Times New Roman", Font.BOLD, 20));
-        btnDiChuyen.setBackground(new Color(55, 212, 23));
+        kieuNut(btnDiChuyen,new Color(55, 212, 23));
         btnDiChuyen.setForeground(Color.WHITE);
-        btnDiChuyen.setFocusPainted(false);
         btnDiChuyen.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         pnlButtons.add(btnDiChuyen);
 
         JButton btnDong = new JButton("Đóng");
-        btnDong.setFont(new Font("Times New Roman", Font.BOLD, 20));
-        btnDong.setBackground(new Color(236, 66, 48));
+        kieuNut(btnDong, new Color(236, 66, 48));
         btnDong.setForeground(Color.WHITE);
-        btnDong.setFocusPainted(false);
         btnDong.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         pnlButtons.add(btnDong);
 
@@ -586,11 +602,12 @@ public class ThanhTacVu extends JFrame {
 
         btnDiChuyen.addActionListener(e -> {
             try {
-                new FrmBan().setVisible(true);
-                dlg.dispose();
-            } catch (SQLException ex) {
-                JOptionPane.showMessageDialog(dlg, "Lỗi khi mở FrmBan: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
-            }
+				new FrmBan().setVisible(true);
+			} catch (SQLException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			dlg.dispose();
         });
 
         // Hiển thị dialog
@@ -684,7 +701,39 @@ public class ThanhTacVu extends JFrame {
     public JMenuBar getJMenuBar() {
         return menuBar;
     }
+    private void kieuNut(JButton button, Color baseColor) {
+        button.setFocusPainted(false);
+        button.setBorderPainted(false);
+        button.setContentAreaFilled(true);
+        button.setOpaque(true);
+        button.setFont(new Font("Times New Roman", Font.BOLD, 20));
+        button.setBackground(baseColor);
 
+        Color hoverColor = baseColor.darker();
+        Color clickColor = baseColor.darker();
+
+        button.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                button.setBackground(hoverColor);
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                button.setBackground(baseColor);
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                button.setBackground(clickColor);
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                button.setBackground(hoverColor);
+            }
+        });
+    }
     private ImageIcon taoIcon(String duongDan, int chieuRong, int chieuCao) {
         try {
             ImageIcon icon = new ImageIcon(duongDan);

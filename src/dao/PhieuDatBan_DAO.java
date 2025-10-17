@@ -112,20 +112,27 @@ public class PhieuDatBan_DAO {
         }
     }
 
-    public void update(PhieuDatBan phieu) throws SQLException {
-        String sql = "UPDATE PhieuDatBan SET tenKhach = ?, soDienThoai = ?, soNguoi = ?, ngayDen = ?, gioDen = ?, ghiChu = ?, tienCoc = ?, ghiChuCoc = ?, trangThai = ? WHERE maPhieu = ?";
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, phieu.getTenKhach());
-            stmt.setString(2, phieu.getSoDienThoai());
-            stmt.setInt(3, phieu.getSoNguoi());
-            stmt.setDate(4, phieu.getNgayDen());
-            stmt.setTime(5, phieu.getGioDen());
-            stmt.setString(6, phieu.getGhiChu());
-            stmt.setDouble(7, phieu.getTienCoc());
-            stmt.setString(8, phieu.getGhiChuCoc());
-            stmt.setString(9, phieu.getTrangThai().trim()); // Trim trước khi cập nhật
-            stmt.setString(10, phieu.getMaPhieu());
-            stmt.executeUpdate();
+    public boolean update(PhieuDatBan phieu) throws SQLException {
+        String sql = "UPDATE phieudatban SET MaBan = ?, NgayDen = ?, GioDen = ?, " +
+                    "TenKhach = ?, SoDienThoai = ?, SoNguoi = ?, GhiChu = ?, " +
+                    "TienCoc = ?, GhiChuCoc = ?, TrangThai = ? " +
+                    "WHERE MaPhieu = ?";
+        
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, phieu.getMaBan());
+            ps.setDate(2, phieu.getNgayDen());
+            ps.setTime(3, phieu.getGioDen());
+            ps.setString(4, phieu.getTenKhach());
+            ps.setString(5, phieu.getSoDienThoai());
+            ps.setInt(6, phieu.getSoNguoi());
+            ps.setString(7, phieu.getGhiChu());
+            ps.setDouble(8, phieu.getTienCoc());
+            ps.setString(9, phieu.getGhiChuCoc());
+            ps.setString(10, phieu.getTrangThai());
+            ps.setString(11, phieu.getMaPhieu());
+            
+            int rowsAffected = ps.executeUpdate();
+            return rowsAffected > 0;
         }
     }
 
@@ -136,7 +143,7 @@ public class PhieuDatBan_DAO {
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, maBan);
             ps.setDate(2, ngay);
-            ps.setString(3, gio.toString()); // Sử dụng string và CAST để tránh xung đột TIME/DATETIME
+            ps.setString(3, gio.toString());
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return rs.getInt(1) > 0;
