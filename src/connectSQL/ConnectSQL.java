@@ -10,7 +10,7 @@ public class ConnectSQL {
     private static final String URL = "jdbc:sqlserver://localhost:1433;databaseName=QLNH;encrypt=false;trustServerCertificate=true;";
 
     private static final String USER = "sa";
-    private static final String PASSWORD = "123456";
+    private static final String PASSWORD = "sapassword";
 
     public static ConnectSQL getInstance() {
         return instance;

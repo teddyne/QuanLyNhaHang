@@ -531,9 +531,9 @@ public class FrmThongKe extends JPanel implements ActionListener {
             e.printStackTrace();
         }
         
-        button.setFont(FONT_BUTTON); // Font đã được set BOLD
+        button.setFont(FONT_BUTTON); 
         button.setBackground(COLOR_PRIMARY);
-        button.setForeground(Color.BLACK); // Chữ màu đen
+        button.setForeground(Color.BLACK); 
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         button.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         button.setFocusPainted(false);
