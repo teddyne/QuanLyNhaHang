@@ -3,280 +3,239 @@ package gui;
 import dao.KhachHang_DAO;
 import entity.KhachHang;
 
-import java.awt.*;
-import java.awt.event.*;
 import javax.swing.*;
-import javax.swing.border.*;
-import java.sql.SQLException;
-import java.util.List;
+import javax.swing.border.Border;
 import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.List;
 
-public class FrmKhachHang extends JFrame {
-    private JTextField txtMa, txtTen, txtPhone, txtEmail, txtCCCD;
-    private JRadioButton rbThuong, rbThanhVien;
-    private ButtonGroup bgLoaiKH;
-    private DefaultTableModel tableModel;
-    private JTable table;
+public class FrmKhachHang extends ThanhTacVu {
     private final KhachHang_DAO khachHangDAO = new KhachHang_DAO();
+    private DefaultTableModel modelKH;
+    private JTable tblKH;
+    private JTextField txtMaKH, txtTenKH, txtPhone, txtEmail, txtCCCD;
+    // THAY ĐỔI 1: Khai báo JComboBox thay cho JRadioButton
+    private JComboBox<String> cbLoaiKH;
+    private JButton btnThem, btnSua, btnXoa, btnLamMoi, btnTraCuu;
 
     public FrmKhachHang() {
-        initUI();
-        setTitle("Quản lý khách hàng");
+        super();
+        setTitle("Quản Lý Khách Hàng");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setExtendedState(JFrame.MAXIMIZED_BOTH);
         setLocationRelativeTo(null);
-        setJMenuBar(ThanhTacVu.getInstance().getJMenuBar());
-        ThanhTacVu customMenu = ThanhTacVu.getInstance();
-        add(customMenu.getBottomBar(), BorderLayout.SOUTH);
+        initUI();
         loadDataToTable();
     }
 
     private void initUI() {
-    	JPanel mainPanel = new JPanel(new BorderLayout(12, 12));
-        mainPanel.setBorder(new EmptyBorder(8, 8, 8, 8));
-        getContentPane().add(mainPanel, BorderLayout.CENTER);
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
+        mainPanel.setBackground(Color.WHITE);
+        add(mainPanel, BorderLayout.CENTER);
 
-        // Header
-        JLabel lblHeader = new JLabel("QUẢN LÝ KHÁCH HÀNG", SwingConstants.CENTER);
-        lblHeader.setOpaque(true);
-        lblHeader.setBackground(new Color(178, 41, 41));
-        lblHeader.setForeground(Color.WHITE);
-        lblHeader.setFont(new Font("Times New Roman", Font.BOLD, 26));
-        lblHeader.setPreferredSize(new Dimension(0, 50));
-        lblHeader.setBorder(new MatteBorder(0, 0, 2, 0, Color.BLACK));
-        mainPanel.add(lblHeader, BorderLayout.NORTH);
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.setBackground(Color.WHITE);
 
-        // --- Form + nút ---
-        JPanel topPanel = new JPanel(new BorderLayout(12, 12));
-        topPanel.setBorder(new EmptyBorder(8, 8, 8, 8));
+        JPanel titlePanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        titlePanel.setBackground(new Color(169, 55, 68));
+        JLabel lblTieuDe = new JLabel("QUẢN LÝ KHÁCH HÀNG");
+        lblTieuDe.setFont(new Font("Times New Roman", Font.BOLD, 28));
+        lblTieuDe.setForeground(Color.WHITE);
+        titlePanel.add(lblTieuDe);
+        topPanel.add(titlePanel, BorderLayout.NORTH);
 
-        // Form GridBag
-        JPanel formPanel = new JPanel(new GridBagLayout());
-        formPanel.setBorder(new EmptyBorder(4, 4, 4, 4));
-        formPanel.setBackground(Color.WHITE);
+        JPanel inputPanel = new JPanel(new BorderLayout());
+        inputPanel.setBackground(Color.WHITE);
+        Border lineBorder = BorderFactory.createLineBorder(new Color(165, 42, 42), 2);
+        inputPanel.setBorder(BorderFactory.createTitledBorder(lineBorder, "Thông Tin Khách Hàng",
+                0, 0, new Font("Times New Roman", Font.BOLD, 24)));
+        inputPanel.setPreferredSize(new Dimension(0, 250));
 
+        JPanel fieldsPanel = new JPanel(new GridBagLayout());
+        fieldsPanel.setBackground(Color.WHITE);
+        fieldsPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 10, 10, 10);
-        gbc.anchor = GridBagConstraints.WEST;
-        Font labelFont = new Font("Times New Roman", Font.BOLD, 18);
+        gbc.insets = new Insets(5, 10, 5, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
 
-        JLabel lblInfoTitle = new JLabel("Thông tin khách hàng");
-        lblInfoTitle.setFont(new Font("Times New Roman", Font.BOLD, 20));
-        gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
-        formPanel.add(lblInfoTitle, gbc);
-        gbc.gridwidth = 1;
+        Font labelFont = new Font("Times New Roman", Font.BOLD, 22);
+        Font fieldFont = new Font("Times New Roman", Font.PLAIN, 18);
 
-        // Mã KH
+        // --- Cột 1 ---
+        gbc.gridx = 0; gbc.gridy = 0;
+        fieldsPanel.add(new JLabel("Mã khách hàng") {{ setFont(labelFont); }}, gbc);
+        gbc.gridx = 1;
+        txtMaKH = new JTextField(15);
+        txtMaKH.setFont(fieldFont);
+        txtMaKH.setEditable(false);
+        txtMaKH.setBackground(new Color(230, 230, 230));
+        fieldsPanel.add(txtMaKH, gbc);
+
         gbc.gridx = 0; gbc.gridy = 1;
-        JLabel lblMa = new JLabel("Mã khách hàng");
-        lblMa.setFont(labelFont);
-        formPanel.add(lblMa, gbc);
+        fieldsPanel.add(new JLabel("Tên khách hàng") {{ setFont(labelFont); }}, gbc);
+        gbc.gridx = 1;
+        txtTenKH = new JTextField(15);
+        txtTenKH.setFont(fieldFont);
+        fieldsPanel.add(txtTenKH, gbc);
 
-        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
-        txtMa = new JTextField(20);
-        txtMa.setFont(new Font("Times New Roman", Font.PLAIN, 16));
-        txtMa.setBorder(new LineBorder(Color.GRAY, 1));
-        txtMa.setEditable(false);
-        txtMa.setBackground(new Color(230, 230, 230));
-        formPanel.add(txtMa, gbc);
+        gbc.gridx = 0; gbc.gridy = 2;
+        fieldsPanel.add(new JLabel("CCCD") {{ setFont(labelFont); }}, gbc);
+        gbc.gridx = 1;
+        txtCCCD = new JTextField(15);
+        txtCCCD.setFont(fieldFont);
+        fieldsPanel.add(txtCCCD, gbc);
 
-        // Tên KH
-        gbc.gridx = 0; gbc.gridy = 2; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
-        JLabel lblTen = new JLabel("Tên khách hàng");
-        lblTen.setFont(labelFont);
-        formPanel.add(lblTen, gbc);
+        // --- Spacer giữa 2 cột ---
+        gbc.gridx = 2; gbc.gridy = 0; gbc.weightx = 0.5;
+        fieldsPanel.add(Box.createHorizontalStrut(50), gbc);
+        gbc.weightx = 1.0;
 
-        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
-        txtTen = new JTextField(20);
-        txtTen.setFont(new Font("Times New Roman", Font.PLAIN, 16));
-        txtTen.setBorder(new LineBorder(Color.GRAY, 1));
-        formPanel.add(txtTen, gbc);
+        // --- Cột 2 ---
+        gbc.gridx = 3; gbc.gridy = 0;
+        fieldsPanel.add(new JLabel("Số điện thoại") {{ setFont(labelFont); }}, gbc);
+        gbc.gridx = 4;
+        txtPhone = new JTextField(15);
+        txtPhone.setFont(fieldFont);
+        fieldsPanel.add(txtPhone, gbc);
 
-        // SĐT
-        gbc.gridx = 0; gbc.gridy = 3; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
-        JLabel lblPhone = new JLabel("Số điện thoại");
-        lblPhone.setFont(labelFont);
-        formPanel.add(lblPhone, gbc);
+        gbc.gridx = 3; gbc.gridy = 1;
+        fieldsPanel.add(new JLabel("Email") {{ setFont(labelFont); }}, gbc);
+        gbc.gridx = 4;
+        txtEmail = new JTextField(15);
+        txtEmail.setFont(fieldFont);
+        fieldsPanel.add(txtEmail, gbc);
 
-        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
-        txtPhone = new JTextField(20);
-        txtPhone.setFont(new Font("Times New Roman", Font.PLAIN, 16));
-        txtPhone.setBorder(new LineBorder(Color.GRAY, 1));
-        formPanel.add(txtPhone, gbc);
-
-        // Email
-        gbc.gridx = 0; gbc.gridy = 4; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
-        JLabel lblEmail = new JLabel("Email");
-        lblEmail.setFont(labelFont);
-        formPanel.add(lblEmail, gbc);
-
-        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
-        txtEmail = new JTextField(20);
-        txtEmail.setFont(new Font("SansSerif", Font.PLAIN, 16));
-        txtEmail.setBorder(new LineBorder(Color.GRAY, 1));
-        formPanel.add(txtEmail, gbc);
-
-        // CCCD
-        gbc.gridx = 0; gbc.gridy = 5; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
-        JLabel lblCCCD = new JLabel("CCCD");
-        lblCCCD.setFont(labelFont);
-        formPanel.add(lblCCCD, gbc);
-
-        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
-        txtCCCD = new JTextField(20);
-        txtCCCD.setFont(new Font("SansSerif", Font.PLAIN, 16));
-        txtCCCD.setBorder(new LineBorder(Color.GRAY, 1));
-        formPanel.add(txtCCCD, gbc);
+        // --- THAY ĐỔI 2: Tạo JComboBox ---
+        gbc.gridx = 3; gbc.gridy = 2;
+        fieldsPanel.add(new JLabel("Loại khách hàng") {{ setFont(labelFont); }}, gbc);
+        gbc.gridx = 4;
+        cbLoaiKH = new JComboBox<>(new String[]{"Khách thường", "Thành viên"});
+        cbLoaiKH.setFont(fieldFont);
+        cbLoaiKH.setBackground(Color.WHITE);
+        fieldsPanel.add(cbLoaiKH, gbc);
         
-        // Loại khách hàng
-        gbc.gridx = 0; gbc.gridy = 6; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
-        JLabel lblLoaiKH = new JLabel("Loại khách hàng");
-        lblLoaiKH.setFont(labelFont);
-        formPanel.add(lblLoaiKH, gbc);
-        
-        rbThuong = new JRadioButton("Khách thường");
-        rbThuong.setFont(new Font("Times New Roman", Font.PLAIN, 16));
-        rbThuong.setSelected(true);
-        rbThuong.setBackground(Color.WHITE);
+        // --- Panel nút thao tác ---
+        JPanel buttonPanel = new JPanel(new GridLayout(3, 2, 10, 10));
+        buttonPanel.setBackground(Color.WHITE);
+        buttonPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
 
-        rbThanhVien = new JRadioButton("Thành viên");
-        rbThanhVien.setFont(new Font("Times New Roman", Font.PLAIN, 16));
-        rbThanhVien.setBackground(Color.WHITE);
+        Dimension buttonSize = new Dimension(150, 50);
+        Font buttonFont = new Font("Times New Roman", Font.BOLD, 20);
 
-        bgLoaiKH = new ButtonGroup();
-        bgLoaiKH.add(rbThuong);
-        bgLoaiKH.add(rbThanhVien);
+        btnThem = taoNut("Thêm", new Color(46, 204, 113), buttonSize, buttonFont);
+        btnSua = taoNut("Sửa", new Color(52, 152, 219), buttonSize, buttonFont);
+        btnXoa = taoNut("Xóa", new Color(231, 76, 60), buttonSize, buttonFont);
+        btnLamMoi = taoNut("Làm mới", new Color(149, 165, 166), buttonSize, buttonFont);
+        btnTraCuu = taoNut("Tra cứu", new Color(121, 89, 229), buttonSize, buttonFont);
 
-        JPanel pLoaiKH = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-        pLoaiKH.setBackground(Color.WHITE);
-        pLoaiKH.add(rbThuong);
-        pLoaiKH.add(Box.createHorizontalStrut(20));
-        pLoaiKH.add(rbThanhVien);
+        buttonPanel.add(btnThem);
+        buttonPanel.add(btnSua);
+        buttonPanel.add(btnXoa);
+        buttonPanel.add(btnLamMoi);
+        buttonPanel.add(btnTraCuu);
+        buttonPanel.add(new JLabel());
 
-        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
-        formPanel.add(pLoaiKH, gbc);
+        inputPanel.add(fieldsPanel, BorderLayout.CENTER);
+        inputPanel.add(buttonPanel, BorderLayout.EAST);
 
-        topPanel.add(formPanel, BorderLayout.CENTER);
+        // Bảng danh sách khách hàng
+        JPanel tablePanel = new JPanel(new BorderLayout());
+        tablePanel.setBorder(BorderFactory.createTitledBorder(lineBorder,
+                "Danh Sách Khách Hàng", 0, 0, new Font("Times New Roman", Font.BOLD, 24)));
+        tablePanel.setBackground(Color.WHITE);
 
-        // Panel nút chức năng
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
-        buttonPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
-        buttonPanel.setPreferredSize(new Dimension(180, 200));
-        buttonPanel.setOpaque(false);
-
-        buttonPanel.add(Box.createVerticalGlue());
-
-        RoundedButton btnThem = new RoundedButton("Thêm");
-        btnThem.addActionListener(e -> themKhachHang());
-        btnThem.setBackground(new Color(88, 214, 141));
-        buttonPanel.add(centered(btnThem));
-        buttonPanel.add(Box.createRigidArea(new Dimension(0, 8)));
-
-        RoundedButton btnXoa = new RoundedButton("Xóa");
-        btnXoa.addActionListener(e -> xoaKhachHang());
-        btnXoa.setBackground(new Color(255, 204, 51));
-        buttonPanel.add(centered(btnXoa));
-        buttonPanel.add(Box.createRigidArea(new Dimension(0, 8)));
-
-        RoundedButton btnSua = new RoundedButton("Sửa");
-        btnSua.addActionListener(e -> suaKhachHang());
-        btnSua.setBackground(new Color(229, 80, 80));
-        buttonPanel.add(centered(btnSua));
-        buttonPanel.add(Box.createRigidArea(new Dimension(0, 8)));
-
-        RoundedButton btnSearch = new RoundedButton("Tìm kiếm");
-        btnSearch.addActionListener(e -> timKiemKhachHang());
-        btnSearch.setBackground(new Color(52, 152, 219));
-        buttonPanel.add(centered(btnSearch));
-
-        buttonPanel.add(Box.createVerticalGlue());
-
-        topPanel.add(buttonPanel, BorderLayout.EAST);
-        
-        // --- Bảng khách hàng ---
-        JPanel bottomPanel = new JPanel(new BorderLayout(8, 8));
-        bottomPanel.setBorder(new EmptyBorder(12, 8, 8, 8));
-
-        JLabel lblListTitle = new JLabel("Danh sách khách hàng");
-        lblListTitle.setFont(new Font("SansSerif", Font.BOLD, 20));
-        bottomPanel.add(lblListTitle, BorderLayout.NORTH);
-
-        String[] cols = {"Mã KH", "Tên KH", "Số điện thoại", "CCCD", "Email", "Loại KH"};
-        tableModel = new DefaultTableModel(cols, 0) {
+        String[] columns = {"Mã KH", "Tên KH", "Số điện thoại", "CCCD", "Email", "Loại KH"};
+        modelKH = new DefaultTableModel(columns, 0) {
             @Override public boolean isCellEditable(int row, int column) { return false; }
         };
-        table = new JTable(tableModel);
-        table.setRowHeight(34);
-        table.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        table.getTableHeader().setFont(new Font("SansSerif", Font.BOLD, 14));
+        tblKH = new JTable(modelKH);
+        tblKH.setFont(new Font("Times New Roman", Font.PLAIN, 16));
+        tblKH.setRowHeight(30);
+        tablePanel.add(new JScrollPane(tblKH), BorderLayout.CENTER);
 
-        JScrollPane sc = new JScrollPane(table);
-        bottomPanel.add(sc, BorderLayout.CENTER);
+        topPanel.add(inputPanel, BorderLayout.CENTER);
+        mainPanel.add(topPanel, BorderLayout.NORTH);
+        mainPanel.add(tablePanel, BorderLayout.CENTER);
 
-        JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, topPanel, bottomPanel);
-        splitPane.setResizeWeight(0.1);
-        splitPane.setBorder(null);
-        mainPanel.add(splitPane, BorderLayout.CENTER);
+        // --- Sự kiện ---
+        btnThem.addActionListener(e -> themKhachHang());
+        btnSua.addActionListener(e -> suaKhachHang());
+        btnXoa.addActionListener(e -> xoaKhachHang());
+        btnLamMoi.addActionListener(e -> clearForm());
+        btnTraCuu.addActionListener(e -> traCuuKhachHang());
 
-        table.addMouseListener(new MouseAdapter() {
+        tblKH.addMouseListener(new MouseAdapter() {
+            @Override
             public void mouseClicked(MouseEvent e) {
-                int r = table.getSelectedRow();
-                if (r >= 0) {
-                    txtMa.setText(table.getValueAt(r, 0).toString());
-                    txtTen.setText(table.getValueAt(r, 1).toString());
-                    txtPhone.setText(table.getValueAt(r, 2).toString());
-                    txtCCCD.setText(table.getValueAt(r, 3).toString());
-                    txtEmail.setText(table.getValueAt(r, 4).toString());
-                    
-                    String loaiKH = table.getValueAt(r, 5).toString();
-                    if(loaiKH.equalsIgnoreCase("Thành viên")) {
-                        rbThanhVien.setSelected(true);
-                    } else {
-                        rbThuong.setSelected(true);
-                    }
+                int row = tblKH.getSelectedRow();
+                if (row >= 0) {
+                    txtMaKH.setText(modelKH.getValueAt(row, 0).toString());
+                    txtTenKH.setText(modelKH.getValueAt(row, 1).toString());
+                    txtPhone.setText(modelKH.getValueAt(row, 2).toString());
+                    txtCCCD.setText(modelKH.getValueAt(row, 3) != null ? modelKH.getValueAt(row, 3).toString() : "");
+                    txtEmail.setText(modelKH.getValueAt(row, 4) != null ? modelKH.getValueAt(row, 4).toString() : "");
+
+                    // THAY ĐỔI 3: Thiết lập giá trị cho ComboBox khi click vào bảng
+                    String loaiKH = modelKH.getValueAt(row, 5).toString();
+                    cbLoaiKH.setSelectedItem(loaiKH);
                 }
             }
         });
     }
 
+    private JButton taoNut(String text, Color baseColor, Dimension size, Font font) {
+        JButton btn = new JButton(text);
+        btn.setFont(font);
+        btn.setPreferredSize(size);
+        btn.setForeground(Color.WHITE);
+        btn.setBackground(baseColor);
+        btn.setFocusPainted(false);
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btn.setContentAreaFilled(false);
+        btn.setOpaque(true);
+
+        btn.addMouseListener(new MouseAdapter() {
+            @Override public void mouseEntered(MouseEvent e) { btn.setBackground(baseColor.darker()); }
+            @Override public void mouseExited(MouseEvent e) { btn.setBackground(baseColor); }
+        });
+        return btn;
+    }
+
     private void loadDataToTable() {
-        tableModel.setRowCount(0);
-        List<KhachHang> dsKhachHang = khachHangDAO.getAllKhachHang();
-        for (KhachHang kh : dsKhachHang) {
-            tableModel.addRow(new Object[]{
+        modelKH.setRowCount(0);
+        for (KhachHang kh : khachHangDAO.getAllKhachHang()) {
+            modelKH.addRow(new Object[]{
                 kh.getMaKH(), kh.getTenKH(), kh.getSdt(),
                 kh.getCccd(), kh.getEmail(), kh.getLoaiKH()
             });
         }
     }
-    
-    private KhachHang createKhachHangFromFormForUpdate() throws IllegalArgumentException {
-        String ma = txtMa.getText().trim();
-        String ten = txtTen.getText().trim();
-        String phone = txtPhone.getText().trim();
-        String cccd = txtCCCD.getText().trim();
-        String email = txtEmail.getText().trim();
-        String loaiKH = rbThanhVien.isSelected() ? "Thành viên" : "Khách thường";
-        return new KhachHang(ma, ten, phone, cccd, email, loaiKH);
-    }
-    
+
     private void themKhachHang() {
         try {
-            String ten = txtTen.getText().trim();
+            String ten = txtTenKH.getText().trim();
             String phone = txtPhone.getText().trim();
             String cccd = txtCCCD.getText().trim();
             String email = txtEmail.getText().trim();
-            String loaiKH = rbThanhVien.isSelected() ? "Thành viên" : "Khách thường";
-            
-            KhachHang kh = new KhachHang(ten, phone, cccd, email, loaiKH);
+            // THAY ĐỔI 4: Lấy giá trị từ ComboBox
+            String loaiKH = (String) cbLoaiKH.getSelectedItem();
 
+            if (ten.isEmpty() || phone.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Tên khách hàng và số điện thoại không được để trống!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            KhachHang kh = new KhachHang(ten, phone, cccd, email, loaiKH);
             if (khachHangDAO.themKhachHang(kh)) {
                 JOptionPane.showMessageDialog(this, "Thêm khách hàng thành công!");
                 loadDataToTable();
                 clearForm();
             } else {
-                JOptionPane.showMessageDialog(this, "Thêm thất bại! Vui lòng kiểm tra lại thông tin hoặc mã khách hàng có thể đã tồn tại.", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Thêm thất bại! Số điện thoại hoặc CCCD có thể đã tồn tại.", "Lỗi", JOptionPane.ERROR_MESSAGE);
             }
         } catch (IllegalArgumentException e) {
             JOptionPane.showMessageDialog(this, e.getMessage(), "Lỗi dữ liệu đầu vào", JOptionPane.WARNING_MESSAGE);
@@ -284,15 +243,27 @@ public class FrmKhachHang extends JFrame {
     }
 
     private void suaKhachHang() {
-        int row = table.getSelectedRow();
+        int row = tblKH.getSelectedRow();
         if (row < 0) {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn một khách hàng để sửa thông tin.");
             return;
         }
 
         try {
-            KhachHang kh = createKhachHangFromFormForUpdate();
-            
+            String ma = txtMaKH.getText().trim();
+            String ten = txtTenKH.getText().trim();
+            String phone = txtPhone.getText().trim();
+            String cccd = txtCCCD.getText().trim();
+            String email = txtEmail.getText().trim();
+            // THAY ĐỔI 5: Lấy giá trị từ ComboBox
+            String loaiKH = (String) cbLoaiKH.getSelectedItem();
+
+            if (ten.isEmpty() || phone.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Tên khách hàng và số điện thoại không được để trống!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            KhachHang kh = new KhachHang(ma, ten, phone, cccd, email, loaiKH);
             if (khachHangDAO.suaKhachHang(kh)) {
                 JOptionPane.showMessageDialog(this, "Cập nhật thông tin khách hàng thành công!");
                 loadDataToTable();
@@ -305,43 +276,12 @@ public class FrmKhachHang extends JFrame {
         }
     }
 
-    private void timKiemKhachHang() {
-        String keyword = JOptionPane.showInputDialog(this, "Nhập mã, tên, SĐT hoặc CCCD của khách hàng cần tìm:");
-        
-        if (keyword == null) {
-            return; 
-        }
-
-        if (keyword.trim().isEmpty()) {
-            loadDataToTable();
-            return;
-        }
-        
-        List<KhachHang> ketQua = khachHangDAO.timKiemKhachHang(keyword);
-        
-        tableModel.setRowCount(0);
-        
-        for (KhachHang kh : ketQua) {
-            tableModel.addRow(new Object[]{
-                kh.getMaKH(), kh.getTenKH(), kh.getSdt(),
-                kh.getCccd(), kh.getEmail(), kh.getLoaiKH()
-            });
-        }
-    }
-
-    private Component centered(Component c) {
-        JPanel p = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
-        p.setOpaque(false);
-        p.add(c);
-        return p;
-    }
-    
     private void xoaKhachHang() {
-        int row = table.getSelectedRow();
+        int row = tblKH.getSelectedRow();
         if (row >= 0) {
             int confirm = JOptionPane.showConfirmDialog(this, "Bạn có chắc chắn muốn xóa khách hàng này không?", "Xác nhận", JOptionPane.YES_NO_OPTION);
             if (confirm == JOptionPane.YES_OPTION) {
-                String maKH = (String) tableModel.getValueAt(row, 0);
+                String maKH = (String) modelKH.getValueAt(row, 0);
                 if (khachHangDAO.xoaKhachHang(maKH)) {
                     JOptionPane.showMessageDialog(this, "Xóa khách hàng thành công!");
                     loadDataToTable();
@@ -354,61 +294,47 @@ public class FrmKhachHang extends JFrame {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn một khách hàng để xóa.");
         }
     }
-    
+
+    private void traCuuKhachHang() {
+        String keyword = txtTenKH.getText().trim();
+        if (keyword.isEmpty()) keyword = txtPhone.getText().trim();
+        if (keyword.isEmpty()) keyword = txtCCCD.getText().trim();
+        if (keyword.isEmpty()) {
+             JOptionPane.showMessageDialog(this, "Vui lòng nhập Tên, SĐT hoặc CCCD để tra cứu.");
+             return;
+        }
+
+        List<KhachHang> ketQua = khachHangDAO.timKiemKhachHang(keyword);
+        modelKH.setRowCount(0);
+        if (ketQua.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Không tìm thấy khách hàng nào phù hợp.");
+        } else {
+            for (KhachHang kh : ketQua) {
+                modelKH.addRow(new Object[]{
+                    kh.getMaKH(), kh.getTenKH(), kh.getSdt(),
+                    kh.getCccd(), kh.getEmail(), kh.getLoaiKH()
+                });
+            }
+        }
+    }
+
     private void clearForm() {
-        txtMa.setText("");
-        txtTen.setText("");
+        txtMaKH.setText("");
+        txtTenKH.setText("");
         txtPhone.setText("");
         txtEmail.setText("");
         txtCCCD.setText("");
-        rbThuong.setSelected(true);
-        table.clearSelection();
-    }
-
-    static class RoundedButton extends JButton {
-        public RoundedButton(String text) {
-            super(text);
-            setFocusPainted(false);
-            setForeground(Color.WHITE);
-            setBackground(new Color(100, 150, 200)); 
-            setBorder(new EmptyBorder(8, 20, 8, 20));
-            setAlignmentX(Component.CENTER_ALIGNMENT);
-            setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        }
-
-        @Override
-        protected void paintComponent(Graphics g) {
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            int width = getWidth();
-            int height = getHeight();
-
-            g2.setColor(getBackground());
-            g2.fillRoundRect(0, 0, width, height, 20, 20);
-
-            g2.setColor(getBackground().darker());
-            g2.setStroke(new BasicStroke(2));
-            g2.drawRoundRect(1, 1, width - 3, height - 3, 20, 20);
-
-            FontMetrics fm = g2.getFontMetrics();
-            int x = (width - fm.stringWidth(getText())) / 2;
-            int y = (height - fm.getHeight()) / 2 + fm.getAscent();
-            g2.setColor(getForeground());
-            g2.setFont(new Font("SansSerif", Font.BOLD, 14)); 
-            g2.drawString(getText(), x, y);
-
-            g2.dispose();
-        }
-
-        @Override
-        public Dimension getPreferredSize() {
-            return new Dimension(160, 45);
-        }
+        // THAY ĐỔI 6: Reset ComboBox về lựa chọn đầu tiên
+        cbLoaiKH.setSelectedIndex(0);
+        tblKH.clearSelection();
+        loadDataToTable();
     }
 
     public static void main(String[] args) {
-        try { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); }
-        catch (Exception ignored) {}
+         try {
+             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+         } catch (Exception ignored) {}
+
         SwingUtilities.invokeLater(() -> new FrmKhachHang().setVisible(true));
     }
 }

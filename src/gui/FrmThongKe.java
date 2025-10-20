@@ -61,7 +61,6 @@ import dao.HoaDon_DAO;
 
 public class FrmThongKe extends JPanel implements ActionListener {
 
-    // ===== BẢNG MÀU CHỦ ĐẠO (TÔNG ĐỎ) =====
     private final Color COLOR_PRIMARY = new Color(221, 44, 0); 
     private final Color COLOR_SECONDARY = new Color(245, 245, 245); 
     private final Color COLOR_TEXT = new Color(51, 51, 51); 
