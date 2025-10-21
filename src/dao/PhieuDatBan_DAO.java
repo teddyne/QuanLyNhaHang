@@ -198,21 +198,49 @@ public class PhieuDatBan_DAO {
 	}
 
 	public boolean checkCachGio(String maBan, Date ngay, Time gio, int gioCach) throws SQLException {
-        String sql = "SELECT CAST(gioDen AS time) AS gioDen FROM PhieuDatBan WHERE maBan = ? AND CAST(ngayDen AS date) = ? AND trangThai IN ('Đặt', 'Phục vu')";
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, maBan);
-            stmt.setDate(2, ngay);
-            ResultSet rs = stmt.executeQuery();
-            long gioDenMillis = gio.getTime();
-            while (rs.next()) {
-                long gioTrongDB = rs.getTime("gioDen").getTime();
-                long diff = Math.abs(gioDenMillis - gioTrongDB);
-                long gioCachMillis = gioCach * 60L * 60L * 1000L; // Chuyển giờ thành milliseconds
-                if (diff < gioCachMillis) {
-                    return false; // Có lịch đặt cách chưa đủ 2 tiếng
+        String sql = "SELECT gioDen FROM PhieuDatBan WHERE maBan = ? AND ngayDen = ? AND trangThai NOT IN ('Hủy')";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, maBan);
+            ps.setDate(2, ngay);
+            try (ResultSet rs = ps.executeQuery()) {
+                long gioDatMillis = gio.getTime();
+                while (rs.next()) {
+                    long gioKhacMillis = rs.getTime("gioDen").getTime();
+                    long diff = Math.abs(gioDatMillis - gioKhacMillis);
+                    if (diff < gioCach * 3600000L) {
+                        return false;
+                    }
                 }
             }
         }
         return true;
     }
+	
+	public PhieuDatBan getByMaBanAndTrangThai(String maBan, String trangThai) {
+	    String sql = "SELECT * FROM PhieuDatBan WHERE maBan = ? AND trangThai = ?";
+	    try {
+	        PreparedStatement ps = conn.prepareStatement(sql);
+	        ps.setString(1, maBan);
+	        ps.setString(2, trangThai);
+	        ResultSet rs = ps.executeQuery();
+	        if (rs.next()) {
+	            return new PhieuDatBan(
+	                rs.getString("maPhieu"),
+	                rs.getString("maBan"),
+	                rs.getString("tenKhach"),
+	                rs.getString("soDienThoai"),
+	                rs.getInt("soNguoi"),
+	                rs.getDate("ngayDen"),
+	                rs.getTime("gioDen"),
+	                rs.getString("ghiChu"),
+	                rs.getDouble("tienCoc"),
+	                rs.getString("ghiChuCoc"),
+	                rs.getString("trangThai")
+	            );
+	        }
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	    }
+	    return null;
+	}
 }

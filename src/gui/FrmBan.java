@@ -55,6 +55,7 @@ import com.toedter.calendar.JDateChooser;
 import java.awt.AlphaComposite;
 import connectSQL.ConnectSQL;
 import dao.Ban_DAO;
+import dao.KhachHang_DAO;
 import dao.KhuVuc_DAO;
 import dao.PhieuDatBan_DAO;
 import entity.Ban;
@@ -69,7 +70,7 @@ public class FrmBan extends JFrame {
     private final Color COLOR_TRONG = Color.WHITE;
     private final Color COLOR_DAT = new Color(236, 66, 48);
     private final Color COLOR_PHUCVU = new Color(55, 212, 23);
-    private final Color COLOR_RED_WINE = new Color(128, 0, 0);
+    private final Color COLOR_RED_WINE = new Color(169, 55, 68);
     private Map<String, BanPanel> mapBan = new HashMap<>();
     private Map<String, JPanel> mapKhu = new HashMap<>();
     private Ban_DAO banDAO;
@@ -80,6 +81,7 @@ public class FrmBan extends JFrame {
     private JTextField txtTimMaBan;
     private JComboBox<Integer> cbSoNguoi;
     private PhieuDatBan_DAO phieuDatBanDAO;
+    private KhachHang_DAO khachHangDAO;
     private JDateChooser dateChooser;
     private JButton btnLocBanTrong;
     private JButton btnLocBanPhucVu;
@@ -90,13 +92,14 @@ public class FrmBan extends JFrame {
     private JButton btnTim;
     private JButton btnDatLai;
     private ButtonGroup groupLoai;
-    private Connection connection; // Thêm thuộc tính connection
+    private Connection conn;
 
     public FrmBan() throws SQLException {
-        connection = ConnectSQL.getConnection(); // Khởi tạo kết nối
-        banDAO = new Ban_DAO(connection);
-        phieuDatBanDAO = new PhieuDatBan_DAO(connection);
-        khuDAO = new KhuVuc_DAO(connection);
+        conn = ConnectSQL.getConnection();
+        banDAO = new Ban_DAO(conn);
+        phieuDatBanDAO = new PhieuDatBan_DAO(conn);
+        khachHangDAO = new KhachHang_DAO(conn);
+        khuDAO = new KhuVuc_DAO(conn);
         setJMenuBar(ThanhTacVu.getInstance().getJMenuBar());
 
         setTitle("Phần mềm quản lý nhà hàng");
@@ -149,7 +152,7 @@ public class FrmBan extends JFrame {
         btnDatBan.addActionListener(e -> {
             if (banDangChon != null) {
                 try {
-                    new FrmDatBan(this, banDangChon, null, phieuDatBanDAO, banDAO).setVisible(true);
+                    new FrmDatBan(this, banDangChon, null, phieuDatBanDAO, banDAO, khachHangDAO, conn).setVisible(true);
                     taiLaiBangChinh();
                 } catch (SQLException ex) {
                     ex.printStackTrace();
@@ -620,36 +623,38 @@ public class FrmBan extends JFrame {
         });
     }
 
-    private JPanel taoPanelKhuVuc(KhuVuc k) throws SQLException {
-        JPanel pnlKhu = new JPanel();
-        pnlKhu.setLayout(new BoxLayout(pnlKhu, BoxLayout.Y_AXIS));
-        pnlKhu.setBackground(Color.WHITE);
+	private JPanel taoPanelKhuVuc(KhuVuc k) throws SQLException {
+	    JPanel pnlKhu = new JPanel();
+	    pnlKhu.setLayout(new BoxLayout(pnlKhu, BoxLayout.Y_AXIS));
+	    pnlKhu.setBackground(Color.WHITE);
+	
+	    List<Ban> danhSachBan = banDAO.getAll(k.getMaKhuVuc());
+	    if (danhSachBan == null || danhSachBan.isEmpty()) {
+	        return null;
+	    }
+	
+	    JPanel rowPanel = null;
+	    int colCount = 0;
+	    for (Ban b : danhSachBan) {
+	        if (!b.getTrangThai().equals("Ẩn")) {
+	            if (colCount % 5 == 0) {
+	                rowPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 40, 10));
+	                rowPanel.setBackground(Color.WHITE);
+	                pnlKhu.add(rowPanel);
+	            }
+	
+	            BanPanel bp = new BanPanel(b);
+	            bp.addMouseListener(taoSuKienNhapChuot(b));
+	            rowPanel.add(bp);
+	            mapBan.put(b.getMaBan(), bp);
+	            colCount++;
+	        }
+	    }
+	
+	    return colCount > 0 ? pnlKhu : null;
+	}
 
-        List<Ban> danhSachBan = banDAO.getAll(k.getMaKhuVuc());
-        if (danhSachBan == null || danhSachBan.isEmpty()) {
-            return null;
-        }
-
-        JPanel rowPanel = null;
-        int colCount = 0;
-        for (Ban b : danhSachBan) {
-            if (colCount % 5 == 0) {
-                rowPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 40, 10));
-                rowPanel.setBackground(Color.WHITE);
-                pnlKhu.add(rowPanel);
-            }
-
-            BanPanel bp = new BanPanel(b);
-            bp.addMouseListener(taoSuKienNhapChuoc(b));
-            rowPanel.add(bp);
-            mapBan.put(b.getMaBan(), bp);
-            colCount++;
-        }
-
-        return pnlKhu;
-    }
-
-    private MouseAdapter taoSuKienNhapChuoc(Ban b) {
+    private MouseAdapter taoSuKienNhapChuot(Ban b) {
         return new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -713,8 +718,12 @@ public class FrmBan extends JFrame {
         String tt = layTrangThaiHienTai(maBan);
         if ("Phục vụ".equals(tt)) {
             try {
-                new FrmPhucVu(this, maBan, banDAO, phieuDatBanDAO).setVisible(true);
-                taiLaiBangChinh();
+            	PhieuDatBan phieu = phieuDatBanDAO.getByMaBanAndTrangThai(maBan, "Đang phục vụ");
+            	if (phieu == null) {
+            	    phieu = phieuDatBanDAO.getByMaBanAndTrangThai(maBan, "Đặt");
+            	}
+            	new FrmPhucVu(this, maBan, phieu, phieuDatBanDAO, banDAO).setVisible(true);
+                taiTrangThaiBanTuCSDL();
             } catch (SQLException ex) {
                 JOptionPane.showMessageDialog(this, "Lỗi khi lấy thông tin phục vụ: " + ex.getMessage());
             }
@@ -833,7 +842,7 @@ public class FrmBan extends JFrame {
 
         btnDatMoi.addActionListener(e -> {
             try {
-                new FrmDatBan(this, maBan, null, phieuDatBanDAO, banDAO).setVisible(true);
+                new FrmDatBan(this, maBan, null, phieuDatBanDAO, banDAO, khachHangDAO, conn).setVisible(true);
                 dialog.dispose();
                 taiLaiBangChinh();
             } catch (SQLException ex) {
@@ -848,7 +857,7 @@ public class FrmBan extends JFrame {
                 String maPhieu = (String) model.getValueAt(selected, 0);
                 try {
                     PhieuDatBan d = phieuDatBanDAO.getByMa(maPhieu);
-                    new FrmDatBan(this, maBan, d, phieuDatBanDAO, banDAO).setVisible(true);
+                    new FrmDatBan(this, maBan, d, phieuDatBanDAO, banDAO, khachHangDAO, conn).setVisible(true);
                     dialog.dispose();
                     hienThiThongTinBan(maBan);
                 } catch (SQLException ex) {
@@ -1051,7 +1060,7 @@ public class FrmBan extends JFrame {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn bàn cần chuyển!");
             return;
         }
-        new BanDialog(this, banDangChon, banDAO, phieuDatBanDAO, connection).setVisible(true);
+        new BanDialog(this, banDangChon, banDAO, phieuDatBanDAO, conn).setVisible(true);
         taiLaiBangChinh();
     }
 

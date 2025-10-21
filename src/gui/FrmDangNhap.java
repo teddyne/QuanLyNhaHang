@@ -24,17 +24,11 @@ public class FrmDangNhap extends JFrame implements ActionListener, MouseListener
     private final JLabel iconEye;
 
     private boolean isPasswordVisible = false;
-    private static TaiKhoan currentTaiKhoan;
-
-    public static TaiKhoan getCurrentTaiKhoan() {
-        return currentTaiKhoan;
-    }
-
-    public static void resetCurrentTaiKhoan() {
-        currentTaiKhoan = null;
-    }
-
-    public FrmDangNhap() {
+	private JButton btnTiepTuc;
+	private JButton btnHuy;
+	private JButton btnDoiMK;
+    
+    public FrmDangNhap(){
         ConnectSQL.getInstance().connect();
 
         setTitle("Đăng nhập");
@@ -72,7 +66,7 @@ public class FrmDangNhap extends JFrame implements ActionListener, MouseListener
 
         txtTaiKhoan = new JTextField();
         txtTaiKhoan.setBounds(180, 220, 290, 35);
-        txtTaiKhoan.setFont(new Font("Arial", Font.PLAIN, 20));
+        txtTaiKhoan.setFont(new Font("Times New Roman", Font.PLAIN, 25));
         pRight.add(txtTaiKhoan);
 
         lblMatKhau = new JLabel("Mật khẩu:");
@@ -88,7 +82,7 @@ public class FrmDangNhap extends JFrame implements ActionListener, MouseListener
 
         txtPass = new JPasswordField();
         txtPass.setBounds(180, 350, 300, 30);
-        txtPass.setFont(new Font("Arial", Font.PLAIN, 20));
+        txtPass.setFont(new Font("Times New Roman", Font.PLAIN, 25));
         pRight.add(txtPass);
 
         ImageIcon eyeClosedRaw = new ImageIcon("img/anMatKhau.png");
@@ -111,7 +105,6 @@ public class FrmDangNhap extends JFrame implements ActionListener, MouseListener
         btnQuenMatKhau = new JButton("Quên mật khẩu?");
         btnQuenMatKhau.setBackground(Color.white);
         btnQuenMatKhau.setForeground(Color.BLUE);
-        btnQuenMatKhau.setFocusPainted(false);
         btnQuenMatKhau.setFont(new Font("Times New Roman", Font.PLAIN, 22));
         btnQuenMatKhau.setBorder(null);
         btnQuenMatKhau.setBounds(340, 390, 150, 30);
@@ -139,32 +132,6 @@ public class FrmDangNhap extends JFrame implements ActionListener, MouseListener
         setVisible(true);
     }
 
-    private JButton taoNut(String text, Color baseColor, Dimension size, Font font) {
-	    JButton btn = new JButton(text);
-	    btn.setFont(font);
-	    btn.setPreferredSize(size);
-	    btn.setForeground(Color.WHITE);
-	    btn.setBackground(baseColor);
-	    btn.setFocusPainted(false);
-        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btn.setContentAreaFilled(false);
-        btn.setOpaque(true);
-        
-	    // Hiệu ứng hover
-	    btn.addMouseListener(new MouseAdapter() {
-	        @Override
-	        public void mouseEntered(MouseEvent e) {
-	            btn.setBackground(baseColor.brighter());
-	        }
-	
-	        @Override
-	        public void mouseExited(MouseEvent e) {
-	            btn.setBackground(baseColor);
-	        }
-	    });
-	
-	    return btn;
-	}
 
 	@Override
     public void actionPerformed(ActionEvent e) {
@@ -198,7 +165,7 @@ public class FrmDangNhap extends JFrame implements ActionListener, MouseListener
 
         JTextField txtSoDienThoai = new JTextField();
         txtSoDienThoai.setBounds(30, 80, 340, 30);
-        txtSoDienThoai.setFont(new Font("Arial", Font.PLAIN, 18));
+        txtSoDienThoai.setFont(new Font("Times New Roman",Font.PLAIN, 18));
         dialog.add(txtSoDienThoai);
 
         // Nhập mã xác nhận cố định
@@ -209,25 +176,22 @@ public class FrmDangNhap extends JFrame implements ActionListener, MouseListener
 
         JTextField txtMaXacNhan = new JTextField();
         txtMaXacNhan.setBounds(30, 150, 340, 30);
-        txtMaXacNhan.setFont(new Font("Arial", Font.PLAIN, 18));
+        txtMaXacNhan.setFont(new Font("Times New Roman",Font.PLAIN, 18));
         dialog.add(txtMaXacNhan);
 
         // Nút tiếp tục
-        JButton btnTiepTuc = new JButton("Tiếp tục");
-        btnTiepTuc.setBackground(new Color(46, 204, 113));
+        Font buttonFont = new Font("Times New Roman", Font.BOLD, 18);
+        Dimension buttonSize = new Dimension(100, 30);
+        
+        btnTiepTuc = taoNut("Tiếp tục", new Color(46, 204, 113), buttonSize, buttonFont);
         btnTiepTuc.setForeground(Color.WHITE);
-        btnTiepTuc.setFont(new Font("Times New Roman", Font.BOLD, 18));
         btnTiepTuc.setBounds(30, 190, 120, 30);
-        btnTiepTuc.setFocusPainted(false);
         dialog.add(btnTiepTuc);
 
         // Nút hủy
-        JButton btnHuy = new JButton("Hủy");
-        btnHuy.setBackground(new Color(231, 76, 60));
+        btnHuy = taoNut("Hủy", new Color(231, 76, 60), buttonSize, buttonFont);
         btnHuy.setForeground(Color.WHITE);
-        btnHuy.setFont(new Font("Times New Roman", Font.BOLD, 18));
         btnHuy.setBounds(250, 190, 120, 30);
-        btnHuy.setFocusPainted(false);
         dialog.add(btnHuy);
 
         String[] soDienThoai = {null};
@@ -277,42 +241,39 @@ public class FrmDangNhap extends JFrame implements ActionListener, MouseListener
         // Nhập mật khẩu mới
         JLabel lblMKMoi = new JLabel("Mật khẩu mới:");
         lblMKMoi.setFont(new Font("Times New Roman", Font.BOLD, 20));
-        lblMKMoi.setBounds(30, 50, 220, 30);
+        lblMKMoi.setBounds(30, 50, 340, 30);
         dialog.add(lblMKMoi);
-
+        
         JPasswordField txtMatKhauMoi = new JPasswordField();
-        txtMatKhauMoi.setBounds(30, 80, 340, 30);
-        txtMatKhauMoi.setFont(new Font("Arial", Font.PLAIN, 18));
+        txtMatKhauMoi.setBounds(30, 80, 340, 30); //ngang-dọc-rộng-cao
+        txtMatKhauMoi.setFont(new Font("Times New Roman",Font.BOLD, 18));
         txtMatKhauMoi.setBorder(BorderFactory.createLineBorder(new Color(149, 165, 166)));
         dialog.add(txtMatKhauMoi);
 
         // Xác nhận mật khẩu
         JLabel lblXacNhanMK = new JLabel("Xác nhận mật khẩu:");
-        lblXacNhanMK.setFont(new Font("Times New Roman", Font.BOLD, 20));
+        lblXacNhanMK.setFont(new Font("Times New Roman",Font.BOLD, 18));
         lblXacNhanMK.setBounds(30, 120, 220, 30);
         dialog.add(lblXacNhanMK);
 
         JPasswordField txtXacNhanMK = new JPasswordField();
         txtXacNhanMK.setBounds(30, 150, 340, 30);
-        txtXacNhanMK.setFont(new Font("Arial", Font.PLAIN, 18));
+        txtXacNhanMK.setFont(new Font("Times New Roman",Font.BOLD, 18));
         dialog.add(txtXacNhanMK);
 
         // Nút đổi mật khẩu
-        JButton btnDoiMK = new JButton("Xác nhận");
-        btnDoiMK.setBackground(new Color(46, 204, 113));
+        Font buttonFont = new Font("Times New Roman", Font.BOLD, 18);
+        Dimension buttonSize = new Dimension(100, 30);
+        
+        btnDoiMK = taoNut("Xác nhận", new Color(46, 204, 113), buttonSize, buttonFont);
         btnDoiMK.setForeground(Color.WHITE);
-        btnDoiMK.setFont(new Font("Times New Roman", Font.BOLD, 18));
         btnDoiMK.setBounds(30, 190, 120, 30);
-        btnDoiMK.setFocusPainted(false);
         dialog.add(btnDoiMK);
 
         // Nút hủy
-        JButton btnHuy = new JButton("Hủy");
-        btnHuy.setBackground(new Color(231, 76, 60));
+        btnHuy = taoNut("Hủy", new Color(231,76,60), buttonSize, buttonFont);
         btnHuy.setForeground(Color.WHITE);
-        btnHuy.setFont(new Font("Times New Roman", Font.BOLD, 16));
         btnHuy.setBounds(250, 190, 120, 30);
-        btnHuy.setFocusPainted(false);
         dialog.add(btnHuy);
 
         btnDoiMK.addActionListener(e -> {
@@ -340,6 +301,32 @@ public class FrmDangNhap extends JFrame implements ActionListener, MouseListener
         btnHuy.addActionListener(e -> dialog.dispose());
         dialog.setVisible(true);
     }
+    private JButton taoNut(String text, Color baseColor, Dimension size, Font font) {
+	    JButton btn = new JButton(text);
+	    btn.setFont(font);
+	    btn.setPreferredSize(size);
+	    btn.setForeground(Color.WHITE);
+	    btn.setBackground(baseColor);
+	    btn.setFocusPainted(false);
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btn.setContentAreaFilled(false);
+        btn.setOpaque(true);
+        
+	    // Hiệu ứng hover
+	    btn.addMouseListener(new MouseAdapter() {
+	        @Override
+	        public void mouseEntered(MouseEvent e) {
+	            btn.setBackground(baseColor.darker());
+	        }
+	
+	        @Override
+	        public void mouseExited(MouseEvent e) {
+	            btn.setBackground(baseColor);
+	        }
+	    });
+	
+	    return btn;
+	}
 
     public void exit() {
         int confirm = JOptionPane.showConfirmDialog(this, "Bạn có chắc muốn thoát không?", "Xác nhận", JOptionPane.YES_NO_OPTION);
@@ -367,113 +354,40 @@ public class FrmDangNhap extends JFrame implements ActionListener, MouseListener
         SwingWorker<Boolean, Void> worker = new SwingWorker<>() {
             @Override
             protected Boolean doInBackground() throws Exception {
+                TaiKhoan_DAO taiKhoanDAO = new TaiKhoan_DAO();
                 Thread.sleep(1000);
-                return kiemTraDangNhap(tk, mk);
+                return taiKhoanDAO.kiemTraDangNhap(tk, mk);
             }
 
-            @Override
             protected void done() {
-                loadingDialog.dispose();
-                try {
-                    boolean ketQua = get();
-                    if (ketQua) {
-                        JOptionPane.showMessageDialog(null, "Đăng nhập thành công! Quyền: " + currentTaiKhoan.getPhanQuyen(), "Thông báo", JOptionPane.INFORMATION_MESSAGE);
-                        FrmTrangChu.resetPhanQuyen();
-                        FrmTrangChu.setPhanQuyen(currentTaiKhoan.getPhanQuyen());
-                        ThanhTacVu.resetInstance();
-                        ThanhTacVu.setPhanQuyen(currentTaiKhoan.getPhanQuyen());
-                        FrmTrangChu trangChu = new FrmTrangChu();
-                        trangChu.setVisible(true);
-                        dispose();
-                    } else {
-                        JOptionPane.showMessageDialog(null, "Tài khoản hoặc mật khẩu không đúng!", "Thông báo", JOptionPane.ERROR_MESSAGE);
-                    }
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                    JOptionPane.showMessageDialog(null, "Lỗi hệ thống: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
-                }
-            }
-        };
+            loadingDialog.dispose();
+            try {
+                boolean ketQua = get();
+                if (ketQua) {
+                    JOptionPane.showMessageDialog(null, "Đăng nhập thành công! Quyền: " + TaiKhoan_DAO.currentTaiKhoan.getPhanQuyen(), "Thông báo", JOptionPane.INFORMATION_MESSAGE);
 
+                    FrmTrangChu.resetPhanQuyen();
+                    FrmTrangChu.setPhanQuyen(TaiKhoan_DAO.currentTaiKhoan.getPhanQuyen());
+                    ThanhTacVu.resetInstance();
+                    ThanhTacVu.setPhanQuyen(TaiKhoan_DAO.currentTaiKhoan.getPhanQuyen());
+
+                    FrmTrangChu trangChu = new FrmTrangChu();
+                    trangChu.setVisible(true);
+                    dispose();
+                } else {
+                    JOptionPane.showMessageDialog(null, "Tài khoản hoặc mật khẩu không đúng!", "Thông báo", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(null, "Lỗi hệ thống: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    };
         worker.execute();
         loadingDialog.setVisible(true);
     }
 
-    public boolean kiemTraDangNhap(String user, String pass) {
-        Connection con = null;
-        PreparedStatement ps = null;
-        ResultSet rs = null;
-        PreparedStatement logPs = null;
-        try {
-            con = ConnectSQL.getConnection();
-            if (con == null) {
-                System.out.println("Kết nối cơ sở dữ liệu thất bại!");
-                return false;
-            }
-
-            String sql = "SELECT t.maTaiKhoan, t.soDienThoai, t.matKhau, t.maNhanVien, t.phanQuyen, n.hoTen " +
-                         "FROM TaiKhoan t INNER JOIN NhanVien n ON t.maNhanVien = n.maNhanVien " +
-                         "WHERE t.soDienThoai = ? OR t.maNhanVien = ?";
-            ps = con.prepareStatement(sql);
-            ps.setString(1, user);
-            ps.setString(2, user);
-            rs = ps.executeQuery();
-            boolean loginSuccess = false;
-            String maTaiKhoan = null;
-
-            if (rs.next() && rs.getString("matKhau").equals(pass)) {
-                currentTaiKhoan = new TaiKhoan();
-                currentTaiKhoan.setMaTaiKhoan(rs.getString("maTaiKhoan"));
-                currentTaiKhoan.setSoDienThoai(rs.getString("soDienThoai"));
-                currentTaiKhoan.setMatKhau(rs.getString("matKhau"));
-                currentTaiKhoan.setMaNhanVien(rs.getString("maNhanVien"));
-                currentTaiKhoan.setPhanQuyen(rs.getString("phanQuyen"));
-                currentTaiKhoan.setHoTen(rs.getString("hoTen"));
-                maTaiKhoan = rs.getString("maTaiKhoan");
-                try {
-                    currentTaiKhoan.setPhanQuyen(currentTaiKhoan.getPhanQuyen());
-                    loginSuccess = true;
-                } catch (IllegalArgumentException e) {
-                    System.out.println("Phân quyền không hợp lệ: " + e.getMessage());
-                }
-            }
-
-            if (maTaiKhoan == null) {
-                String findSql = "SELECT maTaiKhoan FROM TaiKhoan WHERE soDienThoai = ? OR maNhanVien = ?";
-                PreparedStatement findPs = con.prepareStatement(findSql);
-                findPs.setString(1, user);
-                findPs.setString(2, user);
-                ResultSet findRs = findPs.executeQuery();
-                if (findRs.next()) {
-                    maTaiKhoan = findRs.getString("maTaiKhoan");
-                }
-                findRs.close();
-                findPs.close();
-            }
-
-            if (maTaiKhoan != null) {
-                String logSql = "INSERT INTO LichSuDangNhap (maTaiKhoan, trangThai) VALUES (?, ?)";
-                logPs = con.prepareStatement(logSql);
-                logPs.setString(1, maTaiKhoan);
-                logPs.setBoolean(2, loginSuccess);
-                logPs.executeUpdate();
-            }
-
-            return loginSuccess;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        } finally {
-            try {
-                if (rs != null) rs.close();
-                if (ps != null) ps.close();
-                if (logPs != null) logPs.close();
-                if (con != null) con.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-    }
+    
 
     class ImagePanel extends JPanel {
         private final Image img;

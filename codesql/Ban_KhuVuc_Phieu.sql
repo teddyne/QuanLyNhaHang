@@ -3,8 +3,7 @@ CREATE TABLE KhuVuc (
     maKhuVuc NVARCHAR(10) PRIMARY KEY,
     tenKhuVuc NVARCHAR(50) NOT NULL,
     soLuongBan INT NOT NULL,
-    trangThai NVARCHAR(20) NOT NULL DEFAULT N'Hoạt động'
-        CHECK (trangThai IN (N'Hoạt động', N'Ngừng'))
+    trangThai NVARCHAR(20)
 );
 
 INSERT INTO KhuVuc (maKhuVuc, tenKhuVuc, soLuongBan, trangThai) VALUES
@@ -26,14 +25,14 @@ CREATE TABLE Ban (
     maKhuVuc NVARCHAR(10) NOT NULL,
     soChoNgoi INT NOT NULL,
     maLoai NVARCHAR(10) NOT NULL,
-    trangThai NVARCHAR(20) NOT NULL
-        CHECK (trangThai IN (N'Trống', N'Đặt', N'Đang phục vụ')),
+    trangThai NVARCHAR,
     ghiChu NVARCHAR(100),
     FOREIGN KEY (maKhuVuc) REFERENCES KhuVuc(maKhuVuc),
     FOREIGN KEY (maLoai) REFERENCES LoaiBan(maLoai)
 );
-EXEC sp_helpconstraint 'Ban';
-ALTER TABLE ban DROP CONSTRAINT CK__Ban__trangThai__6501FCD8;
+EXEC sp_helpconstraint 'PhieuDatBan';
+ALTER TABLE PhieuDatBan DROP CONSTRAINT DF__PhieuDatB__tienC__69C6B1F5;
+
 INSERT INTO Ban (maBan, maKhuVuc, soChoNgoi, maLoai, trangThai, ghiChu) VALUES
 -- KV01 - Trong nhà
 ('A01', 'KV01', 4, 'L01', N'Trống', NULL),
@@ -70,20 +69,32 @@ CREATE TABLE PhieuDatBan (
     ngayDen DATE NOT NULL,
     gioDen TIME NOT NULL,
     ghiChu NVARCHAR(200) NULL,
-    tienCoc DECIMAL(18,2) DEFAULT 0,
+    tienCoc DECIMAL(18,2),
     ghiChuCoc NVARCHAR(200) NULL,
     trangThai NVARCHAR(20) NOT NULL DEFAULT N'Đặt',
     CONSTRAINT FK_PhieuDatBan_Ban FOREIGN KEY (maBan) REFERENCES Ban(maBan)
 );
 
-SELECT 
-    b.maBan,
-    kv.tenKhuVuc,
-    lb.tenLoai AS LoaiBan,
-    b.soChoNgoi,
-    b.trangThai,
-    b.ghiChu
-FROM Ban b
-JOIN KhuVuc kv ON b.maKhuVuc = kv.maKhuVuc
-JOIN LoaiBan lb ON b.maLoai = lb.maLoai;
-GO
+CREATE TABLE LoaiKhachHang (
+    maLoaiKH NVARCHAR(20) PRIMARY KEY,
+    tenLoaiKH NVARCHAR(100) NOT NULL ,
+    moTa NVARCHAR(255) NULL -- Có thể thêm mô tả hoặc các thuộc tính khác sau này
+);
+INSERT INTO LoaiKhachHang (maLoaiKH, tenLoaiKH)
+VALUES 
+(N'LKH001', N'Khách thường'),
+(N'LKH002', N'Thành viên'),
+
+
+CREATE TABLE KhachHang (
+    maKH NVARCHAR(20) PRIMARY KEY,
+    tenKH NVARCHAR(100) NOT NULL,
+    email NVARCHAR(100),
+    sdt NVARCHAR(15) UNIQUE, -- Thêm UNIQUE để tránh trùng SĐT
+    cccd NVARCHAR(20) UNIQUE, -- Thêm UNIQUE để tránh trùng CCCD
+    maLoaiKH NVARCHAR(20) FOREIGN KEY REFERENCES LoaiKhachHang(maLoaiKH) -- Dùng khóa ngoại
+);
+INSERT INTO KhachHang (maKH, tenKH, email, sdt, cccd, maLoaiKH)
+VALUES
+(N'KH001', N'Nguyễn Văn A', N'vana@gmail.com', N'0912345678', N'079123456789', N'LKH001'),
+(N'KH002', N'Trần Thị B', N'tranb@gmail.com', N'0987654321', N'082345678912', N'LKH002');

@@ -8,9 +8,12 @@ import java.util.List;
 import javax.swing.*;
 import connectSQL.ConnectSQL;
 import dao.Ban_DAO;
+import dao.KhachHang_DAO;
 import dao.KhuVuc_DAO;
 import dao.LoaiBan_DAO; // Added import for LoaiBan_DAO
+import dao.LoaiKhachHang_DAO;
 import dao.PhieuDatBan_DAO;
+import dao.TaiKhoan_DAO;
 import entity.Ban;
 import entity.PhieuDatBan;
 import entity.TaiKhoan;
@@ -225,8 +228,8 @@ public class ThanhTacVu extends JFrame {
         }
 
         menuBar.add(Box.createHorizontalGlue());
-        String userLabel = (FrmDangNhap.getCurrentTaiKhoan() != null)
-                ? "Người dùng: " + FrmDangNhap.getCurrentTaiKhoan().getHoTen()
+        String userLabel = (TaiKhoan_DAO.getCurrentTaiKhoan() != null)
+                ? "Người dùng: " + TaiKhoan_DAO.getCurrentTaiKhoan().getHoTen()
                 : "Người dùng: Không xác định";
         lblQL = new JLabel(userLabel);
         lblQL.setIcon(taoIcon("img/nguoidung.png", 30, 30));
@@ -260,7 +263,7 @@ public class ThanhTacVu extends JFrame {
         });
 
         dangXuat.addActionListener(e -> {
-            FrmDangNhap.resetCurrentTaiKhoan();
+        	TaiKhoan_DAO.resetCurrentTaiKhoan();
             resetInstance();
             new FrmDangNhap().setVisible(true);
             dispose();
@@ -325,8 +328,18 @@ public class ThanhTacVu extends JFrame {
         });
 
         khachHang.addActionListener(e -> {
-            new FrmKhachHang().setVisible(true);
-            dispose();
+            try {
+                Connection conn = ConnectSQL.getConnection();
+                KhachHang_DAO khachHangDAO = new KhachHang_DAO(conn);
+                LoaiKhachHang_DAO loaiKH_DAO = new LoaiKhachHang_DAO(conn);
+                
+                new FrmKhachHang(khachHangDAO, loaiKH_DAO, null).setVisible(true);
+                dispose();
+                
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Lỗi khi mở quản lý khách hàng: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
+            }
         });
 
         nhanVien.addActionListener(e -> {

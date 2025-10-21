@@ -10,12 +10,96 @@ import java.util.List;
 
 public class TaiKhoan_DAO {
     private Connection conn;
+    
+    public static TaiKhoan currentTaiKhoan;
+
+    public static TaiKhoan getCurrentTaiKhoan() {
+        return currentTaiKhoan;
+    }
+
+    public static void resetCurrentTaiKhoan() {
+        currentTaiKhoan = null;
+    }
 
     public TaiKhoan_DAO() {
         this.conn = ConnectSQL.getConnection();
     }
+    public boolean kiemTraDangNhap(String user, String pass) {
+        Connection con = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        PreparedStatement logPs = null;
+        try {
+            con = ConnectSQL.getConnection();
+            if (con == null) {
+                System.out.println("Kết nối cơ sở dữ liệu thất bại!");
+                return false;
+            }
 
-    // Thêm tài khoản mới
+            String sql = "SELECT t.maTaiKhoan, t.soDienThoai, t.matKhau, t.maNhanVien, t.phanQuyen, n.hoTen " +
+                         "FROM TaiKhoan t INNER JOIN NhanVien n ON t.maNhanVien = n.maNhanVien " +
+                         "WHERE t.soDienThoai = ? OR t.maNhanVien = ?";
+            ps = con.prepareStatement(sql);
+            ps.setString(1, user);
+            ps.setString(2, user);
+            rs = ps.executeQuery();
+            boolean loginSuccess = false;
+            String maTaiKhoan = null;
+
+            if (rs.next() && rs.getString("matKhau").equals(pass)) {
+                currentTaiKhoan = new TaiKhoan();
+                currentTaiKhoan.setMaTaiKhoan(rs.getString("maTaiKhoan"));
+                currentTaiKhoan.setSoDienThoai(rs.getString("soDienThoai"));
+                currentTaiKhoan.setMatKhau(rs.getString("matKhau"));
+                currentTaiKhoan.setMaNhanVien(rs.getString("maNhanVien"));
+                currentTaiKhoan.setPhanQuyen(rs.getString("phanQuyen"));
+                currentTaiKhoan.setHoTen(rs.getString("hoTen"));
+                maTaiKhoan = rs.getString("maTaiKhoan");
+                try {
+                    currentTaiKhoan.setPhanQuyen(currentTaiKhoan.getPhanQuyen());
+                    loginSuccess = true;
+                } catch (IllegalArgumentException e) {
+                    System.out.println("Phân quyền không hợp lệ: " + e.getMessage());
+                }
+            }
+
+            if (maTaiKhoan == null) {
+                String findSql = "SELECT maTaiKhoan FROM TaiKhoan WHERE soDienThoai = ? OR maNhanVien = ?";
+                PreparedStatement findPs = con.prepareStatement(findSql);
+                findPs.setString(1, user);
+                findPs.setString(2, user);
+                ResultSet findRs = findPs.executeQuery();
+                if (findRs.next()) {
+                    maTaiKhoan = findRs.getString("maTaiKhoan");
+                }
+                findRs.close();
+                findPs.close();
+            }
+
+            if (maTaiKhoan != null) {
+                String logSql = "INSERT INTO LichSuDangNhap (maTaiKhoan, trangThai) VALUES (?, ?)";
+                logPs = con.prepareStatement(logSql);
+                logPs.setString(1, maTaiKhoan);
+                logPs.setBoolean(2, loginSuccess);
+                logPs.executeUpdate();
+            }
+
+            return loginSuccess;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (ps != null) ps.close();
+                if (logPs != null) logPs.close();
+                if (con != null) con.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     public boolean themTaiKhoan(TaiKhoan tk) {
         String sql = "INSERT INTO TaiKhoan (maTaiKhoan, soDienThoai, matKhau, maNhanVien, phanQuyen) VALUES (?, ?, ?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -31,7 +115,6 @@ public class TaiKhoan_DAO {
         }
     }
 
-    // Sửa tài khoản
     public boolean suaTaiKhoan(TaiKhoan tk) {
         String sql = "UPDATE TaiKhoan SET soDienThoai = ?, matKhau = ?, maNhanVien = ?, phanQuyen = ? WHERE maTaiKhoan = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -47,7 +130,6 @@ public class TaiKhoan_DAO {
         }
     }
 
-    // Cập nhật mật khẩu theo số điện thoại (dùng cho quên mật khẩu)
     public boolean capNhatMatKhauTheoSDT(String soDienThoai, String matKhauMoi) {
         String sql = "UPDATE TaiKhoan SET matKhau = ? WHERE soDienThoai = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -60,7 +142,6 @@ public class TaiKhoan_DAO {
         }
     }
 
-    // Kiểm tra số điện thoại tồn tại
     public boolean kiemTraSoDienThoaiTonTai(String soDienThoai) {
         String sql = "SELECT COUNT(*) FROM TaiKhoan WHERE soDienThoai = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -76,12 +157,11 @@ public class TaiKhoan_DAO {
         return false;
     }
 
-    // Xóa tài khoản (bao gồm xóa lịch sử đăng nhập liên quan)
     public boolean xoaTaiKhoan(String maTaiKhoan) {
         String deleteLichSu = "DELETE FROM LichSuDangNhap WHERE maTaiKhoan = ?";
         String deleteTaiKhoan = "DELETE FROM TaiKhoan WHERE maTaiKhoan = ?";
         try {
-            conn.setAutoCommit(false); // Bắt đầu giao dịch
+            conn.setAutoCommit(false);
             try (PreparedStatement psLichSu = conn.prepareStatement(deleteLichSu);
                  PreparedStatement psTaiKhoan = conn.prepareStatement(deleteTaiKhoan)) {
                 psLichSu.setString(1, maTaiKhoan);
@@ -91,16 +171,16 @@ public class TaiKhoan_DAO {
                 int rowsTaiKhoan = psTaiKhoan.executeUpdate();
 
                 if (rowsTaiKhoan > 0) {
-                    conn.commit(); // Xác nhận giao dịch
+                    conn.commit();
                     return true;
                 } else {
-                    conn.rollback(); // Hoàn tác nếu không xóa được tài khoản
+                    conn.rollback();
                     return false;
                 }
             }
         } catch (SQLException e) {
             try {
-                if (conn != null) conn.rollback(); // Hoàn tác nếu có lỗi
+                if (conn != null) conn.rollback();
             } catch (SQLException ex) {
                 ex.printStackTrace();
             }
@@ -108,14 +188,14 @@ public class TaiKhoan_DAO {
             return false;
         } finally {
             try {
-                conn.setAutoCommit(true); // Khôi phục auto-commit
+                conn.setAutoCommit(true);
             } catch (SQLException e) {
                 e.printStackTrace();
             }
         }
     }
 
-    // Lấy danh sách tất cả tài khoản
+
     public List<TaiKhoan> layDanhSachTaiKhoan() {
         List<TaiKhoan> dsTaiKhoan = new ArrayList<>();
         String sql = "SELECT t.maTaiKhoan, t.soDienThoai, t.matKhau, t.maNhanVien, t.phanQuyen, n.hoTen " +
@@ -138,7 +218,6 @@ public class TaiKhoan_DAO {
         return dsTaiKhoan;
     }
 
-    // Lấy lịch sử đăng nhập theo mã tài khoản
     public List<LichSuDangNhap> layLichSuDangNhap(String maTaiKhoan) {
         List<LichSuDangNhap> dsLichSu = new ArrayList<>();
         String sql = "SELECT maLichSu, maTaiKhoan, thoiGianDangNhap, trangThai FROM LichSuDangNhap WHERE maTaiKhoan = ?";
@@ -160,7 +239,6 @@ public class TaiKhoan_DAO {
         return dsLichSu;
     }
 
-    // Tạo mã tài khoản mới dạng TK001
     public String taoMaTaiKhoanMoi() {
         String sql = "SELECT ISNULL(MAX(CAST(SUBSTRING(maTaiKhoan, 3, LEN(maTaiKhoan)) AS INT)), 0) AS maxId FROM TaiKhoan WHERE maTaiKhoan LIKE 'TK[0-9][0-9][0-9]'";
         try (PreparedStatement ps = conn.prepareStatement(sql);
@@ -172,10 +250,9 @@ public class TaiKhoan_DAO {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return "TK001"; // Nếu không có mã nào, bắt đầu từ TK001
+        return "TK001";
     }
 
-    // Lấy tài khoản đăng nhập gần nhất
     public TaiKhoan layTaiKhoanDangNhapGanNhat() {
         String sql = "SELECT TOP 1 t.maTaiKhoan, t.soDienThoai, t.matKhau, t.maNhanVien, t.phanQuyen, n.hoTen " +
                      "FROM TaiKhoan t INNER JOIN NhanVien n ON t.maNhanVien = n.maNhanVien " +
@@ -200,7 +277,6 @@ public class TaiKhoan_DAO {
         return null;
     }
 
-    // Lấy tài khoản đăng nhập nhiều nhất
     public TaiKhoan layTaiKhoanDangNhapNhieuNhat() {
         String sql = "SELECT TOP 1 t.maTaiKhoan, t.soDienThoai, t.matKhau, t.maNhanVien, t.phanQuyen, n.hoTen, COUNT(ls.maLichSu) as soLanDangNhap " +
                      "FROM TaiKhoan t " +

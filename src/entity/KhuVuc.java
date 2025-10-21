@@ -28,4 +28,8 @@ public class KhuVuc {
 
     public String getTrangThai() { return trangThai; }
     public void setTrangThai(String trangThai) { this.trangThai = trangThai; }
+    @Override
+    public String toString() {
+        return tenKhuVuc != null ? tenKhuVuc : "";
+    }
 }

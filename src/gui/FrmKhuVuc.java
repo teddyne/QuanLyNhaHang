@@ -16,9 +16,8 @@ public class FrmKhuVuc extends ThanhTacVu {
     private final KhuVuc_DAO khuDAO;
     private final DefaultTableModel model;
     private final JTable tblKhuVuc;
-    private final JTextField txtMaKhuVuc, txtTenKhuVuc, txtSoLuongBan;
-    private final JComboBox<String> cbTrangThai;
-    private final JButton btnThem, btnXoa, btnSua, btnLuu, btnTraCuu, btnLamMoi;
+    private final JTextField txtMaKhuVuc, txtTenKhuVuc, txtSoLuongBan, txtTrangThai;
+    private final JButton btnThem, btnAn, btnSua, btnLuu, btnTraCuu, btnLamMoi;
     private final Consumer<Void> refreshCallback;
 
     public FrmKhuVuc() throws SQLException {
@@ -34,7 +33,6 @@ public class FrmKhuVuc extends ThanhTacVu {
         setTitle("Quản Lý Khu Vực");
         ConnectSQL.getInstance().connect();
         
-        // Khởi tạo DAO nếu null
         if (khuDAO == null) {
             Connection conn = ConnectSQL.getConnection();
             if (conn == null) {
@@ -47,7 +45,6 @@ public class FrmKhuVuc extends ThanhTacVu {
         
         this.refreshCallback = refreshCallback;
         
-        // Panel chính
         JPanel mainPanel = new JPanel(new BorderLayout());
         mainPanel.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
         mainPanel.setBackground(Color.WHITE);
@@ -118,6 +115,7 @@ public class FrmKhuVuc extends ThanhTacVu {
         
         txtSoLuongBan = new JTextField(15);
         txtSoLuongBan.setFont(fieldFont);
+        txtSoLuongBan.setEditable(false); // Vô hiệu hóa nhập tay
         gbc.gridx = 1;
         fieldsPanel.add(txtSoLuongBan, gbc);
 
@@ -137,10 +135,10 @@ public class FrmKhuVuc extends ThanhTacVu {
         lblTrangThai.setFont(labelFont);
         fieldsPanel.add(lblTrangThai, gbc);
         
-        cbTrangThai = new JComboBox<>(new String[]{"Hoạt động", "Ngừng"});
-        cbTrangThai.setFont(fieldFont);
+        txtTrangThai = new JTextField(15);
+        txtTrangThai.setFont(fieldFont);
         gbc.gridx = 1;
-        fieldsPanel.add(cbTrangThai, gbc);
+        fieldsPanel.add(txtTrangThai, gbc);
 
         // Panel nút thao tác
         JPanel buttonPanel = new JPanel(new GridLayout(3, 2, 10, 10));
@@ -151,16 +149,16 @@ public class FrmKhuVuc extends ThanhTacVu {
         Dimension buttonSize = new Dimension(150, 50);
 
         // Khởi tạo các nút
-        btnThem = taoNut("Thêm", new Color(46, 204, 113), buttonSize, buttonFont);       // xanh lá
-        btnSua = taoNut("Sửa", new Color(52, 152, 219), buttonSize, buttonFont);         // xanh dương
-        btnXoa = taoNut("Xóa", new Color(231, 76, 60), buttonSize, buttonFont);          // đỏ
-        btnLamMoi = taoNut("Làm mới", new Color(149, 165, 166), buttonSize, buttonFont); // xám nhạt
-        btnLuu = taoNut("Lưu", new Color(255, 193, 7), buttonSize, buttonFont); 		// vàng
-        btnTraCuu = taoNut("Tra cứu", new Color(121, 89, 229), buttonSize, buttonFont);  // tím
+        btnThem = taoNut("Thêm", new Color(46, 204, 113), buttonSize, buttonFont);
+        btnSua = taoNut("Sửa", new Color(52, 152, 219), buttonSize, buttonFont);
+        btnAn = taoNut("Ẩn", new Color(231, 76, 60), buttonSize, buttonFont);
+        btnLamMoi = taoNut("Làm mới", new Color(149, 165, 166), buttonSize, buttonFont);
+        btnLuu = taoNut("Lưu", new Color(255, 193, 7), buttonSize, buttonFont);
+        btnTraCuu = taoNut("Tra cứu", new Color(121, 89, 229), buttonSize, buttonFont);
 
         buttonPanel.add(btnThem);
         buttonPanel.add(btnSua);
-        buttonPanel.add(btnXoa);
+        buttonPanel.add(btnAn);
         buttonPanel.add(btnLamMoi);
         buttonPanel.add(btnLuu);
         buttonPanel.add(btnTraCuu);
@@ -192,7 +190,7 @@ public class FrmKhuVuc extends ThanhTacVu {
 
         // Sự kiện cho các nút
         btnThem.addActionListener(e -> themKhuVuc());
-        btnXoa.addActionListener(e -> xoaKhuVuc());
+        btnAn.addActionListener(e -> anKhuVuc());
         btnSua.addActionListener(e -> suaKhuVuc());
         btnLuu.addActionListener(e -> luuKhuVuc());
         btnTraCuu.addActionListener(e -> traCuuKhuVuc());
@@ -208,45 +206,36 @@ public class FrmKhuVuc extends ThanhTacVu {
                     txtMaKhuVuc.setText((String) model.getValueAt(row, 0));
                     txtTenKhuVuc.setText((String) model.getValueAt(row, 1));
                     txtSoLuongBan.setText(model.getValueAt(row, 2).toString());
-                    cbTrangThai.setSelectedItem(model.getValueAt(row, 3));
+                    txtTrangThai.setText(model.getValueAt(row, 3).toString());
                 }
             }
         });
     }
 
     private JButton taoNut(String text, Color baseColor, Dimension size, Font font) {
-	    JButton btn = new JButton(text);
-	    btn.setFont(font);
-	    btn.setPreferredSize(size);
-	    btn.setForeground(Color.WHITE);
-	    btn.setBackground(baseColor);
-	    btn.setFocusPainted(false);
+        JButton btn = new JButton(text);
+        btn.setFont(font);
+        btn.setPreferredSize(size);
+        btn.setForeground(Color.WHITE);
+        btn.setBackground(baseColor);
+        btn.setFocusPainted(false);
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btn.setContentAreaFilled(false);
         btn.setOpaque(true);
         
-	    // Hiệu ứng hover
-	    btn.addMouseListener(new MouseAdapter() {
-	        @Override
-	        public void mouseEntered(MouseEvent e) {
-	            btn.setBackground(baseColor.darker());
-	        }
-	
-	        @Override
-	        public void mouseExited(MouseEvent e) {
-	            btn.setBackground(baseColor);
-	        }
-	    });
-	
-	    return btn;
-	}
-
-	private JButton createButton(String text, Color bgColor, Font font, Dimension size) {
-        JButton btn = new JButton(text);
-        btn.setBackground(bgColor);
-        btn.setForeground(Color.WHITE);
-        btn.setFont(font);
-        btn.setPreferredSize(size);
+        // Hiệu ứng hover
+        btn.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                btn.setBackground(baseColor.darker());
+            }
+    
+            @Override
+            public void mouseExited(MouseEvent e) {
+                btn.setBackground(baseColor);
+            }
+        });
+    
         return btn;
     }
 
@@ -272,33 +261,37 @@ public class FrmKhuVuc extends ThanhTacVu {
         txtMaKhuVuc.setEditable(true);
         txtMaKhuVuc.setText("KV" + System.currentTimeMillis());
         txtTenKhuVuc.setText("");
-        txtSoLuongBan.setText("");
-        cbTrangThai.setSelectedIndex(0);
+        txtSoLuongBan.setText("0"); // Số lượng bàn mặc định là 0
+        txtTrangThai.setText("Hoạt động");
         txtMaKhuVuc.requestFocus();
     }
 
-    private void xoaKhuVuc() {
+    private void anKhuVuc() {
         int row = tblKhuVuc.getSelectedRow();
         if (row >= 0) {
             String maKhuVuc = (String) model.getValueAt(row, 0);
-            int confirm = JOptionPane.showConfirmDialog(this, 
-                "Xóa khu vực " + maKhuVuc + "?", "Xác nhận", JOptionPane.YES_NO_OPTION);
-            if (confirm == JOptionPane.YES_OPTION) {
-                try {
-                    khuDAO.delete(maKhuVuc);
+            try {
+                if (khuDAO.checkTrung(maKhuVuc)) {
+                    JOptionPane.showMessageDialog(this, "Không thể ẩn khu vực " + maKhuVuc + " vì vẫn còn bàn đang sử dụng!");
+                    return;
+                }
+                int confirm = JOptionPane.showConfirmDialog(this, 
+                    "Ẩn khu vực " + maKhuVuc + "?", "Xác nhận ẩn", JOptionPane.YES_NO_OPTION);
+                if (confirm == JOptionPane.YES_OPTION) {
+                    khuDAO.anKhuVuc(maKhuVuc);
                     model.removeRow(row);
                     if (refreshCallback != null) {
                         refreshCallback.accept(null);
                     }
-                    JOptionPane.showMessageDialog(this, "Xóa khu vực thành công!");
+                    JOptionPane.showMessageDialog(this, "Ẩn khu vực thành công!");
                     lamMoiForm();
-                } catch (SQLException ex) {
-                    JOptionPane.showMessageDialog(this, "Lỗi xóa khu vực: " + ex.getMessage());
-                    ex.printStackTrace();
                 }
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(this, "Lỗi ẩn khu vực: " + ex.getMessage());
+                ex.printStackTrace();
             }
         } else {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn khu vực để xóa!");
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn khu vực để ẩn!");
         }
     }
 
@@ -309,7 +302,7 @@ public class FrmKhuVuc extends ThanhTacVu {
             txtMaKhuVuc.setText((String) model.getValueAt(row, 0));
             txtTenKhuVuc.setText((String) model.getValueAt(row, 1));
             txtSoLuongBan.setText(model.getValueAt(row, 2).toString());
-            cbTrangThai.setSelectedItem(model.getValueAt(row, 3));
+            txtTrangThai.setText(model.getValueAt(row, 3).toString());
         } else {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn khu vực để sửa!");
         }
@@ -318,28 +311,21 @@ public class FrmKhuVuc extends ThanhTacVu {
     private void luuKhuVuc() {
         String ma = txtMaKhuVuc.getText().trim();
         String ten = txtTenKhuVuc.getText().trim();
-        String soLuongStr = txtSoLuongBan.getText().trim();
-        String trangThai = (String) cbTrangThai.getSelectedItem();
+        String trangThai = txtTrangThai.getText().trim();
 
-        if (ma.isEmpty() || ten.isEmpty() || soLuongStr.isEmpty()) {
+        if (ma.isEmpty() || ten.isEmpty() || trangThai.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Vui lòng nhập đầy đủ thông tin!");
             return;
         }
 
-        int soLuong;
-        try {
-            soLuong = Integer.parseInt(soLuongStr);
-            if (soLuong < 0) {
-                JOptionPane.showMessageDialog(this, "Số lượng bàn phải là số không âm!");
-                return;
-            }
-        } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Số lượng bàn phải là số hợp lệ!");
+        if (!trangThai.equals("Hoạt động") && !trangThai.equals("Ẩn")) {
+            JOptionPane.showMessageDialog(this, "Trạng thái phải là 'Hoạt động' hoặc 'Ẩn'!");
             return;
         }
 
         try {
-            KhuVuc khuVuc = new KhuVuc(ma, ten, soLuong, trangThai);
+            int soLuongBan = khuDAO.countBan(ma); // Lấy số lượng bàn tự động
+            KhuVuc khuVuc = new KhuVuc(ma, ten, soLuongBan, trangThai);
             
             if (txtMaKhuVuc.isEditable()) {
                 // Thêm mới
@@ -347,16 +333,16 @@ public class FrmKhuVuc extends ThanhTacVu {
                     JOptionPane.showMessageDialog(this, "Mã khu vực đã tồn tại!");
                     return;
                 }
-                khuDAO.add(khuVuc);
-                model.addRow(new Object[]{ma, ten, soLuong, trangThai});
+                khuDAO.them(khuVuc);
+                model.addRow(new Object[]{ma, ten, soLuongBan, trangThai});
                 JOptionPane.showMessageDialog(this, "Thêm khu vực thành công!");
             } else {
                 // Cập nhật
-                khuDAO.update(khuVuc);
+                khuDAO.capNhat(khuVuc);
                 int row = tblKhuVuc.getSelectedRow();
                 if (row >= 0) {
                     model.setValueAt(ten, row, 1);
-                    model.setValueAt(soLuong, row, 2);
+                    model.setValueAt(soLuongBan, row, 2);
                     model.setValueAt(trangThai, row, 3);
                 }
                 JOptionPane.showMessageDialog(this, "Cập nhật khu vực thành công!");
@@ -375,29 +361,45 @@ public class FrmKhuVuc extends ThanhTacVu {
         txtMaKhuVuc.setEditable(true);
         txtMaKhuVuc.setText("");
         txtTenKhuVuc.setText("");
-        txtSoLuongBan.setText("");
-        cbTrangThai.setSelectedIndex(0);
+        txtSoLuongBan.setText("0");
+        txtTrangThai.setText("");
         loadData();
     }
 
     private void traCuuKhuVuc() {
-        // TODO: Implement tra cứu theo mã, tên và trạng thái
         String ma = txtMaKhuVuc.getText().trim();
         String ten = txtTenKhuVuc.getText().trim();
-        // Tạm thời load tất cả dữ liệu
-        loadData();
+        String trangThai = txtTrangThai.getText().trim();
+
+        model.setRowCount(0);
+        try {
+            List<KhuVuc> list = khuDAO.traCuuKhuVuc(ma, ten, trangThai);
+            for (KhuVuc k : list) {
+                model.addRow(new Object[]{
+                    k.getMaKhuVuc(),
+                    k.getTenKhuVuc(),
+                    k.getSoLuongBan(),
+                    k.getTrangThai()
+                });
+            }
+            if (list.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Không tìm thấy khu vực phù hợp!");
+            }
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "Lỗi tra cứu khu vực: " + ex.getMessage());
+            ex.printStackTrace();
+        }
     }
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-       	 UIManager.put("TableHeader.font", new Font("Times New Roman", Font.BOLD, 20));
-			try {
-				UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-			} catch (ClassNotFoundException | InstantiationException | IllegalAccessException
-					| UnsupportedLookAndFeelException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+            UIManager.put("TableHeader.font", new Font("Times New Roman", Font.BOLD, 20));
+            try {
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            } catch (ClassNotFoundException | InstantiationException | IllegalAccessException
+                    | UnsupportedLookAndFeelException e) {
+                e.printStackTrace();
+            }
             try {
                 new FrmKhuVuc().setExtendedState(JFrame.MAXIMIZED_BOTH);
                 new FrmKhuVuc().setVisible(true);

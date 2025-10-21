@@ -46,6 +46,7 @@ public class FrmThucDon extends JFrame {
     // ===== FONT =====
     private final Font FONT_BTN = new Font("Times New Roman", Font.BOLD, 22);
     private final Font FONT_TXT = new Font("Times New Roman", Font.PLAIN, 20);
+	public Object monSelectedListener;
 
     public FrmThucDon() {
         setTitle("THỰC ĐƠN");

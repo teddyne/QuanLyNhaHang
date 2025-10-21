@@ -6,6 +6,8 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import javax.swing.*;
 import connectSQL.ConnectSQL;
+import dao.KhachHang_DAO;
+import dao.LoaiKhachHang_DAO;
 
 public class FrmTrangChu extends JFrame {
     private JPanel pNor, pCen;
@@ -109,8 +111,18 @@ public class FrmTrangChu extends JFrame {
         });
 
         btnKhach.addActionListener(e -> {
-            new FrmKhachHang().setVisible(true);
-            dispose();
+            try {
+                Connection conn = ConnectSQL.getConnection();
+                KhachHang_DAO khachHangDAO = new KhachHang_DAO(conn);
+                LoaiKhachHang_DAO loaiKH_DAO = new LoaiKhachHang_DAO(conn);
+                
+                new FrmKhachHang(khachHangDAO, loaiKH_DAO, null).setVisible(true);
+                dispose();
+                
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Lỗi khi mở quản lý khách hàng: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
+            }
         });
 
         btnHoaDon.addActionListener(e -> {
