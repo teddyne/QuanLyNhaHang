@@ -16,7 +16,7 @@ public class ConnectSQL {
         return instance;
     }
 
-    public static void connect() {
+    public static void connect() throws SQLException {
         try {
             if (con == null || con.isClosed()) {
                 con = DriverManager.getConnection(URL, USER, PASSWORD);

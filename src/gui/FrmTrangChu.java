@@ -109,7 +109,7 @@ public class FrmTrangChu extends JFrame {
         });
 
         btnKhach.addActionListener(e -> {
-            new FrmKhachHang().setVisible(true);
+        	new FrmHoaDon().setVisible(true);
             dispose();
         });
 

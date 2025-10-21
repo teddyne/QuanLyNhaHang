@@ -10,6 +10,8 @@ import connectSQL.ConnectSQL;
 import dao.Ban_DAO;
 import dao.KhuVuc_DAO;
 import dao.LoaiBan_DAO; // Added import for LoaiBan_DAO
+import dao.KhachHang_DAO;
+import dao.LoaiKhachHang_DAO;
 import dao.PhieuDatBan_DAO;
 import entity.Ban;
 import entity.PhieuDatBan;
@@ -325,8 +327,18 @@ public class ThanhTacVu extends JFrame {
         });
 
         khachHang.addActionListener(e -> {
-            new FrmKhachHang().setVisible(true);
-            dispose();
+            try {
+                Connection conn = ConnectSQL.getConnection();
+                KhachHang_DAO khachHangDAO = new KhachHang_DAO(conn);
+                LoaiKhachHang_DAO loaiKH_DAO = new LoaiKhachHang_DAO(conn);
+                
+                new FrmKhachHang(khachHangDAO, loaiKH_DAO, null).setVisible(true);
+                dispose();
+                
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Lỗi khi mở quản lý khách hàng: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
+            }
         });
 
         nhanVien.addActionListener(e -> {

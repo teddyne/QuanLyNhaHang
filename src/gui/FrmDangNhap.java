@@ -35,7 +35,11 @@ public class FrmDangNhap extends JFrame implements ActionListener, MouseListener
     }
 
     public FrmDangNhap() {
-        ConnectSQL.getInstance().connect();
+    	try {
+            ConnectSQL.getInstance().connect();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
 
         setTitle("Đăng nhập");
         setExtendedState(JFrame.MAXIMIZED_BOTH);

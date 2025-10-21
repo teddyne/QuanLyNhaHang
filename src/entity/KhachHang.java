@@ -8,28 +8,24 @@ public class KhachHang {
     private String sdt;
     private String cccd;
     private String email;
-    private String loaiKH;
+    private String maLoaiKH;
 
     // --- CONSTRUCTORS ---
 
-    public KhachHang(String maKH, String tenKH, String sdt, String cccd, String email, String loaiKH) {
+    public KhachHang(String maKH, String tenKH, String sdt, String cccd, String email, String maLoaiKH) {
         setMaKH(maKH);
         setTenKH(tenKH);
         setSdt(sdt);
         setCccd(cccd);
         setEmail(email);
-        setLoaiKH(loaiKH);
-    }
-    
-    public KhachHang(String tenKH, String sdt, String cccd, String email, String loaiKH) {
-        setTenKH(tenKH);
-        setSdt(sdt);
-        setCccd(cccd);
-        setEmail(email);
-        setLoaiKH(loaiKH);
+        setMaLoaiKH(maLoaiKH); 
     }
 
-    // --- GETTERS AND SETTERS (với VALIDATION đã cập nhật) ---
+    public KhachHang(String maKH, String tenKH, String sdt, String cccd, String email) {
+        this(maKH, tenKH, sdt, cccd, email, "Khách thường");
+    }
+
+    // --- GETTERS AND SETTERS (với VALIDATION) ---
 
     public String getMaKH() {
         return maKH;
@@ -37,10 +33,10 @@ public class KhachHang {
 
     public void setMaKH(String maKH) {
         String regexMaKH = "^KH\\d{4}$";
-        if (!maKH.matches(regexMaKH)) {
+        if (maKH != null && maKH.matches(regexMaKH))
+            this.maKH = maKH;
+        else
             throw new IllegalArgumentException("Mã khách hàng không hợp lệ! (VD: KH0001).");
-        }
-        this.maKH = maKH;
     }
 
     public String getTenKH() {
@@ -48,14 +44,11 @@ public class KhachHang {
     }
 
     public void setTenKH(String tenKH) {
-        if (tenKH == null || tenKH.trim().isEmpty()) {
-            throw new IllegalArgumentException("Tên khách hàng không được bỏ trống.");
-        }
         String regexTenKH = "^[A-ZÀ-Ỵ][a-zà-ỹ\\p{L}]*([ ]+[A-ZÀ-Ỵ][a-zà-ỹ\\p{L}]*)*$";
-        if (!tenKH.matches(regexTenKH)) {
-            throw new IllegalArgumentException("Tên khách hàng không hợp lệ! (Phải viết hoa chữ cái đầu mỗi từ).");
-        }
-        this.tenKH = tenKH;
+        if (tenKH != null && !tenKH.trim().isEmpty() && tenKH.matches(regexTenKH))
+            this.tenKH = tenKH;
+        else
+            throw new IllegalArgumentException("Tên khách hàng không hợp lệ! (Phải viết hoa chữ cái đầu).");
     }
 
     public String getEmail() {
@@ -63,14 +56,11 @@ public class KhachHang {
     }
 
     public void setEmail(String email) {
-        if (email == null || email.trim().isEmpty()) {
-            throw new IllegalArgumentException("Email không được bỏ trống.");
-        }
         String regexEmail = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}$";
-        if (!email.matches(regexEmail)) {
+        if (email != null && email.matches(regexEmail))
+            this.email = email;
+        else
             throw new IllegalArgumentException("Email không hợp lệ!");
-        }
-        this.email = email;
     }
 
     public String getSdt() {
@@ -78,14 +68,11 @@ public class KhachHang {
     }
 
     public void setSdt(String sdt) {
-        if (sdt == null || sdt.trim().isEmpty()) {
-            throw new IllegalArgumentException("Số điện thoại không được bỏ trống.");
-        }
         String regexSdt = "^(03|05|07|08|09)\\d{8}$";
-        if (!sdt.matches(regexSdt)) {
+        if (sdt != null && sdt.matches(regexSdt))
+            this.sdt = sdt;
+        else
             throw new IllegalArgumentException("Số điện thoại không hợp lệ! (10 số, bắt đầu bằng 03,05,07,08,09).");
-        }
-        this.sdt = sdt;
     }
 
     public String getCccd() {
@@ -93,28 +80,26 @@ public class KhachHang {
     }
 
     public void setCccd(String cccd) {
-        if (cccd == null || cccd.trim().isEmpty()) {
-            throw new IllegalArgumentException("Căn cước công dân không được bỏ trống.");
-        }
         String regexCccd = "^0\\d{11}$";
-        if (!cccd.matches(regexCccd)) {
+        if (cccd != null && cccd.matches(regexCccd))
+            this.cccd = cccd;
+        else
             throw new IllegalArgumentException("Căn cước công dân không hợp lệ! (Phải đủ 12 số).");
-        }
-        this.cccd = cccd;
     }
 
-    public String getLoaiKH() {
-        return loaiKH;
+    public String getMaLoaiKH() {
+        return maLoaiKH;
     }
 
-    public void setLoaiKH(String loaiKH) {
-        if (loaiKH != null && (loaiKH.equalsIgnoreCase("Thành viên") || loaiKH.equalsIgnoreCase("Khách thường"))) {
-            this.loaiKH = loaiKH;
+    public void setMaLoaiKH(String maLoaiKH) {
+
+        String regexMaLoaiKH = "^LKH\\d{4}$";
+        if (maLoaiKH != null && maLoaiKH.matches(regexMaLoaiKH)) {
+            this.maLoaiKH = maLoaiKH;
         } else {
-            throw new IllegalArgumentException("Loại khách hàng phải là 'Thành viên' hoặc 'Khách thường'.");
+             this.maLoaiKH = maLoaiKH;
         }
     }
-
     // --- HASHCODE, EQUALS, TOSTRING ---
 
     @Override
@@ -132,6 +117,7 @@ public class KhachHang {
 
     @Override
     public String toString() {
-        return "KhachHang [maKH=" + maKH + ", tenKH=" + tenKH + ", sdt=" + sdt + ", cccd=" + cccd + ", email=" + email + ", loaiKH=" + loaiKH + "]";
+        return "KhachHang [maKH=" + maKH + ", tenKH=" + tenKH + ", sdt=" + sdt + 
+               ", cccd=" + cccd + ", email=" + email + ", maLoaiKH=" + maLoaiKH + "]";
     }
 }
