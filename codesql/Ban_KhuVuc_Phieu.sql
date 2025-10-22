@@ -85,7 +85,6 @@ VALUES
 (N'LKH001', N'Khách thường'),
 (N'LKH002', N'Thành viên'),
 
-
 CREATE TABLE KhachHang (
     maKH NVARCHAR(20) PRIMARY KEY,
     tenKH NVARCHAR(100) NOT NULL,

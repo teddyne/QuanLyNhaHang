@@ -13,7 +13,7 @@ import entity.Ban;
 import entity.PhieuDatBan;
 
 public class BanDialog extends JDialog {
-    private final Color COLOR_RED_WINE = new Color(128, 0, 0);
+    private final Color COLOR_RED_WINE = new Color(169, 55, 68);
     protected DefaultTableModel model;
     protected JTable table;
     protected JTextField txtBanSo;

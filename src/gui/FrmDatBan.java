@@ -40,7 +40,7 @@ import entity.KhachHang;
 import entity.PhieuDatBan;
 
 public class FrmDatBan extends JDialog {
-    private static final Color COLOR_RED_WINE = new Color(128, 0, 0);
+    private static final Color COLOR_RED_WINE = new Color(169, 55, 68);
     private PhieuDatBan_DAO phieuDatBanDAO;
     private Ban_DAO banDAO;
     private KhachHang_DAO khachHangDAO;

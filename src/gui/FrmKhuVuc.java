@@ -115,7 +115,7 @@ public class FrmKhuVuc extends ThanhTacVu {
         
         txtSoLuongBan = new JTextField(15);
         txtSoLuongBan.setFont(fieldFont);
-        txtSoLuongBan.setEditable(false); // Vô hiệu hóa nhập tay
+        txtSoLuongBan.setEditable(false);
         gbc.gridx = 1;
         fieldsPanel.add(txtSoLuongBan, gbc);
 
