@@ -8,6 +8,7 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.*;
 import java.sql.Date;
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.List;
 
@@ -35,6 +36,8 @@ public class FrmKhuyenMai extends JFrame implements ActionListener, MouseListene
 	private JLabel lblLoai;
 	private JLabel lblTrangThai;
 	private JPanel pMain;
+	private JTextField txtTrangThai;
+	private JButton btnThemLoai;
 
     public FrmKhuyenMai() {
         setTitle("Quản Lý Khuyến Mãi");
@@ -55,45 +58,47 @@ public class FrmKhuyenMai extends JFrame implements ActionListener, MouseListene
 		Font fo = new Font("Times new Roman", Font.BOLD, 28);
 		lblTieuDe.setFont(fo);
 		lblTieuDe.setForeground(Color.WHITE);
-		Color c = new Color(169, 55, 68);
-		pNorth.setBackground(c);
+		pNorth.setBackground(new Color(169, 55, 68));
 		add(pNorth, BorderLayout.NORTH);
 		
         // Panel phía trên (form + nút)
         JPanel pCenter = new JPanel(new BorderLayout());
-
         // Panel filter bên trái
         JPanel pLeft = new JPanel();
         pLeft.setLayout(new BoxLayout(pLeft, BoxLayout.Y_AXIS));
 		pLeft.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(new Color(165, 42, 42), 2),"Bộ Lọc Khuyến Mãi", 0, 0, new Font("Times New Roman", Font.BOLD, 24)));
 
+		
         // ======== Dòng 1: Mã KM + Món ========
         JPanel p1 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        txtMaKM = new JTextField(28);
-        txtMon = new JTextField(28);
+        txtMaKM = new JTextField(20);
+        txtMon = new JTextField(20);
         p1.add(Box.createHorizontalStrut(25));
 
         p1.add(lblMa = new JLabel("Mã khuyến mãi:   "));
         p1.add(txtMaKM);
         p1.add(Box.createHorizontalStrut(100));
 
-        p1.add(lblMon = new JLabel("Món ăn:     "));
+        p1.add(lblMon = new JLabel("Món ăn:       "));
         p1.add(txtMon);
 
         
         // Loại KM + Trạng thái
         JPanel p2 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        cmbLoaiKM = new JComboBox<>(new String[]{"Tất cả","Phần trăm","Giảm trực tiếp","Sinh nhật","Tặng món"});
-        cmbTrangThai = new JComboBox<>(new String[]{"Tất cả","Đang áp dụng","Sắp áp dụng","Hết hạn"});
+        cmbLoaiKM = new JComboBox<>();
+        loadLoaiKhuyenMai();
+
+        txtTrangThai = new JTextField(20);
         p2.add(Box.createHorizontalStrut(25));
 
         p2.add(lblLoai = new JLabel("Loại khuyến mãi: "));
         p2.add(cmbLoaiKM);
         p2.add(Box.createHorizontalStrut(100));
 
-        p2.add(lblTrangThai = new JLabel("Trạng thái: "));
-        p2.add(cmbTrangThai);
+        p2.add(lblTrangThai = new JLabel("Trạng thái:   "));
+        p2.add(txtTrangThai);
 
+        
         // Ngày bắt đầu / kết thúc với checkbox
         JPanel p3 = new JPanel(new FlowLayout(FlowLayout.LEFT));
         p3.add(Box.createHorizontalStrut(20));
@@ -103,10 +108,10 @@ public class FrmKhuyenMai extends JFrame implements ActionListener, MouseListene
         spDenNgay = new JSpinner(new SpinnerDateModel());
         spDenNgay.setEditor(new JSpinner.DateEditor(spDenNgay,"dd/MM/yyyy"));
         
-        chkTuNgay = new JCheckBox("Từ ngày: ");
+        chkTuNgay = new JCheckBox("Từ ngày:            ");
         chkDenNgay = new JCheckBox("Đến ngày: ");
         p3.add(chkTuNgay); p3.add(spTuNgay);
-        p3.add(Box.createHorizontalStrut(20));
+        p3.add(Box.createHorizontalStrut(100));
         p3.add(chkDenNgay); p3.add(spDenNgay);
  
 		Font foBoLoc = new Font("Times new Roman", Font.BOLD, 22);
@@ -123,56 +128,74 @@ public class FrmKhuyenMai extends JFrame implements ActionListener, MouseListene
 		chkDenNgay.setFont(foBoLoc);
 		spTuNgay.setFont(foTxt); 
 		spDenNgay.setFont(foTxt);
-		cmbLoaiKM.setPreferredSize(new Dimension(450, 30));// rộng cao
-		cmbTrangThai.setFont(foTxt);
-		cmbTrangThai.setPreferredSize(new Dimension(450, 30));
-		spTuNgay.setPreferredSize(new Dimension(173, 30));
-		spDenNgay.setPreferredSize(new Dimension(173, 30));
+		cmbLoaiKM.setPreferredSize(new Dimension(320, 30));// rộng cao
+		txtTrangThai.setFont(foTxt);
+		spTuNgay.setPreferredSize(new Dimension(320, 30));
+		spDenNgay.setPreferredSize(new Dimension(320, 30));
 
         pLeft.add(p1); pLeft.add(p2); pLeft.add(p3);
 
         pLeft.add(p1);
         pLeft.add(p2);
         pLeft.add(p3);
-
-        // Panel nút thao tác bên phải
+        
         JPanel pRight = new JPanel();
-        pRight.setLayout(new BoxLayout(pRight, BoxLayout.Y_AXIS));
-        pRight.setBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10));//trên trái dưới phải
+        pRight.setLayout(new BoxLayout(pRight, BoxLayout.X_AXIS));
+        pRight.setBackground(Color.WHITE);
 
-        Font btnFont = new Font("Times New Roman", Font.BOLD, 22);
-        btnThem = new JButton("Thêm");
-        btnSua = new JButton("Sửa");
-        btnTraCuu = new JButton("Tra cứu");
-        btnTatCa = new JButton("Tất cả");
-        btnLamMoi = new JButton("Làm mới");
+        JPanel col1 = new JPanel();
+        JPanel col2 = new JPanel();
+        col1.setLayout(new BoxLayout(col1, BoxLayout.Y_AXIS));
+        col2.setLayout(new BoxLayout(col2, BoxLayout.Y_AXIS));
+        col1.setBackground(Color.WHITE);
+        col2.setBackground(Color.WHITE);
+        
+        Font btnFont = new Font("Times New Roman", Font.BOLD, 20);
+        Dimension btnSize = new Dimension(150, 50);
+
+        btnThem   = taoNut("Thêm", new Color(46, 204, 113), btnSize, btnFont);
+        btnSua    = taoNut("Sửa", new Color(52, 152, 219), btnSize, btnFont);
+        btnTraCuu = taoNut("Tra cứu", new Color(121, 89, 229), btnSize, btnFont);
+        btnTatCa  = taoNut("Tất cả", new Color(231, 76, 60), btnSize, btnFont);
+        btnLamMoi = taoNut("Làm mới", new Color(255, 193, 7), btnSize, btnFont);
+        btnThemLoai = taoNut("Thêm loại", new Color(149, 165, 166), btnSize, btnFont);
 
 
-        Dimension btnSize = new Dimension(180, 50);
-        for (JButton btn : new JButton[]{btnThem, btnSua, btnTraCuu, btnTatCa, btnLamMoi}) {
+        // Cột 1
+        col1.add(btnThem);
+        col1.add(Box.createVerticalStrut(10));
+        col1.add(btnTraCuu);
+        col1.add(Box.createVerticalStrut(10));
+        col1.add(btnLamMoi);
+
+        // Cột 2
+        col2.add(btnSua);
+        col2.add(Box.createVerticalStrut(10));
+        col2.add(btnTatCa);
+        col2.add(Box.createVerticalStrut(10));
+        col2.add(btnThemLoai);
+        
+        
+        col1.setAlignmentY(Component.TOP_ALIGNMENT);
+        col2.setAlignmentY(Component.TOP_ALIGNMENT);
+        Dimension colSize = new Dimension(170, 200);
+        col1.setPreferredSize(colSize);
+        col2.setPreferredSize(colSize);
+
+        pRight.add(Box.createHorizontalStrut(5));
+        pRight.add(Box.createVerticalStrut(30));
+        pRight.add(col1);
+        pRight.add(col2);
+
+        for (JButton btn : new JButton[]{btnThem, btnSua, btnTraCuu, btnTatCa, btnLamMoi, btnThemLoai}) {
             btn.setMaximumSize(btnSize);
             btn.setAlignmentX(Component.CENTER_ALIGNMENT);
-            btn.setFont(btnFont);
-            pRight.add(btn);
-            pRight.add(Box.createVerticalStrut(10));
             btn.addActionListener(this);
         }
-        
-        btnThem.setForeground(Color.WHITE);
-        btnThem.setBackground(new Color(102, 210, 74));
-        btnSua.setForeground(Color.WHITE);
-        btnSua.setBackground(new Color(216, 154, 161));
-        btnLamMoi.setForeground(Color.WHITE);
-        btnLamMoi.setBackground(new Color(210, 201, 74));
-        btnTraCuu.setForeground(Color.WHITE);
-        btnTraCuu.setBackground(new Color(62, 64, 194));
-        btnTatCa.setForeground(Color.WHITE);
-        btnTatCa.setBackground(new Color(169, 55, 68));
 
         pCenter.add(pLeft, BorderLayout.CENTER);
         pCenter.add(pRight, BorderLayout.EAST);
         add(pCenter, BorderLayout.CENTER);
-
         
         
         // ======== Bảng dữ liệu ========
@@ -185,11 +208,12 @@ public class FrmKhuyenMai extends JFrame implements ActionListener, MouseListene
         tblKhuyenMai.addMouseListener(this);
 
         JScrollPane scroll = new JScrollPane(tblKhuyenMai);
+	    scroll.getViewport().setBackground(Color.WHITE); // nền bên trong bảng
         JPanel tablePanel = new JPanel(new BorderLayout());
         tablePanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 		tablePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(new Color(165, 42, 42), 2),"Danh Sách Khuyến Mãi", 0, 0, new Font("Times New Roman", Font.BOLD, 24)));
-        tablePanel.add(scroll, BorderLayout.CENTER);
-        //add(tablePanel, BorderLayout.SOUTH);
+        tablePanel.setBackground(Color.WHITE);
+		tablePanel.add(scroll, BorderLayout.CENTER);
 
         
         pMain.setLayout(new BorderLayout());
@@ -197,19 +221,16 @@ public class FrmKhuyenMai extends JFrame implements ActionListener, MouseListene
         pMain.add(tablePanel, BorderLayout.CENTER); // bảng chiếm hết phần còn lại
         add(pMain, BorderLayout.CENTER); //giữa của header với footer
 
+        //Màu
+        pMain.setBackground(Color.WHITE);
+        pNorth.setBackground(new Color(169, 55, 68));
+        p1.setBackground(Color.WHITE);
+        p2.setBackground(Color.WHITE);
+        p3.setBackground(Color.WHITE);
+        pLeft.setBackground(Color.WHITE);
+        pRight.setBackground(Color.WHITE);
+        pCenter.setBackground(Color.WHITE);
        
-        
-        // Khởi tạo các field form chi tiết KM62, 64, 194
-        txtTenKM = new JTextField(15);
-        txtGiaTri = new JTextField(10);
-        txtDonHangTu = new JTextField(10);
-        txtMon1 = new JTextField(15);
-        txtMon2 = new JTextField(15);
-        txtMonTang = new JTextField(15);
-        txtGhiChu = new JTextField(30);
-        cmbDoiTuongApDung = new JComboBox<>(new String[]{"Tất cả", "Khách hàng thân thiết", "Khách lẻ"});
-
-        // Load dữ liệu
         loadDanhSachKhuyenMai();
     }
 
@@ -251,7 +272,8 @@ public class FrmKhuyenMai extends JFrame implements ActionListener, MouseListene
         if(src == btnThem) {
             new FrmThemKhuyenMai();
             loadDanhSachKhuyenMai();
-        } else if(src == btnSua) {
+        }
+        if(src == btnSua) {
             int row = tblKhuyenMai.getSelectedRow();
             if(row < 0){
                 JOptionPane.showMessageDialog(this,"Chọn khuyến mãi cần sửa!");
@@ -262,22 +284,54 @@ public class FrmKhuyenMai extends JFrame implements ActionListener, MouseListene
             new FrmSuaKhuyenMai(km);
             loadDanhSachKhuyenMai();
         }
-        else if (src == btnTraCuu) 
+        if (src == btnTraCuu) 
         	traCuuKhuyenMai();
-        else if (src == btnTatCa) 
+        if (src == btnTatCa) 
         	xemTatCaKhuyenMai();
-        else if (src == btnLamMoi) 
+        if (src == btnLamMoi) 
         	lamMoiForm();
+        if (src == btnThemLoai) {
+            FrmLoaiKhuyenMai frm = new FrmLoaiKhuyenMai();
+            frm.addWindowListener(new WindowAdapter() {
+                @Override
+                public void windowClosed(WindowEvent e) {
+                    loadLoaiKhuyenMai(); // không cần try-catch nữa
+                }
+            });
+            frm.setVisible(true);
+        }
+
+
     }
 
-    private void lamMoiForm() {
+    //load (cập nhật) lên combobox
+    private void loadLoaiKhuyenMai() {
+        try {
+            cmbLoaiKM.removeAllItems();
+            cmbLoaiKM.addItem("Tất cả");
+
+            dao.LoaiKhuyenMai_DAO loaiDAO = new dao.LoaiKhuyenMai_DAO();
+            List<entity.LoaiKhuyenMai> list = loaiDAO.getAllLoaiKhuyenMai();
+
+            for (entity.LoaiKhuyenMai loai : list) {
+                cmbLoaiKM.addItem(loai.getTenLoai());
+            }
+
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "Lỗi khi tải danh sách loại khuyến mãi!", 
+                                          "Lỗi", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
+        }
+    }
+
+
+    
+	private void lamMoiForm() {
     	txtMaKM.setText("");
         txtMon.setText("");
-        
+        txtTrangThai.setText("");
         // ComboBox về "Tất cả"
         cmbLoaiKM.setSelectedIndex(0);
-        cmbTrangThai.setSelectedIndex(0);
-
         // CheckBox ngày bỏ check
         chkTuNgay.setSelected(false);
         chkDenNgay.setSelected(false);
@@ -286,12 +340,10 @@ public class FrmKhuyenMai extends JFrame implements ActionListener, MouseListene
     private void traCuuKhuyenMai() {
         String ma = txtMaKM.getText().trim();
         String mon = txtMon.getText().trim();
+        String trangThai = txtTrangThai.getText().trim();
 
         String loai = cmbLoaiKM.getSelectedItem().toString();
         if (loai.equals("Tất cả")) loai = null;
-
-        String trangThai = cmbTrangThai.getSelectedItem().toString();
-        if (trangThai.equals("Tất cả")) trangThai = null;
 
         Date tuNgayVal = chkTuNgay.isSelected() ? new Date(((java.util.Date) spTuNgay.getValue()).getTime()) : null;
         Date denNgayVal = chkDenNgay.isSelected() ? new Date(((java.util.Date) spDenNgay.getValue()).getTime()) : null;
@@ -335,7 +387,7 @@ public class FrmKhuyenMai extends JFrame implements ActionListener, MouseListene
                     Double.parseDouble(txtGiaTri.getText()),
                     bd,
                     kt,
-                    cmbTrangThai.getSelectedItem().toString(),
+                    txtTrangThai.getText(),
                     cmbDoiTuongApDung.getSelectedItem().toString(),
                     Double.parseDouble(txtDonHangTu.getText()),
                     txtMon1.getText(),
@@ -370,7 +422,7 @@ public class FrmKhuyenMai extends JFrame implements ActionListener, MouseListene
                     Double.parseDouble(txtGiaTri.getText()),
                     bd,
                     kt,
-                    cmbTrangThai.getSelectedItem().toString(),
+                    txtTrangThai.getText(),
                     cmbDoiTuongApDung.getSelectedItem().toString(),
                     Double.parseDouble(txtDonHangTu.getText()),
                     txtMon1.getText(),
@@ -391,28 +443,55 @@ public class FrmKhuyenMai extends JFrame implements ActionListener, MouseListene
             JOptionPane.showMessageDialog(this, "Giá trị và đơn hàng từ phải là số!", "Lỗi", JOptionPane.ERROR_MESSAGE);
         }
     }
+    
+    private JButton taoNut(String text, Color baseColor, Dimension size, Font font) {
+        JButton btn = new JButton(text);
+        btn.setFont(font);
+        btn.setPreferredSize(size);
+        btn.setForeground(Color.WHITE);
+        btn.setBackground(baseColor);
+        btn.setFocusPainted(false);
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btn.setContentAreaFilled(false);
+        btn.setOpaque(true);
+
+        // Hiệu ứng hover
+        btn.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent e) {
+                btn.setBackground(baseColor.darker());
+            }
+
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent e) {
+                btn.setBackground(baseColor);
+            }
+        });
+        return btn;
+    }
+
 
     @Override
     public void mouseClicked(MouseEvent e) {
         int row = tblKhuyenMai.getSelectedRow();
         if (row >= 0) {
             txtMaKM.setText(modelKhuyenMai.getValueAt(row, 0).toString());
-            txtTenKM.setText(modelKhuyenMai.getValueAt(row, 1).toString());
+//            txtTenKM.setText(modelKhuyenMai.getValueAt(row, 1).toString());
             cmbLoaiKM.setSelectedItem(modelKhuyenMai.getValueAt(row, 2));
-            txtGiaTri.setText(modelKhuyenMai.getValueAt(row, 3).toString());
+//            txtGiaTri.setText(modelKhuyenMai.getValueAt(row, 3).toString());
 
             String ngayBD = modelKhuyenMai.getValueAt(row, 4).toString();
             String ngayKT = modelKhuyenMai.getValueAt(row, 5).toString();
             spTuNgay.setValue(!ngayBD.isEmpty() ? java.sql.Date.valueOf(ngayBD) : new java.util.Date());
             spDenNgay.setValue(!ngayKT.isEmpty() ? java.sql.Date.valueOf(ngayKT) : new java.util.Date());
 
-            cmbTrangThai.setSelectedItem(modelKhuyenMai.getValueAt(row, 6));
-            cmbDoiTuongApDung.setSelectedItem(modelKhuyenMai.getValueAt(row, 7));
-            txtDonHangTu.setText(modelKhuyenMai.getValueAt(row, 8).toString());
-            txtMon1.setText(modelKhuyenMai.getValueAt(row, 9).toString());
-            txtMon2.setText(modelKhuyenMai.getValueAt(row, 10).toString());
-            txtMonTang.setText(modelKhuyenMai.getValueAt(row, 11).toString());
-            txtGhiChu.setText(modelKhuyenMai.getValueAt(row, 12).toString());
+            txtTrangThai.setText(modelKhuyenMai.getValueAt(row, 6).toString());
+//            cmbDoiTuongApDung.setSelectedItem(modelKhuyenMai.getValueAt(row, 7));
+//            txtDonHangTu.setText(modelKhuyenMai.getValueAt(row, 8).toString());
+//            txtMon1.setText(modelKhuyenMai.getValueAt(row, 9).toString());
+//            txtMon2.setText(modelKhuyenMai.getValueAt(row, 10).toString());
+//            txtMonTang.setText(modelKhuyenMai.getValueAt(row, 11).toString());
+//            txtGhiChu.setText(modelKhuyenMai.getValueAt(row, 12).toString());
         }
     }
 
@@ -428,7 +507,15 @@ public class FrmKhuyenMai extends JFrame implements ActionListener, MouseListene
     @Override
     public void mouseExited(MouseEvent e) { }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws SQLException {
+    	UIManager.put("TableHeader.font", new Font("Times New Roman", Font.BOLD, 14));
+		try {
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException
+				| UnsupportedLookAndFeelException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
         new FrmKhuyenMai().setVisible(true);
     }
 }

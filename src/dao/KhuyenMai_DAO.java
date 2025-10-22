@@ -13,11 +13,14 @@ public class KhuyenMai_DAO {
     public KhuyenMai_DAO() {
         conn = ConnectSQL.getInstance().getConnection();
     }
-    
-
+        
     public List<KhuyenMai> layDanhSachKhuyenMai() {
         List<KhuyenMai> list = new ArrayList<>();
-        String sql = "SELECT * FROM KhuyenMai";
+        String sql = """
+            SELECT KM.*, LK.tenLoai AS loaiKM
+            FROM KhuyenMai KM
+            JOIN LoaiKhuyenMai LK ON KM.maLoai = LK.maLoai
+        """;
         Date today = new Date(System.currentTimeMillis());
 
         try (Statement st = conn.createStatement(); ResultSet rs = st.executeQuery(sql)) {
@@ -36,8 +39,8 @@ public class KhuyenMai_DAO {
                 km.setMon2(rs.getString("mon2"));
                 km.setMonTang(rs.getString("monTang"));
                 km.setGhiChu(rs.getString("ghiChu"));
-
-                // --- Tính lại trạng thái ---
+                
+             // --- Tính lại trạng thái ---
                 String trangThaiMoi;
                 if (today.before(km.getNgayBatDau())) {
                     trangThaiMoi = "Sắp áp dụng";
@@ -52,7 +55,7 @@ public class KhuyenMai_DAO {
                     capNhatTrangThai(km.getMaKM(), trangThaiMoi);
                     km.setTrangThai(trangThaiMoi);
                 }
-
+                
                 list.add(km);
             }
         } catch (SQLException e) {
@@ -60,6 +63,7 @@ public class KhuyenMai_DAO {
         }
         return list;
     }
+
     
     //Cập nhật lại db
     private void capNhatTrangThai(String maKM, String trangThaiMoi) {
@@ -76,7 +80,12 @@ public class KhuyenMai_DAO {
     
  // Hàm lấy một khuyến mãi theo mã
     public KhuyenMai layKhuyenMaiTheoMa(String maKM) {
-        String sql = "SELECT * FROM KhuyenMai WHERE maKM=?";
+    	String sql = """
+    		    SELECT KM.*, LK.tenLoai AS loaiKM
+    		    FROM KhuyenMai KM
+    		    JOIN LoaiKhuyenMai LK ON KM.maLoai = LK.maLoai
+    		    WHERE KM.maKM=?
+    		""";
         try (
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
@@ -109,12 +118,16 @@ public class KhuyenMai_DAO {
     //Tra cứu KM theo nhiều tiêu chí
     public List<KhuyenMai> traCuuKhuyenMai(String maKM, String mon, String loai, String trangThai, Date tuNgay, Date denNgay) {
         List<KhuyenMai> list = new ArrayList<>();
-        StringBuilder sql = new StringBuilder("SELECT * FROM KhuyenMai WHERE 1=1 ");
-
+        StringBuilder sql = new StringBuilder("""
+        	    SELECT KM.*, LK.tenLoai AS loaiKM
+        	    FROM KhuyenMai KM
+        	    JOIN LoaiKhuyenMai LK ON KM.maLoai = LK.maLoai
+        	    WHERE 1=1
+        	""");
         // Tạo điều kiện linh hoạt
         if (maKM != null && !maKM.isEmpty()) sql.append(" AND maKM LIKE ? ");
         if (mon != null && !mon.isEmpty()) sql.append(" AND (mon1 LIKE ? OR mon2 LIKE ? OR monTang LIKE ?) ");
-        if (loai != null && !loai.isEmpty()) sql.append(" AND loaiKM = ? ");
+        if (loai != null && !loai.isEmpty()) sql.append(" AND LK.tenLoai = ? ");
         if (trangThai != null && !trangThai.isEmpty()) sql.append(" AND trangThai = ? ");
         if (tuNgay != null) sql.append(" AND ngayBatDau >= ? ");
         if (denNgay != null) sql.append(" AND ngayKetThuc <= ? ");
