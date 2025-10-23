@@ -66,5 +66,19 @@ public class LoaiKhuyenMai_DAO {
         ps.close();
         return list;
     }
+    
+    public String getMaLoaiByTenLoai(String tenLoai) {
+        String sql = "SELECT maLoai FROM LoaiKhuyenMai WHERE tenLoai = ?";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, tenLoai);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getString("maLoai");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 
 }

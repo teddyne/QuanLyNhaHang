@@ -6,7 +6,7 @@ public class KhuyenMai {
 
 	private String maKM;
     private String tenKM;
-    private String loaiKM;
+    private String maLoai;
     private double giaTri;
     private Date ngayBatDau;
     private Date ngayKetThuc;
@@ -18,13 +18,13 @@ public class KhuyenMai {
     private String monTang;
     private String ghiChu;
     
-	public KhuyenMai(String maKM, String tenKM, String loaiKM, double giaTri, Date ngayBatDau, Date ngayKetThuc,
+	public KhuyenMai(String maKM, String tenKM, String maLoai, double giaTri, Date ngayBatDau, Date ngayKetThuc,
 			String trangThai, String doiTuongApDung, double donHangTu, String mon1, String mon2, String monTang,
 			String ghiChu) {
 		super();
 		this.maKM = maKM;
 		this.tenKM = tenKM;
-		this.loaiKM = loaiKM;
+		this.maLoai = maLoai;
 		this.giaTri = giaTri;
 		this.ngayBatDau = ngayBatDau;
 		this.ngayKetThuc = ngayKetThuc;
@@ -58,12 +58,12 @@ public class KhuyenMai {
 		this.tenKM = tenKM;
 	}
 
-	public String getLoaiKM() {
-		return loaiKM;
+	public String getMaLoai() {
+		return maLoai;
 	}
 
-	public void setLoaiKM(String loaiKM) {
-		this.loaiKM = loaiKM;
+	public void setMaLoai(String maLoai) {
+		this.maLoai = maLoai;
 	}
 
 	public double getGiaTri() {
@@ -148,7 +148,7 @@ public class KhuyenMai {
 
 	@Override
 	public String toString() {
-		return "KhuyenMai [maKM=" + maKM + ", tenKM=" + tenKM + ", loaiKM=" + loaiKM + ", giaTri=" + giaTri
+		return "KhuyenMai [maKM=" + maKM + ", tenKM=" + tenKM + ", maLoai=" + maLoai + ", giaTri=" + giaTri
 				+ ", ngayBatDau=" + ngayBatDau + ", ngayKetThuc=" + ngayKetThuc + ", trangThai=" + trangThai
 				+ ", doiTuongApDung=" + doiTuongApDung + ", donHangTu=" + donHangTu + ", mon1=" + mon1 + ", mon2="
 				+ mon2 + ", monTang=" + monTang + ", ghiChu=" + ghiChu + "]";

@@ -7,6 +7,8 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.JOptionPane;
+
 public class KhuyenMai_DAO {
     private final Connection conn;
 
@@ -28,7 +30,7 @@ public class KhuyenMai_DAO {
                 KhuyenMai km = new KhuyenMai();
                 km.setMaKM(rs.getString("maKM"));
                 km.setTenKM(rs.getString("tenKM"));
-                km.setLoaiKM(rs.getString("loaiKM"));
+                km.setMaLoai(rs.getString("loaiKM"));
                 km.setGiaTri(rs.getDouble("giaTri"));
                 km.setNgayBatDau(rs.getDate("ngayBatDau"));
                 km.setNgayKetThuc(rs.getDate("ngayKetThuc"));
@@ -77,7 +79,7 @@ public class KhuyenMai_DAO {
         }
     }
 
-    
+   
  // Hàm lấy một khuyến mãi theo mã
     public KhuyenMai layKhuyenMaiTheoMa(String maKM) {
     	String sql = """
@@ -112,6 +114,24 @@ public class KhuyenMai_DAO {
             e.printStackTrace();
         }
         return null; // nếu không tìm thấy
+    }
+    
+ // Lấy danh sách loại KM từ database
+    public String[] getLoaiKhuyenMai() {
+        List<String> list = new ArrayList<>();
+        try {
+            String sql = "SELECT tenLoai FROM LoaiKhuyenMai";
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery();
+            while(rs.next()) {
+                list.add(rs.getString("tenLoai"));
+            }
+            rs.close();
+            ps.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list.toArray(new String[0]);
     }
 
     
@@ -173,67 +193,52 @@ public class KhuyenMai_DAO {
     }
 
     public boolean themKhuyenMai(KhuyenMai km) {
-        String sql = "INSERT INTO KhuyenMai(maKM, tenKM, loaiKM, giaTri, ngayBatDau, ngayKetThuc, trangThai, doiTuongApDung, donHangTu, mon1, mon2, monTang, ghiChu) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, km.getMaKM());
-            ps.setString(2, km.getTenKM());
-            ps.setString(3, km.getLoaiKM());
-            ps.setDouble(4, km.getGiaTri());
-            ps.setDate(5, km.getNgayBatDau());
-            ps.setDate(6, km.getNgayKetThuc());
-            ps.setString(7, km.getTrangThai());
-            ps.setString(8, km.getDoiTuongApDung());
-            ps.setDouble(9, km.getDonHangTu());
-
-            // Xử lý khóa ngoại
-            if (km.getMon1() == null || km.getMon1().trim().isEmpty())
-                ps.setNull(10, Types.NVARCHAR);
-            else
-                ps.setString(10, km.getMon1());
-
-            if (km.getMon2() == null || km.getMon2().trim().isEmpty())
-                ps.setNull(11, Types.NVARCHAR);
-            else
-                ps.setString(11, km.getMon2());
-
-            if (km.getMonTang() == null || km.getMonTang().trim().isEmpty())
-                ps.setNull(12, Types.NVARCHAR);
-            else
-                ps.setString(12, km.getMonTang());
-
-            ps.setString(13, km.getGhiChu());
-
-            return ps.executeUpdate() > 0;
+        String sql = "INSERT INTO KhuyenMai (maKM, tenKM, maLoai, giaTri, ngayBatDau, ngayKetThuc, trangThai, doiTuongApDung, donHangTu, mon1, mon2, monTang, ghiChu) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, km.getMaKM());
+            pstmt.setString(2, km.getTenKM());
+            pstmt.setString(3, km.getMaLoai()); // Sử dụng maLoai thay vì loaiKM
+            pstmt.setDouble(4, km.getGiaTri());
+            pstmt.setDate(5, km.getNgayBatDau());
+            pstmt.setDate(6, km.getNgayKetThuc());
+            pstmt.setString(7, km.getTrangThai());
+            pstmt.setString(8, km.getDoiTuongApDung());
+            pstmt.setDouble(9, km.getDonHangTu());
+            pstmt.setString(10, km.getMon1());
+            pstmt.setString(11, km.getMon2());
+            pstmt.setString(12, km.getMonTang());
+            pstmt.setString(13, km.getGhiChu());
+            int rowsAffected = pstmt.executeUpdate();
+            System.out.println("Rows affected: " + rowsAffected); // Log để kiểm tra
+            return rowsAffected > 0;
         } catch (SQLException e) {
             e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Lỗi cơ sở dữ liệu: " + e.getMessage());
             return false;
         }
     }
-
-    public boolean suaKhuyenMai(KhuyenMai km){
-        String sql = "UPDATE KhuyenMai SET tenKM=?, loaiKM=?, giaTri=?, ngayBatDau=?, ngayKetThuc=?, " +
-                     "trangThai=?, doiTuongApDung=?, donHangTu=?, mon1=?, mon2=?, monTang=?, ghiChu=? " +
-                     "WHERE maKM=?";
-        try (
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setString(1, km.getTenKM());
-            stmt.setString(2, km.getLoaiKM());
-            stmt.setDouble(3, km.getGiaTri());
-            stmt.setDate(4, km.getNgayBatDau());
-            stmt.setDate(5, km.getNgayKetThuc());
-            stmt.setString(6, km.getTrangThai());
-            stmt.setString(7, km.getDoiTuongApDung());
-            stmt.setDouble(8, km.getDonHangTu());
-            stmt.setString(9, km.getMon1());
-            stmt.setString(10, km.getMon2());
-            stmt.setString(11, km.getMonTang());
-            stmt.setString(12, km.getGhiChu());
-            stmt.setString(13, km.getMaKM());
-
-            int rows = stmt.executeUpdate();
-            return rows > 0;
-        } catch (Exception e){
+    
+    
+    public boolean suaKhuyenMai(KhuyenMai km) {
+        String sql = "UPDATE KhuyenMai SET maLoai = ?, tenKM = ?, giaTri = ?, ngayBatDau = ?, ngayKetThuc = ?, trangThai = ?, doiTuongApDung = ?, donHangTu = ?, mon1 = ?, mon2 = ?, monTang = ?, ghiChu = ? WHERE maKM = ?";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, km.getMaLoai()); // Sử dụng maLoai thay vì loaiKM
+            pstmt.setString(2, km.getTenKM());
+            pstmt.setDouble(3, km.getGiaTri());
+            pstmt.setDate(4, km.getNgayBatDau());
+            pstmt.setDate(5, km.getNgayKetThuc());
+            pstmt.setString(6, km.getTrangThai());
+            pstmt.setString(7, km.getDoiTuongApDung());
+            pstmt.setDouble(8, km.getDonHangTu());
+            pstmt.setString(9, km.getMon1());
+            pstmt.setString(10, km.getMon2());
+            pstmt.setString(11, km.getMonTang());
+            pstmt.setString(12, km.getGhiChu());
+            pstmt.setString(13, km.getMaKM());
+            int rowsAffected = pstmt.executeUpdate();
+            return rowsAffected > 0;
+        } catch (SQLException e) {
             e.printStackTrace();
             return false;
         }
