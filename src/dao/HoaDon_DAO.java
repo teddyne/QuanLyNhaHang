@@ -192,5 +192,88 @@ public class HoaDon_DAO {
 
         return maHD;
     }
+    
+    public List<Object[]> getHoaDonTheoThoiGian(java.sql.Date ngayBatDau, java.sql.Date ngayKetThuc) {
+		List<Object[]> ds = new ArrayList<>();
+		String sql = "SELECT hd.maHD, b.maBan, hd.ngayLap, kh.tenKH, kh.sdt, nv.hoTen, km.tenKM, " +
+					 "ISNULL(SUM(ct.soLuong * ct.donGia), 0) AS tongTien " +
+					 "FROM HoaDon hd " +
+					 "LEFT JOIN KhachHang kh ON hd.maKH = kh.maKH " +
+					 "LEFT JOIN NhanVien nv ON hd.maNhanVien = nv.maNhanVien " +
+					 "LEFT JOIN KhuyenMai km ON hd.maKM = km.maKM " +
+					 "LEFT JOIN PhieuDatBan p ON hd.maPhieu = p.maPhieu " +
+					 "LEFT JOIN Ban b ON p.maBan = b.maBan " +
+					 "LEFT JOIN ChiTietHoaDon ct ON hd.maHD = ct.maHD " +
+					 "WHERE CONVERT(date, hd.ngayLap) BETWEEN ? AND ? " +
+					 "GROUP BY hd.maHD, b.maBan, hd.ngayLap, kh.tenKH, kh.sdt, nv.hoTen, km.tenKM " +
+					 "ORDER BY hd.ngayLap ASC";
+
+		try (Connection con = ConnectSQL.getConnection();
+			 PreparedStatement stmt = con.prepareStatement(sql)) {
+
+			stmt.setDate(1, ngayBatDau);
+			stmt.setDate(2, ngayKetThuc);
+
+			try (ResultSet rs = stmt.executeQuery()) {
+				while (rs.next()) {
+					Object[] row = {
+							rs.getString("maHD"),
+							rs.getString("maBan"),
+							rs.getTimestamp("ngayLap"), // Dùng getTimestamp để lấy cả giờ, phút (cần cho Excel)
+							rs.getString("tenKH"),
+							rs.getString("sdt"),
+							rs.getString("hoTen"),
+							rs.getString("tenKM"),
+							rs.getDouble("tongTien")
+					};
+					ds.add(row);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return ds;
+	}
+    
+    /**
+	 * Lấy Top 10 món ăn bán chạy nhất trong một khoảng thời gian.
+	 */
+	public List<Object[]> getTopMonAnBanChay(java.sql.Date ngayBatDau, java.sql.Date ngayKetThuc) {
+		List<Object[]> ds = new ArrayList<>();
+		String sql = """
+			SELECT TOP 10
+				ma.tenMon,
+				SUM(ct.soLuong) AS tongSoLuong
+			FROM ChiTietHoaDon ct
+			JOIN MonAn ma ON ct.maMon = ma.maMon
+			JOIN HoaDon hd ON ct.maHD = hd.maHD
+			WHERE
+				CONVERT(date, hd.ngayLap) BETWEEN ? AND ?
+			GROUP BY
+				ma.tenMon
+			ORDER BY
+				tongSoLuong DESC
+		""";
+
+		try (Connection con = ConnectSQL.getConnection();
+			 PreparedStatement stmt = con.prepareStatement(sql)) {
+
+			stmt.setDate(1, ngayBatDau);
+			stmt.setDate(2, ngayKetThuc);
+
+			try (ResultSet rs = stmt.executeQuery()) {
+				while (rs.next()) {
+					Object[] row = {
+							rs.getString("tenMon"),
+							rs.getInt("tongSoLuong")
+					};
+					ds.add(row);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return ds;
+	}
 
 }

@@ -1,14 +1,20 @@
 ﻿use QLNH
 
+--Bảng LoaiKhachHang
+CREATE TABLE LoaiKhachHang (
+    maLoaiKH NVARCHAR(20) PRIMARY KEY,
+    tenLoaiKH NVARCHAR(100) NOT NULL ,
+    moTa NVARCHAR(255) NULL -- Có thể thêm mô tả hoặc các thuộc tính khác sau này
+);
+
 -- Bảng KhachHang
 CREATE TABLE KhachHang (
     maKH NVARCHAR(20) PRIMARY KEY,
     tenKH NVARCHAR(100) NOT NULL,
     email NVARCHAR(100),
-    sdt NVARCHAR(15),
+	sdt VARCHAR(15) UNIQUE, -- Thêm UNIQUE để tránh trùng SĐT
     ngaySinh Date,
-    loaiKH NVARCHAR(50),
-	CHECK (loaiKH IN (N'Khách thường', N'Thành viên'))
+    maLoaiKH NVARCHAR(20) FOREIGN KEY REFERENCES LoaiKhachHang(maLoaiKH) -- Dùng khóa ngoại
 );
 
 -- Bảng NhanVien
@@ -20,18 +26,22 @@ CREATE TABLE NhanVien (
     gioiTinh BIT,
     cccd NVARCHAR(50),
     email NVARCHAR(100),
-    sdt NVARCHAR(15),
+    sdt VARCHAR(15) UNIQUE,
     trangThai BIT,
     chucVu NVARCHAR(50)
 );
+ALTER TABLE NhanVien DROP COLUMN trangThai;
+ALTER TABLE NhanVien ADD trangThai NVARCHAR(50);
+
 
 -- Bảng TaiKhoan
 CREATE TABLE TaiKhoan (
     maTaiKhoan VARCHAR(100) PRIMARY KEY DEFAULT ('{' + CONVERT(VARCHAR(36), NEWID()) + '}'),
-    soDienThoai VARCHAR(10) NOT NULL UNIQUE,
+    soDienThoai VARCHAR(15) NOT NULL UNIQUE,
     matKhau VARCHAR(255) NOT NULL CHECK (LEN(matKhau) >= 6),
     maNhanVien NVARCHAR(20) NOT NULL FOREIGN KEY REFERENCES NhanVien(maNhanVien),
     phanQuyen VARCHAR(20) NOT NULL CHECK (phanQuyen IN ('QuanLy', 'LeTan')),
+	trangThai BIT DEFAULT 1,
     CONSTRAINT chk_sdt CHECK (soDienThoai LIKE '0[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]' AND LEN(soDienThoai) = 10)
 );
 
@@ -43,23 +53,43 @@ CREATE TABLE LichSuDangNhap (
     trangThai BIT NOT NULL -- 1: Success, 0: Failure
 );
 
-
--- Bảng KhuVuc
+-- Creating KhuVuc table
 CREATE TABLE KhuVuc (
-    maKhuVuc NVARCHAR(20) PRIMARY KEY,
-    tenKhuVuc NVARCHAR(100) NOT NULL,
+    maKhuVuc NVARCHAR(10) PRIMARY KEY,
+    tenKhuVuc NVARCHAR(50) NOT NULL,
     soLuongBan INT NOT NULL,
-    trangThai NVARCHAR(50) CHECK (trangThai IN (N'Hoạt động', N'Ngừng'))
+    trangThai NVARCHAR(20) NOT NULL DEFAULT N'Hoạt động' CHECK (trangThai IN (N'Hoạt động', N'Ngừng'))
 );
 
--- Bảng Ban
+CREATE TABLE LoaiBan (
+    maLoai NVARCHAR(10) PRIMARY KEY,
+    tenLoai NVARCHAR(50) NOT NULL
+);
+
+-- Creating Ban table
 CREATE TABLE Ban (
-    maBan NVARCHAR(20) PRIMARY KEY,
-	maKhuVuc NVARCHAR(20) FOREIGN KEY REFERENCES KhuVuc(maKhuVuc),
-    soChoNgoi INT NOT NULL CHECK (soChoNgoi > 0),
-    loaiBan NVARCHAR(50) CHECK (loaiBan IN (N'Thường', N'VIP')),
-	trangThai NVARCHAR(50) CHECK (trangThai IN (N'Trống', N'Đặt', N'Đang phục vụ')),
-	ghiChu NVARCHAR(200)
+    maBan NVARCHAR(10) PRIMARY KEY,
+    maKhuVuc NVARCHAR(10) NOT NULL,
+    soChoNgoi INT NOT NULL,
+    maLoai NVARCHAR(10) NOT NULL,
+    trangThai NVARCHAR(20) NOT NULL CHECK (trangThai IN (N'Trống', N'Đặt', N'Đang phục vụ')),
+    ghiChu NVARCHAR(100),
+    FOREIGN KEY (maKhuVuc) REFERENCES KhuVuc(maKhuVuc)
+);
+
+CREATE TABLE PhieuDatBan (
+    maPhieu      NVARCHAR(10) PRIMARY KEY,       
+    maBan        NVARCHAR(10) NOT NULL,          
+    tenKhach     NVARCHAR(100) NOT NULL,         
+    soDienThoai  VARCHAR(15) NULL,              
+    soNguoi      INT NOT NULL,                   
+    ngayDen      DATE NOT NULL,                  
+    gioDen       TIME NOT NULL,                  
+    ghiChu       NVARCHAR(200) NULL,             
+    tienCoc      DECIMAL(18,2) DEFAULT 0,        
+    ghiChuCoc    NVARCHAR(200) NULL,             
+    trangThai    NVARCHAR(20) NOT NULL DEFAULT N'Đặt',
+    CONSTRAINT FK_PhieuDatBan_Ban FOREIGN KEY (maBan) REFERENCES Ban(maBan)
 );
 
 --Bảng loại món
@@ -79,15 +109,20 @@ CREATE TABLE MonAn (
     moTa NVARCHAR(200)
 );
 
+CREATE TABLE LoaiKhuyenMai (
+    maLoai NVARCHAR(20) PRIMARY KEY,
+    tenLoai NVARCHAR(100) NOT NULL
+);
+
 -- Bảng KhuyenMai
 CREATE TABLE KhuyenMai (
     maKM NVARCHAR(20) PRIMARY KEY,
     tenKM NVARCHAR(100) NOT NULL,
-    loaiKM NVARCHAR(50) CHECK (loaiKM IN (N'Phần trăm', N'Giảm trực tiếp', N'Sinh nhật', N'Tặng món')),
+    maLoai NVARCHAR(20) NOT NULL,
     giaTri DECIMAL(18,2),
     ngayBatDau DATE NOT NULL,
     ngayKetThuc DATE NOT NULL,
-    trangThai NVARCHAR(50) CHECK (trangThai IN (N'Đang áp dụng', N'Sắp áp dụng', N'Hết hạn')),
+    trangThai NVARCHAR(50),
 	doiTuongApDung NVARCHAR(50) CHECK (doiTuongApDung IN (N'Khách thường', N'Thành viên', N'Tất cả')),
     donHangTu DECIMAL(18,2),
     mon1 NVARCHAR(20) FOREIGN KEY REFERENCES MonAn(maMon),
@@ -97,30 +132,16 @@ CREATE TABLE KhuyenMai (
 	CONSTRAINT CK_NgayKhuyenMai CHECK (ngayKetThuc >= ngayBatDau)
 );
 
--- Bảng PhieuDatBan
-CREATE TABLE PhieuDatBan (
-    maPhieu NVARCHAR(20) PRIMARY KEY,
-	maBan NVARCHAR(20) FOREIGN KEY REFERENCES Ban(maBan),
-	maKH NVARCHAR(20) FOREIGN KEY REFERENCES KhachHang(maKH),
-	soNguoi INT CHECK (soNguoi > 0),
-	ngayDen DATE NOT NULL,
-    gioDen TIME NOT NULL,
-	ghiChu NVARCHAR(200) NULL,
-    tienCoc DECIMAL(18,2) CHECK (tienCoc >= 0),
-	ghiChuCoc NVARCHAR (200) NULL,
-    trangThai NVARCHAR(20) NOT NULL DEFAULT N'Đặt',
-    maNhanVien NVARCHAR(20) FOREIGN KEY REFERENCES NhanVien(maNhanVien),
-);
-
 -- Bảng HoaDon
 CREATE TABLE HoaDon (
     maHD NVARCHAR(20) PRIMARY KEY,
-    ngayLap DATE NOT NULL,
+	ngayLap DATETIME NOT NULL DEFAULT GETDATE(),
 	trangThai NVARCHAR(50) CHECK (trangThai IN (N'Chưa thanh toán', N'Đã thanh toán', N'Đã cọc', N'Đã hủy')),
-	maPhieu NVARCHAR(20) FOREIGN KEY REFERENCES PhieuDatBan(maPhieu),
+	maPhieu NVARCHAR(10) FOREIGN KEY REFERENCES PhieuDatBan(maPhieu),
     maKH NVARCHAR(20) FOREIGN KEY REFERENCES KhachHang(maKH),
     maKM NVARCHAR(20) NULL FOREIGN KEY REFERENCES KhuyenMai(maKM),
     maNhanVien NVARCHAR(20) FOREIGN KEY REFERENCES NhanVien(maNhanVien),
+	phuThu DECIMAL(18,2) DEFAULT 0 CHECK (phuThu >= 0),
     ghiChu NVARCHAR(200)
 );
 
@@ -134,81 +155,112 @@ CREATE TABLE ChiTietHoaDon (
     ghiChu NVARCHAR(200)
 );
 
-
-
 --INSERT dữ liệu
+
+-- Bảng LoaiKhachHang
+INSERT INTO LoaiKhachHang (maLoaiKH, tenLoaiKH, moTa) VALUES
+('LKH01', N'Khách thường', N'Khách vãng lai'),
+('LKH02', N'Thành viên', N'Khách hàng có tài khoản');
+
 -- Bảng KhachHang
-INSERT INTO KhachHang VALUES ('KH0001', N'Nguyễn Văn A', 'a@gmail.com', '0912345678', '1995-05-10', N'Khách thường');
-INSERT INTO KhachHang VALUES ('KH0002', N'Trần Thị B', 'b@gmail.com', '0923456789', '2000-11-20', N'Thành viên');
-INSERT INTO KhachHang VALUES ('KH0003', N'Lê Văn C', 'c@gmail.com', '0934567890', '1988-03-15', N'Thành viên');
+INSERT INTO KhachHang (maKH, tenKH, email, sdt, ngaySinh, maLoaiKH) VALUES
+('KH0001', N'Nguyễn Văn A', 'a@gmail.com', '0912345678', '1995-05-10', 'LKH01'),
+('KH0002', N'Trần Thị B', 'b@gmail.com', '0923456789', '2000-11-20', 'LKH02'),
+('KH0003', N'Lê Văn C', 'c@gmail.com', '0934567890', '1988-03-15', 'LKH02');
 
 -- Bảng NhanVien
-INSERT INTO NhanVien VALUES ('NV0001', N'Bùi Ngọc Hiền', 'nv1.img', '1995-08-12', 0, '075123456789', 'hien@gmail.com', '0987654321', 1, N'Quản lý');
-INSERT INTO NhanVien VALUES ('NV0002', N'Nguyễn Trương An Thy', 'nv2.img', '1995-01-17', 0, '075987654321', 'thy@gmail.com', '0978123456', 1, N'Lễ tân');
-INSERT INTO NhanVien VALUES ('NV0003', N'Ừng Thị Thanh Trúc', 'nv3.img', '1995-05-11', 0, '075654321987', 'truc@gmail.com', '0967812345', 1, N'Lễ tân');
-INSERT INTO NhanVien VALUES ('NV0004', N'Nguyễn Nam Khánh', 'nv4.img', '1995-10-25', 1, '075289364950', 'khanh@gmail.com', '0345678912', 1, N'Lễ tân');
+INSERT INTO NhanVien (maNhanVien, hoTen, anhNV, ngaySinh, gioiTinh, cccd, email, sdt, trangThai, chucVu) VALUES
+('NV0001', N'Bùi Ngọc Hiền', 'nv1.img', '1995-08-12', 0, '075123456789', 'hien@gmail.com', '0987654321', N'Đang làm việc', N'Quản lý'),
+('NV0002', N'Nguyễn Trương An Thy', 'nv2.img', '1995-01-17', 0, '075987654321', 'thy@gmail.com', '0978123456', N'Đang làm việc', N'Lễ tân'),
+('NV0003', N'Ừng Thị Thanh Trúc', 'nv3.img', '1995-05-11', 0, '075654321987', 'truc@gmail.com', '0967812345', N'Đang làm việc', N'Lễ tân'),
+('NV0004', N'Nguyễn Nam Khánh', 'nv4.img', '1995-10-25', 1, '075289364950', 'khanh@gmail.com', '0345678912', N'Đang làm việc', N'Lễ tân');
 
 -- Bảng TaiKhoan
 INSERT INTO TaiKhoan (soDienThoai, matKhau, maNhanVien, phanQuyen) VALUES
 ('0987654321', 'hien123', 'NV0001', 'QuanLy'),
 ('0978123456', 'thy456',  'NV0002', 'LeTan'),
 ('0967812345', 'truc789', 'NV0003', 'LeTan'),
-('0945678912', 'khanh321','NV0004', 'LeTan');
-
+('0345678912', 'khanh321','NV0004', 'LeTan');
 
 -- Bảng KhuVuc
-INSERT INTO KhuVuc VALUES ('KV0001', N'Trong nhà', 6, N'Hoạt động');
-INSERT INTO KhuVuc VALUES ('KV0002', N'Sân vườn', 4, N'Hoạt động');
-INSERT INTO KhuVuc VALUES ('KV0003', N'Ngoài trời', 2, N'Hoạt động');
+INSERT INTO KhuVuc (maKhuVuc, tenKhuVuc, soLuongBan, trangThai) VALUES
+('KV01', N'Trong nhà', 6, N'Hoạt động'),
+('KV02', N'Sân thượng', 4, N'Hoạt động'),
+('KV03', N'Ngoài trời', 2, N'Hoạt động');
+
+-- Bảng LoaiBan
+INSERT INTO LoaiBan (maLoai, tenLoai) VALUES
+('L01', N'Thường'),
+('L02', N'VIP');
 
 -- Bảng Ban
-INSERT INTO Ban VALUES ('B0001', 4, N'Đang phục vụ', 'KV0001', N'Thường', NULL);
-INSERT INTO Ban VALUES ('B0002', 6, N'Đã đặt', 'KV0001', N'VIP', NULL);
-INSERT INTO Ban VALUES ('B0003', 8, N'Trống', 'KV0002', N'Thường', NULL);
-
--- Bảng Ban
-INSERT INTO Ban VALUES ('B0001', 'KV0001', 4, N'Thường', N'Trống', NULL);
-INSERT INTO Ban VALUES ('B0002', 'KV0001', 6, N'VIP', N'Trống', NULL);
-INSERT INTO Ban VALUES ('B0003', 'KV0002', 8, N'Thường', N'Đang phục vụ', NULL);
-INSERT INTO Ban VALUES ('B0004', 'KV0003', 2, N'Thường', N'Trống', NULL);
-INSERT INTO Ban VALUES ('B0005', 'KV0001', 4, N'Thường', N'Đặt', NULL);
+INSERT INTO Ban(maBan, maKhuVuc, soChoNgoi, maLoai, trangThai, ghiChu) VALUES
+-- KV01 - Trong nhà
+('A01', 'KV01', 4, 'L01', N'Trống', NULL),
+('A02', 'KV01', 4, 'L02', N'Trống', NULL),
+('A03', 'KV01', 4, 'L01', N'Trống', NULL),
+('A04', 'KV01', 6, 'L02', N'Trống', NULL),
+('A05', 'KV01', 4, 'L01', N'Trống', NULL),
+('A06', 'KV01', 6, 'L02', N'Trống', NULL),
+('A07', 'KV01', 4, 'L01', N'Trống', NULL),
+('A08', 'KV01', 4, 'L02', N'Trống', NULL),
+('A09', 'KV01', 4, 'L01', N'Trống', NULL),
+('A10', 'KV01', 6, 'L02', N'Trống', NULL),
+-- KV02 - Sân thượng
+('B01', 'KV02', 4, 'L01', N'Trống', NULL),
+('B02', 'KV02', 4, 'L02', N'Trống', NULL),
+('B03', 'KV02', 4, 'L01', N'Trống', NULL),
+('B04', 'KV02', 6, 'L02', N'Trống', NULL),
+('B05', 'KV02', 8, 'L02', N'Trống', N'Bàn ngoài trời'),
+-- KV03 - Ngoài trời
+('C01', 'KV03', 4, 'L01', N'Trống', NULL),
+('C02', 'KV03', 4, 'L02', N'Trống', NULL),
+('C03', 'KV03', 6, 'L02', N'Trống', NULL),
+('C04', 'KV03', 8, 'L01', N'Trống', N'Bàn VIP ngoài trời');
 
 -- Bảng LoaiMon
-INSERT INTO LoaiMon VALUES ('LM0001', N'Món chính');
-INSERT INTO LoaiMon VALUES ('LM0002', N'Tráng miệng');
+INSERT INTO LoaiMon (maLoai, tenLoai) VALUES
+('LM0001', N'Món chính'),
+('LM0002', N'Tráng miệng');
 
 -- Bảng MonAn
-INSERT INTO MonAn VALUES ('MON0001', N'Lẩu hải sản', 'lauhaisan.img', 'LM0001', 150000, 1, NULL);
-INSERT INTO MonAn VALUES ('MON0002', N'Cơm chiên dương châu', 'comchien.img', 'LM0001', 40000, 1, NULL);
-INSERT INTO MonAn VALUES ('MON0003', N'Bánh flan', 'flan.img', 'LM0002', 15000, 1, NULL);
+INSERT INTO MonAn (maMon, tenMon, anhMon, maLoai, donGia, trangThai, moTa) VALUES
+('MON0001', N'Lẩu hải sản', 'lauhaisan.img', 'LM0001', 150000, 1, NULL),
+('MON0002', N'Cơm chiên Dương Châu', 'comchien.img', 'LM0001', 40000, 1, NULL),
+('MON0003', N'Bánh flan', 'flan.img', 'LM0002', 15000, 1, N'Món tráng miệng phổ biến');
+
+--Bảng LoaiKhuyenMai
+INSERT INTO LoaiKhuyenMai(maLoai, tenLoai) VALUES
+('L01', N'Phần trăm'),
+('L02', N'Giảm trực tiếp'),
+('L03', N'Tặng món');
 
 -- Bảng KhuyenMai
-INSERT INTO KhuyenMai VALUES ('KM0001', N'Giảm 10%', N'Phần trăm', 10, '2024-07-10', '2024-07-20', N'Hết hạn', N'Tất cả', 2000000, NULL, NULL, NULL, NULL);
-INSERT INTO KhuyenMai VALUES ('KM0002', N'Giảm 50k', N'Giảm trực tiếp', 50000, '2025-10-27', '2025-11-15', N'Sắp áp dụng', N'Tất cả', 500000, NULL, NULL, NULL, NULL);
-INSERT INTO KhuyenMai VALUES ('KM0003', N'Mua 2 tặng 1 flan', N'Tặng món', 0, '2025-09-27', '2025-10-15', N'Đang áp dụng', N'Tất cả', 0, 'MON0003', 'MON0003', 'MON0003', NULL);
+INSERT INTO KhuyenMai (maKM, tenKM, maLoai, giaTri, ngayBatDau, ngayKetThuc, trangThai, doiTuongApDung, donHangTu, mon1, mon2, monTang, ghiChu) VALUES
+('KM0001', N'Giảm 10%', 'L01', 10, '2024-07-10', '2024-07-20', N'Hết hạn', N'Tất cả', 2000000, NULL, NULL, NULL, NULL),
+('KM0002', N'Giảm 50k', 'L02', 50000, '2025-10-27', '2025-11-15', N'Sắp áp dụng', N'Tất cả', 500000, NULL, NULL, NULL, NULL),
+('KM0003', N'Mua 2 tặng 1 flan', 'L03', 0, '2025-09-27', '2025-10-15', N'Đang áp dụng', N'Tất cả', 0, 'MON0003', 'MON0003', 'MON0003', NULL);
 
 -- Bảng PhieuDatBan
-INSERT INTO PhieuDatBan VALUES ('P0001', '2025-09-20', '18:00:00', 4, N'Đã đặt', 0, NULL, 'KH0001', 'NV0002', 'B0001', 'KV0001');
-INSERT INTO PhieuDatBan VALUES ('P0002', '2025-09-24', '19:30:00', 6, N'Đã đặt', 0, NULL, 'KH0002', 'NV0002', 'B0002', 'KV0001');
-
--- Bảng PhieuDatBan
-INSERT INTO PhieuDatBan VALUES ('P0001', 'B0005', 'KH0001', 4, '2025-10-20', '18:00:00', NULL, 200000, NULL, N'Đặt', 'NV0002');
-INSERT INTO PhieuDatBan VALUES ('P0002', 'B0002', 'KH0002', 6, '2025-10-04', '19:30:00', N'Hẹn gặp mặt', 0, NULL, N'Đặt', 'NV0003');
-INSERT INTO PhieuDatBan VALUES ('P0003', 'B0003', 'KH0003', 2, '2025-10-07', '12:00:00', NULL, 0, NULL, N'Đặt', 'NV0004');
-INSERT INTO PhieuDatBan VALUES ('P0004', 'B0001', 'KH0002', 6, '2025-09-04', '19:30:00', NULL, 0, NULL, N'Đặt', 'NV0003');
-INSERT INTO PhieuDatBan VALUES ('P0005', 'B0001', 'KH0001', 2, '2025-09-07', '12:00:00', NULL, 0, NULL, N'Đặt', 'NV0004');
+INSERT INTO PhieuDatBan (maPhieu, maBan, tenKhach, soDienThoai, soNguoi, ngayDen, gioDen, ghiChu, tienCoc, ghiChuCoc, trangThai) VALUES
+('P0001', 'A02', N'Nguyễn Văn A', '0912345678', 4, '2025-10-09', '18:00', N'Bàn VIP gần cửa sổ', 200000, N'Cọc tiền mặt', N'Đặt'),
+('P0002', 'B03', N'Trần Thị B', '0923456789', 3, '2025-10-08', '12:00', N'Ăn trưa sinh nhật', 0, NULL, N'Đặt'),
+('P0003', 'C03', N'Lê Văn C', '0934567890', 6, '2025-10-07', '19:30', N'Tiệc bạn bè', 500000, N'Chuyển khoản', N'Đặt');
 
 -- Bảng HoaDon
-INSERT INTO HoaDon VALUES ('HD0001', '2025-09-04', N'Đã thanh toán', 'P0004', 'KH0002', NULL, 'NV0003', NULL);
-INSERT INTO HoaDon VALUES ('HD0002', '2025-09-07', N'Đã thanh toán', 'P0005', 'KH0001', NULL, 'NV0004', NULL);
+INSERT INTO HoaDon (maHD, ngayLap, trangThai, maPhieu, maKH, maKM, maNhanVien, phuThu, ghiChu) VALUES
+('HD0001', GETDATE(), N'Đã thanh toán', 'P0003', 'KH0003', 'KM0003', 'NV0002', 0, N'Áp dụng khuyến mãi tặng flan'),
+('HD0002', GETDATE(), N'Chưa thanh toán', 'P0001', 'KH0001', NULL, 'NV0003', 0, N'Chưa thanh toán đủ'),
+('HD0003', GETDATE(), N'Đã cọc', 'P0002', 'KH0002', 'KM0001', 'NV0004', 0, N'Đặt bàn buổi trưa, giảm 10%');
 
 -- Bảng ChiTietHoaDon
-INSERT INTO ChiTietHoaDon VALUES ('HD0001', 'MON0001', 1, 150000, NULL);
-INSERT INTO ChiTietHoaDon VALUES ('HD0001', 'MON0002', 2, 40000, NULL);
-INSERT INTO ChiTietHoaDon VALUES ('HD0001', 'MON0003', 2, 15000, NULL);
-
-INSERT INTO ChiTietHoaDon VALUES ('HD0002', 'MON0001', 1, 40000, NULL);
-INSERT INTO ChiTietHoaDon VALUES ('HD0002', 'MON0003', 1, 15000, NULL);
+INSERT INTO ChiTietHoaDon (maHD, maMon, soLuong, donGia, ghiChu) VALUES
+('HD0001', 'MON0001', 2, 150000, N'Lẩu hải sản cho nhóm 6 người'),
+('HD0001', 'MON0003', 3, 15000, N'Tặng thêm 1 flan'),
+('HD0002', 'MON0002', 2, 40000, N'Cơm chiên Dương Châu'),
+('HD0002', 'MON0003', 2, 15000, NULL),
+('HD0003', 'MON0001', 1, 150000, NULL),
+('HD0003', 'MON0002', 1, 40000, NULL);
 
 select * from KhachHang
 select * from NhanVien

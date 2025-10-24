@@ -16,6 +16,8 @@ import java.sql.SQLException;
 import java.sql.Time;
 import java.util.Calendar;
 import java.util.regex.Pattern;
+import com.toedter.calendar.JDateChooser;
+import java.time.ZoneId;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -224,7 +226,7 @@ public class FrmDatBan extends JDialog {
                         khNew.setMaKH(khachHangDAO.generateMaKH());
                         khNew.setTenKH(txtTen.getText().trim());
                         khNew.setSdt(sdt);
-                        khNew.setCccd(null);
+                        khNew.setNgaySinh(null);
                         khNew.setEmail(null);
                         khNew.setLoaiKH("Thành viên");
                         khachHangDAO.themKhachHang(khNew);
@@ -440,6 +442,7 @@ class FrmThemKhachHang extends JDialog {
     private JTextField txtSDT;
     private JTextField txtCCCD;
     private JTextField txtEmail;
+    private JDateChooser dateChooserNgaySinh;
 
     public FrmThemKhachHang(JDialog parent, String sdt, String ten, KhachHang_DAO khachHangDAO) {
         super(parent, "Thêm khách hàng thành viên", true);
@@ -516,7 +519,7 @@ class FrmThemKhachHang extends JDialog {
                 kh.setMaKH(khachHangDAO.generateMaKH());
                 kh.setTenKH(txtTen.getText().trim());
                 kh.setSdt(txtSDT.getText().trim());
-                kh.setCccd(txtCCCD.getText().trim().isEmpty() ? null : txtCCCD.getText().trim());
+                kh.setNgaySinh( (dateChooserNgaySinh.getDate() == null) ? null : dateChooserNgaySinh.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate() );
                 kh.setEmail(txtEmail.getText().trim().isEmpty() ? null : txtEmail.getText().trim());
                 kh.setLoaiKH("Thành viên");
                 khachHangDAO.themKhachHang(kh);

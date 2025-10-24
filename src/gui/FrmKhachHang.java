@@ -6,6 +6,12 @@ import entity.KhachHang;
 import entity.LoaiKhachHang;
 import connectSQL.ConnectSQL;
 
+import com.toedter.calendar.JDateChooser;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
+
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.table.DefaultTableModel;
@@ -25,11 +31,14 @@ public class FrmKhachHang extends ThanhTacVu {
 
     private DefaultTableModel modelKH;
     private JTable tblKH;
-    private JTextField txtMaKH, txtTenKH, txtPhone, txtEmail, txtCCCD;
+    private JTextField txtMaKH, txtTenKH, txtPhone, txtEmail;
+    private JDateChooser dateChooserNgaySinh; 
     private JComboBox<String> cbLoaiKH;
     private JButton btnThem, btnSua, btnXoa, btnLamMoi, btnTraCuu, btnLoaiKH;
 
     private List<LoaiKhachHang> dsLoaiKH;
+
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
     public FrmKhachHang(KhachHang_DAO khachHangDAO, LoaiKhachHang_DAO loaiKH_DAO, Consumer<Void> refreshCallback) throws SQLException {
         super();
@@ -113,17 +122,21 @@ public class FrmKhachHang extends ThanhTacVu {
         gbc.gridx = 1;
         fieldsPanel.add(txtTenKH, gbc);
 
-        // CCCD
         gbc.gridx = 0;
         gbc.gridy = 2;
-        JLabel lblCCCD = new JLabel("CCCD");
-        lblCCCD.setFont(labelFont);
-        fieldsPanel.add(lblCCCD, gbc);
-        txtCCCD = new JTextField(15);
-        txtCCCD.setFont(fieldFont);
-        gbc.gridx = 1;
-        fieldsPanel.add(txtCCCD, gbc);
+        JLabel lblNgaySinh = new JLabel("Ngày sinh"); 
+        lblNgaySinh.setFont(labelFont);
+        fieldsPanel.add(lblNgaySinh, gbc);
 
+        dateChooserNgaySinh = new JDateChooser(); 
+        dateChooserNgaySinh.setFont(fieldFont);
+        dateChooserNgaySinh.setDateFormatString("dd-MM-yyyy"); 
+        // Set chiều cao cho JDateChooser để khớp với các JTextField khác
+        dateChooserNgaySinh.setPreferredSize(new Dimension(150, (int)txtTenKH.getPreferredSize().getHeight()));
+
+        gbc.gridx = 1;
+        fieldsPanel.add(dateChooserNgaySinh, gbc);
+        
         // Spacer giữa cột
         gbc.weightx = 0.5;
         for (int y = 0; y <= 2; y++) {
@@ -201,14 +214,14 @@ public class FrmKhachHang extends ThanhTacVu {
                 "Danh Sách Khách Hàng", 0, 0, new Font("Times New Roman", Font.BOLD, 24)));
         tablePanel.setBackground(Color.WHITE);
 
-        String[] columns = {"Mã KH", "Tên KH", "Số điện thoại", "CCCD", "Email", "Loại KH"};
+        String[] columns = {"Mã KH", "Tên KH", "Số điện thoại", "Ngày sinh", "Email", "Loại KH"};
         modelKH = new DefaultTableModel(columns, 0) {
             @Override public boolean isCellEditable(int row, int column) { return false; }
         };
         tblKH = new JTable(modelKH);
         tblKH.setFont(new Font("Times New Roman", Font.PLAIN, 16));
         tblKH.setRowHeight(30);
-        
+
         JScrollPane scrollKH = new JScrollPane(tblKH);
         tablePanel.add(scrollKH, BorderLayout.CENTER);
 
@@ -276,7 +289,20 @@ public class FrmKhachHang extends ThanhTacVu {
                     txtMaKH.setText(modelKH.getValueAt(row, 0).toString());
                     txtTenKH.setText(modelKH.getValueAt(row, 1).toString());
                     txtPhone.setText(modelKH.getValueAt(row, 2).toString());
-                    txtCCCD.setText(modelKH.getValueAt(row, 3) != null ? modelKH.getValueAt(row, 3).toString() : "");
+
+                    Object ngaySinhObj = modelKH.getValueAt(row, 3);
+                    if (ngaySinhObj != null) {
+                        try {
+                            LocalDate ld = LocalDate.parse(ngaySinhObj.toString(), DATE_FORMATTER);
+                            Date date = Date.from(ld.atStartOfDay(ZoneId.systemDefault()).toInstant());
+                            dateChooserNgaySinh.setDate(date);
+                        } catch (Exception ex) {
+                            dateChooserNgaySinh.setDate(null); 
+                        }
+                    } else {
+                        dateChooserNgaySinh.setDate(null); 
+                    }
+
                     txtEmail.setText(modelKH.getValueAt(row, 4) != null ? modelKH.getValueAt(row, 4).toString() : "");
                     cbLoaiKH.setSelectedItem(modelKH.getValueAt(row, 5).toString());
                 }
@@ -306,7 +332,7 @@ public class FrmKhachHang extends ThanhTacVu {
                         kh.getMaKH(),
                         kh.getTenKH(),
                         kh.getSdt(),
-                        kh.getCccd(),
+                        kh.getNgaySinh() != null ? kh.getNgaySinh().format(DATE_FORMATTER) : null,
                         kh.getEmail(),
                         kh.getloaiKH()
                 });
@@ -322,22 +348,33 @@ public class FrmKhachHang extends ThanhTacVu {
         try {
             String ten = txtTenKH.getText().trim();
             String phone = txtPhone.getText().trim();
-            String cccd = txtCCCD.getText().trim();
             String email = txtEmail.getText().trim();
             String tenLoaiKH_selected = (String) cbLoaiKH.getSelectedItem();
-            
+            Date ngaySinhUtil = dateChooserNgaySinh.getDate();
+            LocalDate ngaySinh = null;
+            if (ngaySinhUtil != null) {
+               
+                ngaySinh = ngaySinhUtil.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+            }
+
             if (tenLoaiKH_selected.equals("Tất cả")) {
                 JOptionPane.showMessageDialog(this, "Vui lòng chọn một loại khách hàng hợp lệ.", "Lỗi", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
             KhachHang kh = new KhachHang();
-            kh.setMaKH(khachHangDAO.generateMaKH());
-            kh.setTenKH(ten);
-            kh.setSdt(phone);
-            kh.setCccd(cccd.isEmpty() ? null : cccd);
-            kh.setEmail(email.isEmpty() ? null : email);
-            kh.setLoaiKH(tenLoaiKH_selected);
+     
+            try {
+                kh.setMaKH(khachHangDAO.generateMaKH());
+                kh.setTenKH(ten);
+                kh.setSdt(phone);
+                kh.setNgaySinh(ngaySinh); 
+                kh.setEmail(email.isEmpty() ? null : email);
+                kh.setLoaiKH(tenLoaiKH_selected);
+            } catch (IllegalArgumentException e) {
+                JOptionPane.showMessageDialog(this, e.getMessage(), "Lỗi Dữ Liệu", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
 
             if (khachHangDAO.themKhachHang(kh)) {
                 JOptionPane.showMessageDialog(this, "Thêm khách hàng thành công!");
@@ -347,7 +384,8 @@ public class FrmKhachHang extends ThanhTacVu {
                 loadDataToTable();
                 clearForm();
             } else {
-                JOptionPane.showMessageDialog(this, "Thêm thất bại! Số điện thoại hoặc CCCD có thể đã tồn tại.", "Lỗi", JOptionPane.ERROR_MESSAGE);
+             
+                JOptionPane.showMessageDialog(this, "Thêm thất bại! Số điện thoại có thể đã tồn tại.", "Lỗi", JOptionPane.ERROR_MESSAGE);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -366,22 +404,33 @@ public class FrmKhachHang extends ThanhTacVu {
             String maKH = txtMaKH.getText().trim();
             String ten = txtTenKH.getText().trim();
             String phone = txtPhone.getText().trim();
-            String cccd = txtCCCD.getText().trim();
             String email = txtEmail.getText().trim();
             String tenLoaiKH_selected = (String) cbLoaiKH.getSelectedItem();
-            
+
+            Date ngaySinhUtil = dateChooserNgaySinh.getDate();
+            LocalDate ngaySinh = null;
+            if (ngaySinhUtil != null) {
+                ngaySinh = ngaySinhUtil.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+            }
+
             if (tenLoaiKH_selected.equals("Tất cả")) {
                 JOptionPane.showMessageDialog(this, "Vui lòng chọn một loại khách hàng hợp lệ.", "Lỗi", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
             KhachHang kh = new KhachHang();
-            kh.setMaKH(maKH);
-            kh.setTenKH(ten);
-            kh.setSdt(phone);
-            kh.setCccd(cccd.isEmpty() ? null : cccd);
-            kh.setEmail(email.isEmpty() ? null : email);
-            kh.setLoaiKH(tenLoaiKH_selected);
+ 
+            try {
+                kh.setMaKH(maKH);
+                kh.setTenKH(ten);
+                kh.setSdt(phone);
+                kh.setNgaySinh(ngaySinh); // Thay cho setCccd
+                kh.setEmail(email.isEmpty() ? null : email);
+                kh.setLoaiKH(tenLoaiKH_selected);
+            } catch (IllegalArgumentException e) {
+                JOptionPane.showMessageDialog(this, e.getMessage(), "Lỗi Dữ Liệu", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
 
             if (khachHangDAO.suaKhachHang(kh)) {
                 JOptionPane.showMessageDialog(this, "Cập nhật thông tin khách hàng thành công!");
@@ -409,7 +458,7 @@ public class FrmKhachHang extends ThanhTacVu {
         if (confirm == JOptionPane.YES_OPTION) {
             String maKH = (String) modelKH.getValueAt(row, 0);
             try {
-                if (khachHangDAO.xoaKhachHang(maKH)) {
+                if (khachHangDAO.anKhachHang(maKH)) {
                     JOptionPane.showMessageDialog(this, "Xóa khách hàng thành công!");
                     if (refreshCallback != null) {
                         refreshCallback.accept(null);
@@ -427,7 +476,8 @@ public class FrmKhachHang extends ThanhTacVu {
     }
 
     private void traCuuKhachHang() {
-        String keyword = JOptionPane.showInputDialog(this, "Nhập Tên, SĐT hoặc CCCD để tìm:", "Tra Cứu Khách Hàng", JOptionPane.INFORMATION_MESSAGE);
+ 
+        String keyword = JOptionPane.showInputDialog(this, "Nhập Tên hoặc SĐT để tìm:", "Tra Cứu Khách Hàng", JOptionPane.INFORMATION_MESSAGE);
         if (keyword == null || keyword.trim().isEmpty()) {
             return;
         }
@@ -442,7 +492,7 @@ public class FrmKhachHang extends ThanhTacVu {
                             kh.getMaKH(),
                             kh.getTenKH(),
                             kh.getSdt(),
-                            kh.getCccd(),
+                            kh.getNgaySinh() != null ? kh.getNgaySinh().format(DATE_FORMATTER) : null,
                             kh.getEmail(),
                             kh.getloaiKH()
                     });
@@ -459,7 +509,7 @@ public class FrmKhachHang extends ThanhTacVu {
         txtTenKH.setText("");
         txtPhone.setText("");
         txtEmail.setText("");
-        txtCCCD.setText("");
+        dateChooserNgaySinh.setDate(null);
         if (cbLoaiKH.getItemCount() > 0) {
             cbLoaiKH.setSelectedIndex(0);
         }
@@ -475,12 +525,14 @@ public class FrmKhachHang extends ThanhTacVu {
             JOptionPane.showMessageDialog(this, "Tên và Số điện thoại không được để trống!", "Lỗi", JOptionPane.ERROR_MESSAGE);
             return false;
         }
-        if (!sdt.matches("^0[0-9]{9}$")) {
-            JOptionPane.showMessageDialog(this, "Số điện thoại phải bắt đầu bằng 0 và có 10 chữ số.", "Lỗi", JOptionPane.ERROR_MESSAGE);
+        
+        if (!sdt.matches("^(03|05|07|08|09)\\d{8}$")) {
+            JOptionPane.showMessageDialog(this, "Số điện thoại không hợp lệ! (10 số, bắt đầu bằng 03,05,07,08,09).", "Lỗi", JOptionPane.ERROR_MESSAGE);
             return false;
         }
         return true;
     }
+
 
     private String getTenLoaiKH(String tenLoaiKH) {
         if (tenLoaiKH == null) return "Không xác định";
