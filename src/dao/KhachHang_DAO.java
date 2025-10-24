@@ -33,8 +33,8 @@ public class KhachHang_DAO {
      * Thêm một khách hàng mới vào cơ sở dữ liệu. Mã KH sẽ được tự động phát sinh.
      */
     public boolean themKhachHang(KhachHang kh) throws SQLException {
-
-        String sql = "INSERT INTO KhachHang (maKH, tenKH, sdt, cccd, email, maLoaiKH) VALUES (?, ?, ?, ?, ?, ?)";
+        // Đã đổi cccd thành ngaySinh
+        String sql = "INSERT INTO KhachHang (maKH, tenKH, sdt, ngaySinh, email, maLoaiKH) VALUES (?, ?, ?, ?, ?, ?)";
         
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             String maTuDong = phatSinhMaTuDong();
@@ -42,7 +42,7 @@ public class KhachHang_DAO {
             ps.setString(1, maTuDong);
             ps.setString(2, kh.getTenKH());
             ps.setString(3, kh.getSdt());
-            ps.setString(4, kh.getCccd());
+            ps.setString(4, kh.getNgaySinh()); // Đã đổi
             ps.setString(5, kh.getEmail());
             ps.setString(6, kh.getMaLoaiKH());
 
@@ -54,12 +54,13 @@ public class KhachHang_DAO {
      * Cập nhật thông tin của một khách hàng đã có trong CSDL.
      */
     public boolean suaKhachHang(KhachHang kh) throws SQLException {
-        String sql = "UPDATE KhachHang SET tenKH = ?, sdt = ?, cccd = ?, email = ?, maLoaiKH = ? WHERE maKH = ?";
+        // Đã đổi cccd thành ngaySinh
+        String sql = "UPDATE KhachHang SET tenKH = ?, sdt = ?, ngaySinh = ?, email = ?, maLoaiKH = ? WHERE maKH = ?";
         
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, kh.getTenKH());
             ps.setString(2, kh.getSdt());
-            ps.setString(3, kh.getCccd());
+            ps.setString(3, kh.getNgaySinh()); // Đã đổi
             ps.setString(4, kh.getEmail());
             ps.setString(5, kh.getMaLoaiKH());
             ps.setString(6, kh.getMaKH());
@@ -81,11 +82,12 @@ public class KhachHang_DAO {
     }
 
     /**
-     * Tìm kiếm khách hàng theo từ khóa (Mã, Tên, SĐT, CCCD).
+     * Tìm kiếm khách hàng theo từ khóa (Mã, Tên, SĐT, Ngày sinh).
      */
     public List<KhachHang> timKiemKhachHang(String keyword) throws SQLException {
         List<KhachHang> ds = new ArrayList<>();
-        String sql = "SELECT * FROM KhachHang WHERE maKH LIKE ? OR tenKH LIKE ? OR sdt LIKE ? OR cccd LIKE ?";
+        // Đã đổi cccd thành ngaySinh
+        String sql = "SELECT * FROM KhachHang WHERE maKH LIKE ? OR tenKH LIKE ? OR sdt LIKE ? OR ngaySinh LIKE ?";
         String searchTerm = "%" + keyword + "%";
 
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -107,7 +109,7 @@ public class KhachHang_DAO {
      * Phát sinh mã khách hàng mới một cách tự động và hiệu quả.
      */
     public String phatSinhMaTuDong() throws SQLException {
-        String newId = "KH0001"; 
+        String newId = "KH0001";  
         String sql = "SELECT TOP 1 maKH FROM KhachHang ORDER BY maKH DESC";
         
         try (Statement stmt = conn.createStatement();
@@ -116,7 +118,7 @@ public class KhachHang_DAO {
                 String lastId = rs.getString("maKH");
                 
                 int number = Integer.parseInt(lastId.substring(2));
-                number++; 
+                number++;  
                 newId = String.format("KH%04d", number);
             }
         }
@@ -130,10 +132,10 @@ public class KhachHang_DAO {
         String maKH = rs.getString("maKH");
         String tenKH = rs.getString("tenKH");
         String sdt = rs.getString("sdt");
-        String cccd = rs.getString("cccd");
+        String ngaySinh = rs.getString("ngaySinh"); // Đã đổi
         String email = rs.getString("email");
         String maLoaiKH = rs.getString("maLoaiKH"); // Lấy mã loại khách hàng
 
-        return new KhachHang(maKH, tenKH, sdt, cccd, email, maLoaiKH);
+        return new KhachHang(maKH, tenKH, sdt, ngaySinh, email, maLoaiKH); // Đã đổi
     }
 }

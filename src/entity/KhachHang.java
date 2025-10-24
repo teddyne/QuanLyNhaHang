@@ -6,23 +6,24 @@ public class KhachHang {
     private String maKH;
     private String tenKH;
     private String sdt;
-    private String cccd;
+    private String ngaySinh; // Đã đổi
     private String email;
     private String maLoaiKH;
 
     // --- CONSTRUCTORS ---
 
-    public KhachHang(String maKH, String tenKH, String sdt, String cccd, String email, String maLoaiKH) {
+    public KhachHang(String maKH, String tenKH, String sdt, String ngaySinh, String email, String maLoaiKH) { // Đã đổi
         setMaKH(maKH);
         setTenKH(tenKH);
         setSdt(sdt);
-        setCccd(cccd);
+        setNgaySinh(ngaySinh); // Đã đổi
         setEmail(email);
         setMaLoaiKH(maLoaiKH); 
     }
 
-    public KhachHang(String maKH, String tenKH, String sdt, String cccd, String email) {
-        this(maKH, tenKH, sdt, cccd, email, "Khách thường");
+    // Constructor này có thể cần xem lại logic, tạm thời đổi cccd -> ngaySinh
+    public KhachHang(String maKH, String tenKH, String sdt, String ngaySinh, String email) { // Đã đổi
+        this(maKH, tenKH, sdt, ngaySinh, email, "Khách thường"); // Đã đổi
     }
 
     // --- GETTERS AND SETTERS (với VALIDATION) ---
@@ -75,16 +76,28 @@ public class KhachHang {
             throw new IllegalArgumentException("Số điện thoại không hợp lệ! (10 số, bắt đầu bằng 03,05,07,08,09).");
     }
 
-    public String getCccd() {
-        return cccd;
+    // Đã đổi getCccd
+    public String getNgaySinh() {
+        return ngaySinh;
     }
 
-    public void setCccd(String cccd) {
-        String regexCccd = "^0\\d{11}$";
-        if (cccd != null && cccd.matches(regexCccd))
-            this.cccd = cccd;
-        else
-            throw new IllegalArgumentException("Căn cước công dân không hợp lệ! (Phải đủ 12 số).");
+    // Đã đổi setCccd
+    public void setNgaySinh(String ngaySinh) {
+        // Cho phép ngày sinh null hoặc rỗng
+        if (ngaySinh == null || ngaySinh.trim().isEmpty()) {
+            this.ngaySinh = null;
+            return;
+        }
+        
+        String regexNgaySinh = "^\\d{4}-\\d{2}-\\d{2}$"; // Ví dụ format YYYY-MM-DD
+        if (ngaySinh.matches(regexNgaySinh)) {
+            this.ngaySinh = ngaySinh;
+        } else {
+            throw new IllegalArgumentException("Ngày sinh không hợp lệ! (Định dạng YYYY-MM-DD hoặc để trống).");
+        }
+
+        // Hiện tại chỉ gán trực tiếp
+         this.ngaySinh = ngaySinh;
     }
 
     public String getMaLoaiKH() {
@@ -118,6 +131,6 @@ public class KhachHang {
     @Override
     public String toString() {
         return "KhachHang [maKH=" + maKH + ", tenKH=" + tenKH + ", sdt=" + sdt + 
-               ", cccd=" + cccd + ", email=" + email + ", maLoaiKH=" + maLoaiKH + "]";
+               ", ngaySinh=" + ngaySinh + ", email=" + email + ", maLoaiKH=" + maLoaiKH + "]"; // Đã đổi
     }
 }

@@ -6,6 +6,13 @@ import entity.KhachHang;
 import entity.LoaiKhachHang;
 import connectSQL.ConnectSQL;
 
+// === IMPORT THÊM CHO JCALENDAR ===
+import com.toedter.calendar.JDateChooser;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.text.ParseException;
+// ==================================
+
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.table.DefaultTableModel;
@@ -25,11 +32,21 @@ public class FrmKhachHang extends ThanhTacVu {
 
     private DefaultTableModel modelKH;
     private JTable tblKH;
-    private JTextField txtMaKH, txtTenKH, txtPhone, txtEmail, txtCCCD;
+    private JTextField txtMaKH, txtTenKH, txtPhone, txtEmail;
+    // === ĐÃ THAY ĐỔI: Từ JTextField sang JDateChooser ===
+    private JDateChooser dcNgaySinh; 
+    // ===================================================
     private JComboBox<String> cbLoaiKH;
     private JButton btnThem, btnSua, btnXoa, btnLamMoi, btnTraCuu, btnLoaiKH;
 
     private List<LoaiKhachHang> dsLoaiKH;
+    
+    // === ĐÃ THÊM: Định dạng ngày tháng ===
+    // Định dạng hiển thị (View)
+    private final SimpleDateFormat sdfView = new SimpleDateFormat("dd/MM/yyyy");
+    // Định dạng lưu trữ (Database) - Giả định là yyyy-MM-dd
+    private final SimpleDateFormat sdfDb = new SimpleDateFormat("yyyy-MM-dd");
+    // ====================================
 
     
     public FrmKhachHang(KhachHang_DAO khachHangDAO, LoaiKhachHang_DAO loaiKH_DAO, Consumer<Void> refreshCallback) {
@@ -77,7 +94,7 @@ public class FrmKhachHang extends ThanhTacVu {
         inputPanel.setBorder(BorderFactory.createTitledBorder(
                 BorderFactory.createLineBorder(new Color(165, 42, 42), 2), "Thông Tin Khách Hàng",
                 0, 0, new Font("Times New Roman", Font.BOLD, 24)));
-        inputPanel.setPreferredSize(new Dimension(0, 220)); // Tăng chiều cao một chút cho 3 hàng
+        inputPanel.setPreferredSize(new Dimension(0, 220)); 
 
         JPanel fieldsPanel = new JPanel(new GridBagLayout());
         fieldsPanel.setBackground(Color.WHITE);
@@ -90,10 +107,11 @@ public class FrmKhachHang extends ThanhTacVu {
         Font labelFont = new Font("Times New Roman", Font.BOLD, 22);
         Font fieldFont = new Font("Times New Roman", Font.PLAIN, 18);
 
-        // --- Cột 1 ---
+     // --- Cột 1 ---
         // Mã khách hàng
         gbc.gridx = 0;
         gbc.gridy = 0;
+        gbc.weightx = 0; // === THÊM: Label không co giãn ===
         JLabel lblMaKH = new JLabel("Mã khách hàng");
         lblMaKH.setFont(labelFont);
         fieldsPanel.add(lblMaKH, gbc);
@@ -102,73 +120,90 @@ public class FrmKhachHang extends ThanhTacVu {
         txtMaKH.setEditable(false);
         txtMaKH.setBackground(new Color(230, 230, 230));
         gbc.gridx = 1;
+        gbc.weightx = 1.0; // === THÊM: Field co giãn ===
         fieldsPanel.add(txtMaKH, gbc);
 
         // Tên khách hàng
         gbc.gridx = 0;
         gbc.gridy = 1;
+        gbc.weightx = 0; // === THÊM: Label không co giãn ===
         JLabel lblTenKH = new JLabel("Tên khách hàng");
         lblTenKH.setFont(labelFont);
         fieldsPanel.add(lblTenKH, gbc);
         txtTenKH = new JTextField(15);
         txtTenKH.setFont(fieldFont);
         gbc.gridx = 1;
+        gbc.weightx = 1.0; // === THÊM: Field co giãn ===
         fieldsPanel.add(txtTenKH, gbc);
 
-        // CCCD
+        // Ngày sinh
         gbc.gridx = 0;
         gbc.gridy = 2;
-        JLabel lblCCCD = new JLabel("CCCD");
-        lblCCCD.setFont(labelFont);
-        fieldsPanel.add(lblCCCD, gbc);
-        txtCCCD = new JTextField(15);
-        txtCCCD.setFont(fieldFont);
+        gbc.weightx = 0; // === THÊM: Label không co giãn ===
+        JLabel lblNgaySinh = new JLabel("Ngày sinh"); 
+        lblNgaySinh.setFont(labelFont);
+        fieldsPanel.add(lblNgaySinh, gbc); 
+        
+        dcNgaySinh = new JDateChooser();
+        dcNgaySinh.setDateFormatString("dd/MM/yyyy"); 
+        dcNgaySinh.setFont(fieldFont); 
+        dcNgaySinh.setPreferredSize(new Dimension(150, txtTenKH.getPreferredSize().height));
+        
         gbc.gridx = 1;
-        fieldsPanel.add(txtCCCD, gbc);
+        gbc.weightx = 1.0; // === THÊM: Field co giãn ===
+        fieldsPanel.add(dcNgaySinh, gbc); 
 
         // Spacer giữa cột
-        gbc.weightx = 0.5;
+        gbc.weightx = 0; // === THAY ĐỔI: Spacer không co giãn ===
         for (int y = 0; y <= 2; y++) {
             gbc.gridx = 2;
             gbc.gridy = y;
             fieldsPanel.add(Box.createHorizontalStrut(50), gbc);
         }
-        gbc.weightx = 1.0;
+        
+        // === ĐÃ XÓA: gbc.weightx = 1.0; (không cần reset ở đây) ===
+
 
         // --- Cột 2 ---
         // Số điện thoại
         gbc.gridx = 3;
         gbc.gridy = 0;
+        gbc.weightx = 0; // === THÊM: Label không co giãn ===
         JLabel lblPhone = new JLabel("Số điện thoại");
         lblPhone.setFont(labelFont);
         fieldsPanel.add(lblPhone, gbc);
         txtPhone = new JTextField(15);
         txtPhone.setFont(fieldFont);
         gbc.gridx = 4;
+        gbc.weightx = 1.0; // === THÊM: Field co giãn ===
         fieldsPanel.add(txtPhone, gbc);
 
         // Email
         gbc.gridx = 3;
         gbc.gridy = 1;
+        gbc.weightx = 0; // === THÊM: Label không co giãn ===
         JLabel lblEmail = new JLabel("Email");
         lblEmail.setFont(labelFont);
         fieldsPanel.add(lblEmail, gbc);
         txtEmail = new JTextField(15);
         txtEmail.setFont(fieldFont);
         gbc.gridx = 4;
+        gbc.weightx = 1.0; // === THÊM: Field co giãn ===
         fieldsPanel.add(txtEmail, gbc);
 
         // Loại khách hàng
         gbc.gridx = 3;
         gbc.gridy = 2;
+        gbc.weightx = 0; // === THÊM: Label không co giãn ===
         JLabel lblLoaiKH = new JLabel("Loại khách hàng");
         lblLoaiKH.setFont(labelFont);
         fieldsPanel.add(lblLoaiKH, gbc);
         cbLoaiKH = new JComboBox<>();
         cbLoaiKH.setFont(fieldFont);
         cbLoaiKH.setBackground(Color.WHITE);
-        loadLoaiKhachHangData(); // Tải dữ liệu cho ComboBox
+        loadLoaiKhachHangData(); 
         gbc.gridx = 4;
+        gbc.weightx = 1.0; // === THÊM: Field co giãn ===
         fieldsPanel.add(cbLoaiKH, gbc);
 
         // Panel nút thao tác
@@ -204,7 +239,7 @@ public class FrmKhachHang extends ThanhTacVu {
                 "Danh Sách Khách Hàng", 0, 0, new Font("Times New Roman", Font.BOLD, 24)));
         tablePanel.setBackground(Color.WHITE);
 
-        String[] columns = {"Mã KH", "Tên KH", "Số điện thoại", "CCCD", "Email", "Loại KH"};
+        String[] columns = {"Mã KH", "Tên KH", "Số điện thoại", "Ngày sinh", "Email", "Loại KH"}; 
         modelKH = new DefaultTableModel(columns, 0) {
             @Override public boolean isCellEditable(int row, int column) { return false; }
         };
@@ -219,16 +254,10 @@ public class FrmKhachHang extends ThanhTacVu {
         mainPanel.add(topPanel, BorderLayout.NORTH);
         mainPanel.add(tablePanel, BorderLayout.CENTER);
 
-        // === Gán sự kiện ===
         addEventListeners();
-
-        // === Tải dữ liệu ===
         loadDataToTable();
     }
 
-    /**
-     * Gán các trình xử lý sự kiện cho các thành phần.
-     */
     private void addEventListeners() {
         btnThem.addActionListener(e -> themKhachHang());
         btnSua.addActionListener(e -> suaKhachHang());
@@ -238,19 +267,13 @@ public class FrmKhachHang extends ThanhTacVu {
 
         btnLoaiKH.addActionListener(e -> {
             try {
-            
                 Consumer<Void> callback = v -> {
                     System.out.println("Callback được gọi: Tải lại ComboBox và Bảng");
-                    
-                    loadLoaiKhachHangData(); 
-                    
+                    loadLoaiKhachHangData();  
                     loadDataToTable();      
                 };
-
                 FrmLoaiKhachHang frmLoai = new FrmLoaiKhachHang(this, loaiKH_DAO, callback);
-                
                 frmLoai.setVisible(true);
-
             } catch (Exception ex) {
                 ex.printStackTrace();
                 JOptionPane.showMessageDialog(this, "Lỗi khi mở form Loại Khách Hàng: " + ex.getMessage());
@@ -265,7 +288,28 @@ public class FrmKhachHang extends ThanhTacVu {
                     txtMaKH.setText(modelKH.getValueAt(row, 0).toString());
                     txtTenKH.setText(modelKH.getValueAt(row, 1).toString());
                     txtPhone.setText(modelKH.getValueAt(row, 2).toString());
-                    txtCCCD.setText(modelKH.getValueAt(row, 3) != null ? modelKH.getValueAt(row, 3).toString() : "");
+                    
+                    // === ĐÃ THAY ĐỔI: Lấy ngày sinh từ bảng và set cho JDateChooser ===
+                    dcNgaySinh.setDate(null); // Xóa ngày cũ
+                    Object ngaySinhObj = modelKH.getValueAt(row, 3);
+                    if (ngaySinhObj != null) {
+                        String ngaySinhStr = ngaySinhObj.toString();
+                        try {
+                            // Giả định ngày tháng trong bảng (lấy từ DAO) có dạng "yyyy-MM-dd"
+                            Date date = sdfDb.parse(ngaySinhStr);
+                            dcNgaySinh.setDate(date);
+                        } catch (ParseException ex) {
+                            // Nếu lỗi, thử parse theo dạng "dd/MM/yyyy" (nếu bảng đã định dạng)
+                            try {
+                                Date date = sdfView.parse(ngaySinhStr);
+                                dcNgaySinh.setDate(date);
+                            } catch (ParseException ex2) {
+                                // Bỏ qua nếu không parse được
+                            }
+                        }
+                    }
+                    // ===============================================================
+
                     txtEmail.setText(modelKH.getValueAt(row, 4) != null ? modelKH.getValueAt(row, 4).toString() : "");
                     cbLoaiKH.setSelectedItem(modelKH.getValueAt(row, 5).toString());
                 }
@@ -320,9 +364,23 @@ public class FrmKhachHang extends ThanhTacVu {
         try {
             for (KhachHang kh : khachHangDAO.getAllKhachHang()) {
                 String tenLoaiKH = getTenLoaiKH(kh.getMaLoaiKH());
+                
+                // === ĐÃ THAY ĐỔI: Định dạng ngày sinh sang dd/MM/yyyy khi tải lên bảng ===
+                String ngaySinhHienThi = kh.getNgaySinh(); // Lấy String từ entity (vd: yyyy-MM-dd)
+                if (ngaySinhHienThi != null && !ngaySinhHienThi.isEmpty()) {
+                    try {
+                        Date dateDb = sdfDb.parse(ngaySinhHienThi);
+                        ngaySinhHienThi = sdfView.format(dateDb); // Chuyển sang dd/MM/yyyy
+                    } catch (ParseException e) {
+                        // Giữ nguyên nếu không parse được
+                    }
+                }
+                // ======================================================================
+
                 modelKH.addRow(new Object[]{
                         kh.getMaKH(), kh.getTenKH(), kh.getSdt(),
-                        kh.getCccd(), kh.getEmail(), tenLoaiKH
+                        ngaySinhHienThi, // Hiển thị ngày đã định dạng
+                        kh.getEmail(), tenLoaiKH
                 });
             }
         } catch (Exception e) {
@@ -336,17 +394,25 @@ public class FrmKhachHang extends ThanhTacVu {
         try {
             String ten = txtTenKH.getText().trim();
             String phone = txtPhone.getText().trim();
-            String cccd = txtCCCD.getText().trim();
+            
+            // === ĐÃ THAY ĐỔI: Lấy ngày sinh từ JDateChooser và định dạng cho DB ===
+            String ngaySinh = null;
+            Date selectedDate = dcNgaySinh.getDate();
+            if (selectedDate != null) {
+                ngaySinh = sdfDb.format(selectedDate); // Định dạng "yyyy-MM-dd"
+            }
+            // =================================================================
+
             String email = txtEmail.getText().trim();
             String tenLoaiKH_selected = (String) cbLoaiKH.getSelectedItem();
             
             if (tenLoaiKH_selected.equals("Tất cả")) {
-                 JOptionPane.showMessageDialog(this, "Vui lòng chọn một loại khách hàng hợp lệ.", "Lỗi", JOptionPane.ERROR_MESSAGE);
-                 return;
+                JOptionPane.showMessageDialog(this, "Vui lòng chọn một loại khách hàng hợp lệ.", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                return;
             }
             String maLoaiKH = getMaLoaiKH(tenLoaiKH_selected);
 
-            KhachHang kh = new KhachHang(ten, phone, cccd, email, maLoaiKH);
+            KhachHang kh = new KhachHang(ten, phone, ngaySinh, email, maLoaiKH); 
 
             if (khachHangDAO.themKhachHang(kh)) {
                 JOptionPane.showMessageDialog(this, "Thêm khách hàng thành công!");
@@ -356,7 +422,7 @@ public class FrmKhachHang extends ThanhTacVu {
                 loadDataToTable();
                 clearForm();
             } else {
-                JOptionPane.showMessageDialog(this, "Thêm thất bại! Số điện thoại hoặc CCCD có thể đã tồn tại.", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Thêm thất bại! Số điện thoại có thể đã tồn tại.", "Lỗi", JOptionPane.ERROR_MESSAGE);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -375,17 +441,25 @@ public class FrmKhachHang extends ThanhTacVu {
             String maKH = txtMaKH.getText().trim();
             String ten = txtTenKH.getText().trim();
             String phone = txtPhone.getText().trim();
-            String cccd = txtCCCD.getText().trim();
+            
+            // === ĐÃ THAY ĐỔI: Lấy ngày sinh từ JDateChooser và định dạng cho DB ===
+            String ngaySinh = null;
+            Date selectedDate = dcNgaySinh.getDate();
+            if (selectedDate != null) {
+                ngaySinh = sdfDb.format(selectedDate); // Định dạng "yyyy-MM-dd"
+            }
+            // =================================================================
+
             String email = txtEmail.getText().trim();
             String tenLoaiKH_selected = (String) cbLoaiKH.getSelectedItem();
             
             if (tenLoaiKH_selected.equals("Tất cả")) {
-                 JOptionPane.showMessageDialog(this, "Vui lòng chọn một loại khách hàng hợp lệ.", "Lỗi", JOptionPane.ERROR_MESSAGE);
-                 return;
+                JOptionPane.showMessageDialog(this, "Vui lòng chọn một loại khách hàng hợp lệ.", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                return;
             }
             String maLoaiKH = getMaLoaiKH(tenLoaiKH_selected);
 
-            KhachHang kh = new KhachHang(maKH, ten, phone, cccd, email, maLoaiKH);
+            KhachHang kh = new KhachHang(maKH, ten, phone, ngaySinh, email, maLoaiKH);
 
             if (khachHangDAO.suaKhachHang(kh)) {
                 JOptionPane.showMessageDialog(this, "Cập nhật thông tin khách hàng thành công!");
@@ -431,22 +505,43 @@ public class FrmKhachHang extends ThanhTacVu {
     }
 
     private void traCuuKhachHang() {
-        String keyword = JOptionPane.showInputDialog(this, "Nhập Tên, SĐT hoặc CCCD để tìm:", "Tra Cứu Khách Hàng", JOptionPane.INFORMATION_MESSAGE);
+        String keyword = JOptionPane.showInputDialog(this, "Nhập Tên, SĐT hoặc Ngày sinh (dd/MM/yyyy) để tìm:", "Tra Cứu Khách Hàng", JOptionPane.INFORMATION_MESSAGE); 
         if (keyword == null || keyword.trim().isEmpty()) {
             return;
         }
         try {
+            // === ĐÃ THAY ĐỔI: Chuyển đổi ngày tìm kiếm sang dạng DB (nếu là ngày) ===
+            String keywordDb = keyword.trim();
+            try {
+                // Thử xem người dùng có nhập dạng dd/MM/yyyy không
+                Date dateView = sdfView.parse(keywordDb);
+                keywordDb = sdfDb.format(dateView); // Chuyển sang yyyy-MM-dd để tìm
+            } catch (ParseException e) {
+                // Nếu không phải dạng dd/MM/yyyy, giữ nguyên keyword (tìm theo tên, sđt)
+            }
+            // ===================================================================
 
-            List<KhachHang> ketQua = khachHangDAO.timKiemKhachHang(keyword.trim());
+            List<KhachHang> ketQua = khachHangDAO.timKiemKhachHang(keywordDb);
             modelKH.setRowCount(0);
             if (ketQua.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Không tìm thấy khách hàng nào phù hợp.");
             } else {
                 for (KhachHang kh : ketQua) {
                     String tenLoaiKH = getTenLoaiKH(kh.getMaLoaiKH());
+                    
+                    // === ĐÃ THAY ĐỔI: Định dạng ngày sinh khi hiển thị kết quả tìm kiếm ===
+                    String ngaySinhHienThi = kh.getNgaySinh();
+                     if (ngaySinhHienThi != null && !ngaySinhHienThi.isEmpty()) {
+                        try {
+                            Date dateDb = sdfDb.parse(ngaySinhHienThi);
+                            ngaySinhHienThi = sdfView.format(dateDb);
+                        } catch (ParseException e) { }
+                    }
+                    // ======================================================================
+
                     modelKH.addRow(new Object[]{
                             kh.getMaKH(), kh.getTenKH(), kh.getSdt(),
-                            kh.getCccd(), kh.getEmail(), tenLoaiKH
+                            ngaySinhHienThi, kh.getEmail(), tenLoaiKH 
                     });
                 }
             }
@@ -462,7 +557,9 @@ public class FrmKhachHang extends ThanhTacVu {
         txtTenKH.setText("");
         txtPhone.setText("");
         txtEmail.setText("");
-        txtCCCD.setText("");
+        // === ĐÃ THAY ĐỔI ===
+        dcNgaySinh.setDate(null); // Xóa ngày trong JDateChooser
+        // ==================
         if (cbLoaiKH.getItemCount() > 0) {
             cbLoaiKH.setSelectedIndex(0);
         }
