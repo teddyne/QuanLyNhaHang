@@ -378,8 +378,8 @@ public class FrmNhanVien extends ThanhTacVu {
             JOptionPane.showMessageDialog(this, "CCCD phải 12 chữ số!");
             return false;
         }
-        if (!txtSDT.getText().matches("^(03|05|07|08)\\d{8}$")) {
-            JOptionPane.showMessageDialog(this, "SĐT phải 10 chữ số và bắt đầu bằng 03, 05, 07 hoặc 08!");
+        if (!txtSDT.getText().matches("^(03|05|07|08|09)\\d{8}$")) {
+            JOptionPane.showMessageDialog(this, "SĐT phải 10 chữ số và bắt đầu bằng 03, 05, 07 hoặc 08 và 09!");
             return false;
         }
         if (!txtEmail.getText().matches("^\\w+@\\w+\\.\\w+$")) {
@@ -467,18 +467,18 @@ public class FrmNhanVien extends ThanhTacVu {
     private void xoaNhanVien() {
         String ma = txtMaNV.getText().trim();
         if (ma.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Chọn nhân viên cần ẩn!");
+            JOptionPane.showMessageDialog(this, "Chọn nhân viên cần xóa!");
             return;
         }
         int confirm = JOptionPane.showConfirmDialog(this, 
-            "Ẩn nhân viên " + ma + "?", "Xác nhận ẩn", JOptionPane.YES_NO_OPTION);
+            "Xóa nhân viên " + ma + "?", "Xác nhận xóa", JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {
             if (dao.anNhanVien(ma)) {
-                JOptionPane.showMessageDialog(this, "Nhân viên đã ẩn!");
+                JOptionPane.showMessageDialog(this, "Nhân viên đã xóa!");
                 loadNhanVien();
                 lamMoiForm();
             } else {
-                JOptionPane.showMessageDialog(this, "Ẩn thất bại!");
+                JOptionPane.showMessageDialog(this, "Xóa thất bại!");
             }
         }
     }

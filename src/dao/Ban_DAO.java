@@ -122,7 +122,7 @@ public class Ban_DAO {
 	    }
 	}
 
-    public boolean anBan(String maBan) throws SQLException {
+    public boolean xoaBan(String maBan) throws SQLException {
         String sql = "UPDATE QLNH.dbo.Ban SET trangThai = N'Ẩn' WHERE maBan = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, maBan);

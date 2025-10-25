@@ -157,66 +157,43 @@ public class TaiKhoan_DAO {
         return false;
     }
 
-    public boolean xoaTaiKhoan(String maTaiKhoan) {
-        String deleteLichSu = "DELETE FROM LichSuDangNhap WHERE maTaiKhoan = ?";
-        String deleteTaiKhoan = "DELETE FROM TaiKhoan WHERE maTaiKhoan = ?";
-        try {
-            conn.setAutoCommit(false);
-            try (PreparedStatement psLichSu = conn.prepareStatement(deleteLichSu);
-                 PreparedStatement psTaiKhoan = conn.prepareStatement(deleteTaiKhoan)) {
-                psLichSu.setString(1, maTaiKhoan);
-                psTaiKhoan.setString(1, maTaiKhoan);
-
-                int rowsLichSu = psLichSu.executeUpdate();
-                int rowsTaiKhoan = psTaiKhoan.executeUpdate();
-
-                if (rowsTaiKhoan > 0) {
-                    conn.commit();
-                    return true;
-                } else {
-                    conn.rollback();
-                    return false;
-                }
-            }
-        } catch (SQLException e) {
-            try {
-                if (conn != null) conn.rollback();
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-            }
-            e.printStackTrace();
-            return false;
-        } finally {
-            try {
-                conn.setAutoCommit(true);
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-    }
+	public boolean xoaTaiKhoan(String maTaiKhoan) {
+	    String sql = "UPDATE taikhoan SET trangThai = 0 WHERE maTaiKhoan = ?";
+	    try (Connection conn = ConnectSQL.getConnection();
+	         PreparedStatement ps = conn.prepareStatement(sql)) {
+	        
+	        ps.setString(1, maTaiKhoan);
+	        int rowsAffected = ps.executeUpdate();
+	        return rowsAffected > 0;
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	        return false;
+	    }
+	}
 
 
-    public List<TaiKhoan> layDanhSachTaiKhoan() {
-        List<TaiKhoan> dsTaiKhoan = new ArrayList<>();
-        String sql = "SELECT t.maTaiKhoan, t.soDienThoai, t.matKhau, t.maNhanVien, t.phanQuyen, n.hoTen " +
-                     "FROM TaiKhoan t INNER JOIN NhanVien n ON t.maNhanVien = n.maNhanVien";
-        try (PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                TaiKhoan tk = new TaiKhoan();
-                tk.setMaTaiKhoan(rs.getString("maTaiKhoan"));
-                tk.setSoDienThoai(rs.getString("soDienThoai"));
-                tk.setMatKhau(rs.getString("matKhau"));
-                tk.setMaNhanVien(rs.getString("maNhanVien"));
-                tk.setPhanQuyen(rs.getString("phanQuyen"));
-                tk.setHoTen(rs.getString("hoTen"));
-                dsTaiKhoan.add(tk);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return dsTaiKhoan;
-    }
+	public List<TaiKhoan> layDanhSachTaiKhoan() {
+	    List<TaiKhoan> danhSach = new ArrayList<>();
+	    String sql = "SELECT t.*, n.hoTen FROM taikhoan t INNER JOIN NhanVien n ON t.maNhanVien = n.maNhanVien WHERE t.trangThai = 1 ORDER BY t.maTaiKhoan";
+	    
+	    try (Connection conn = ConnectSQL.getInstance().getConnection();
+	         PreparedStatement ps = conn.prepareStatement(sql);
+	         ResultSet rs = ps.executeQuery()) {
+	        while (rs.next()) {
+	            TaiKhoan tk = new TaiKhoan();
+	            tk.setMaTaiKhoan(rs.getString("maTaiKhoan"));
+	            tk.setSoDienThoai(rs.getString("soDienThoai"));
+	            tk.setMatKhau(rs.getString("matKhau"));
+	            tk.setMaNhanVien(rs.getString("maNhanVien"));
+	            tk.setPhanQuyen(rs.getString("phanQuyen"));
+	            tk.setHoTen(rs.getString("hoTen"));
+	            danhSach.add(tk);
+	        }
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	    }
+	    return danhSach;
+	}
 
     public List<LichSuDangNhap> layLichSuDangNhap(String maTaiKhoan) {
         List<LichSuDangNhap> dsLichSu = new ArrayList<>();

@@ -15,6 +15,7 @@ import dao.LoaiKhachHang_DAO;
 import dao.PhieuDatBan_DAO;
 import dao.TaiKhoan_DAO;
 import entity.Ban;
+import entity.KhachHang; // Đã thêm import
 import entity.PhieuDatBan;
 import entity.TaiKhoan;
 
@@ -367,6 +368,17 @@ public class ThanhTacVu extends JFrame {
                 JOptionPane.showMessageDialog(this, "Lỗi khi mở form tìm kiếm bàn: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
             }
         });
+        
+        // ==================================================================
+        // PHẦN CODE MỚI ĐƯỢC THÊM CHO TÌM KIẾM KHÁCH HÀNG
+        // ==================================================================
+        tkh.addActionListener(e -> {
+            try {
+                moFormNhapSDTKhachHang();
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(this, "Lỗi khi mở form tìm kiếm khách hàng: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            }
+        });
     }
 
     private void moFormNhapMaBan() throws SQLException {
@@ -626,6 +638,169 @@ public class ThanhTacVu extends JFrame {
         // Hiển thị dialog
         dlg.setVisible(true);
     }
+    
+   
+    private void moFormNhapSDTKhachHang() throws SQLException {
+	    JDialog dlg = new JDialog(this, "Nhập Mã Khách Hàng", false);
+	    dlg.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 20));
+	    dlg.setSize(600, 120);
+	    dlg.setLocationRelativeTo(this);
+	    dlg.setResizable(false);
+	
+	    Connection conn = ConnectSQL.getConnection();
+	    KhachHang_DAO khachHangDAO = new KhachHang_DAO(conn);
+	
+	    JLabel lblSdt = new JLabel("Số điện thoại:");
+	    lblSdt.setFont(new Font("Times New Roman", Font.BOLD, 22));
+	
+	    JTextField txtSdt = new JTextField(15);
+	    txtSdt.setFont(new Font("Times New Roman", Font.PLAIN, 22));
+	    
+	    JButton btnTim = new JButton("Tìm");
+        kieuNut(btnTim, new Color(102, 210, 74));
+	    btnTim.setForeground(Color.WHITE);
+	    btnTim.setFocusPainted(false);
+	    btnTim.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+	
+	    dlg.add(lblSdt);
+	    dlg.add(txtSdt);
+	    dlg.add(btnTim);
+	
+	    btnTim.addActionListener(e -> {
+	        String sdt = txtSdt.getText().trim();
+	        if (sdt.isEmpty()) {
+	            JOptionPane.showMessageDialog(dlg, "Vui lòng nhập Số điện thoại khách hàng!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+	            return;
+	        }
+	
+	        try {
+	            KhachHang kh = khachHangDAO.timKhachHangTheoSDT(sdt); 
+	            if (kh == null) {
+	                JOptionPane.showMessageDialog(dlg, "Không tìm thấy khách hàng với Số điện thoại: " + sdt, "Thông báo", JOptionPane.ERROR_MESSAGE);
+	                return;
+	            }
+	
+	            moFormHienThiThongTinKhachHang(kh);
+	            dlg.dispose();
+	        } catch (SQLException ex) {
+	            JOptionPane.showMessageDialog(dlg, "Lỗi khi tìm kiếm khách hàng: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+	        }
+	    });
+	
+	    txtSdt.addKeyListener(new KeyAdapter() {
+	        @Override
+	        public void keyPressed(KeyEvent e) {
+	            if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+	                btnTim.doClick();
+	            }
+	        }
+	    });
+	
+	    dlg.setVisible(true);
+	}
+
+    
+	private void moFormHienThiThongTinKhachHang(KhachHang kh) {
+        JDialog dlg = new JDialog(this, "Thông Tin Khách Hàng", false);
+        dlg.setLayout(new BorderLayout(10, 10));
+        dlg.getContentPane().setBackground(Color.white);
+        dlg.setSize(600, 350); // Kích thước nhỏ hơn vì ít thông tin hơn
+        dlg.setLocationRelativeTo(this);
+        dlg.setResizable(false);
+
+        JPanel pnlThongTin = new JPanel(new GridBagLayout());
+        pnlThongTin.setBackground(Color.WHITE);
+        pnlThongTin.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(new Color(128, 0, 0), 2), "Thông tin khách hàng", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.TOP, new Font("Times New Roman", Font.BOLD, 24)));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        Font fontLabel = new Font("Times New Roman", Font.BOLD, 20);
+        Font fontValue = new Font("Times New Roman", Font.PLAIN, 20);
+
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        JLabel lblMaKHTitle = new JLabel("Mã khách hàng:");
+        lblMaKHTitle.setFont(fontLabel);
+        pnlThongTin.add(lblMaKHTitle, gbc);
+        gbc.gridx = 1;
+        JLabel lblMaKHValue = new JLabel(kh.getMaKH());
+        lblMaKHValue.setFont(fontValue);
+        pnlThongTin.add(lblMaKHValue, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        JLabel lblTenKHTitle = new JLabel("Tên khách hàng:");
+        lblTenKHTitle.setFont(fontLabel);
+        pnlThongTin.add(lblTenKHTitle, gbc);
+        gbc.gridx = 1;
+        JLabel lblTenKHValue = new JLabel(kh.getTenKH());
+        lblTenKHValue.setFont(fontValue);
+        pnlThongTin.add(lblTenKHValue, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        JLabel lblSoDienThoaiTitle = new JLabel("Số điện thoại:");
+        lblSoDienThoaiTitle.setFont(fontLabel);
+        pnlThongTin.add(lblSoDienThoaiTitle, gbc);
+        gbc.gridx = 1;
+        JLabel lblSoDienThoaiValue = new JLabel(kh.getSdt());
+        lblSoDienThoaiValue.setFont(fontValue);
+        pnlThongTin.add(lblSoDienThoaiValue, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        JLabel lblLoaiKHTitle = new JLabel("Loại khách hàng:");
+        lblLoaiKHTitle.setFont(fontLabel);
+        pnlThongTin.add(lblLoaiKHTitle, gbc);
+        gbc.gridx = 1;
+        
+        JLabel lblLoaiKHValue = new JLabel(kh.getloaiKH()); 
+        lblLoaiKHValue.setFont(fontValue);
+        pnlThongTin.add(lblLoaiKHValue, gbc);
+
+        JScrollPane scrollThongTin = new JScrollPane(pnlThongTin);
+        scrollThongTin.setBorder(null);
+        dlg.add(scrollThongTin, BorderLayout.CENTER);
+
+        // Panel nút
+        JPanel pnlButtons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
+        pnlButtons.setBackground(Color.WHITE);
+
+        JButton btnDiChuyen = new JButton("Quản lý khách hàng");
+        kieuNut(btnDiChuyen, new Color(55, 212, 23));
+        btnDiChuyen.setForeground(Color.WHITE);
+        btnDiChuyen.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        pnlButtons.add(btnDiChuyen);
+
+        JButton btnDong = new JButton("Đóng");
+        kieuNut(btnDong, new Color(236, 66, 48));
+        btnDong.setForeground(Color.WHITE);
+        btnDong.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        pnlButtons.add(btnDong);
+
+        dlg.add(pnlButtons, BorderLayout.SOUTH);
+
+        btnDong.addActionListener(e -> dlg.dispose());
+
+        btnDiChuyen.addActionListener(e -> {
+            try {
+                Connection conn = ConnectSQL.getConnection();
+                KhachHang_DAO khachHangDAO = new KhachHang_DAO(conn);
+                LoaiKhachHang_DAO loaiKH_DAO = new LoaiKhachHang_DAO(conn);
+                
+                new FrmKhachHang(khachHangDAO, loaiKH_DAO, null).setVisible(true);
+                dlg.dispose(); 
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(dlg, "Lỗi khi mở quản lý khách hàng: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
+            }
+        });
+
+        dlg.setVisible(true);
+    }
+    
 
     private String layTrangThaiHienTai(String maBan, PhieuDatBan_DAO phieuDatBanDAO) {
         try {

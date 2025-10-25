@@ -2,6 +2,7 @@ package dao;
 
 import entity.KhachHang;
 import java.sql.*;
+import java.time.LocalDate; 
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,8 +15,10 @@ public class KhachHang_DAO {
 
     public List<KhachHang> getAllKhachHang() throws SQLException {
         List<KhachHang> dsKhachHang = new ArrayList<>();
-        String sql = "SELECT kh.maKH, kh.tenKH, kh.sdt, kh.cccd, kh.email, lkh.tenLoaiKH " +
-                    "FROM KhachHang kh LEFT JOIN LoaiKhachHang lkh ON kh.maLoaiKH = lkh.maLoaiKH";
+        
+        String sql = "SELECT kh.maKH, kh.tenKH, kh.sdt, kh.ngaySinh, kh.email, lkh.tenLoaiKH " +
+                     "FROM KhachHang kh LEFT JOIN LoaiKhachHang lkh ON kh.maLoaiKH = lkh.maLoaiKH " +
+                     "WHERE kh.trangThai = N'Hoạt động'"; 
         
         try (Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
@@ -28,16 +31,24 @@ public class KhachHang_DAO {
     }
 
     public boolean themKhachHang(KhachHang kh) throws SQLException {
-        String sql = "INSERT INTO KhachHang (maKH, tenKH, sdt, cccd, email, maLoaiKH) VALUES (?, ?, ?, ?, ?, ?)";
+        
+        String sql = "INSERT INTO KhachHang (maKH, tenKH, sdt, ngaySinh, email, maLoaiKH) VALUES (?, ?, ?, ?, ?, ?)";
         
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             String maTuDong = generateMaKH();
-            String maLoaiKH = kh.getloaiKH().equals("Thành viên") ? "LKH002" : "LKH001";
+            
+            String maLoaiKH = kh.getloaiKH().equals("Thành viên") ? "LKH02" : "LKH01"; 
             
             ps.setString(1, maTuDong);
             ps.setString(2, kh.getTenKH());
             ps.setString(3, kh.getSdt());
-            ps.setString(4, kh.getCccd());
+
+            if (kh.getNgaySinh() != null) {
+                ps.setDate(4, java.sql.Date.valueOf(kh.getNgaySinh()));
+            } else {
+                ps.setNull(4, java.sql.Types.DATE);
+            }
+            
             ps.setString(5, kh.getEmail());
             ps.setString(6, maLoaiKH);
 
@@ -46,14 +57,21 @@ public class KhachHang_DAO {
     }
 
     public boolean suaKhachHang(KhachHang kh) throws SQLException {
-        String sql = "UPDATE KhachHang SET tenKH = ?, sdt = ?, cccd = ?, email = ?, maLoaiKH = ? WHERE maKH = ?";
+      
+        String sql = "UPDATE KhachHang SET tenKH = ?, sdt = ?, ngaySinh = ?, email = ?, maLoaiKH = ? WHERE maKH = ?";
         
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            String maLoaiKH = kh.getloaiKH().equals("Thành viên") ? "LKH002" : "LKH001";
+            String maLoaiKH = kh.getloaiKH().equals("Thành viên") ? "LKH02" : "LKH01";
             
             ps.setString(1, kh.getTenKH());
             ps.setString(2, kh.getSdt());
-            ps.setString(3, kh.getCccd());
+
+            if (kh.getNgaySinh() != null) {
+                ps.setDate(3, java.sql.Date.valueOf(kh.getNgaySinh()));
+            } else {
+                ps.setNull(3, java.sql.Types.DATE);
+            }
+
             ps.setString(4, kh.getEmail());
             ps.setString(5, maLoaiKH);
             ps.setString(6, kh.getMaKH());
@@ -62,27 +80,32 @@ public class KhachHang_DAO {
         }
     }
 
-    public boolean xoaKhachHang(String maKH) throws SQLException {
-        String sql = "DELETE FROM KhachHang WHERE maKH = ?";
+    
+    public boolean anKhachHang(String maKH) throws SQLException {
+       
+        String sql = "UPDATE KhachHang SET trangThai = N'Ẩn' WHERE maKH = ?";
         
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, maKH);
             return ps.executeUpdate() > 0;
         }
     }
+    
 
     public List<KhachHang> timKiemKhachHang(String keyword) throws SQLException {
         List<KhachHang> ds = new ArrayList<>();
-        String sql = "SELECT kh.maKH, kh.tenKH, kh.sdt, kh.cccd, kh.email, lkh.tenLoaiKH " +
-                    "FROM KhachHang kh LEFT JOIN LoaiKhachHang lkh ON kh.maLoaiKH = lkh.maLoaiKH " +
-                    "WHERE kh.maKH LIKE ? OR kh.tenKH LIKE ? OR kh.sdt LIKE ? OR kh.cccd LIKE ?";
+        
+        String sql = "SELECT kh.maKH, kh.tenKH, kh.sdt, kh.ngaySinh, kh.email, lkh.tenLoaiKH " +
+                     "FROM KhachHang kh LEFT JOIN LoaiKhachHang lkh ON kh.maLoaiKH = lkh.maLoaiKH " +
+                     "WHERE (kh.maKH LIKE ? OR kh.tenKH LIKE ? OR kh.sdt LIKE ?) " +
+                     "AND kh.trangThai = N'Hoạt động'"; 
+        
         String searchTerm = "%" + keyword + "%";
 
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, searchTerm);
             ps.setString(2, searchTerm);
             ps.setString(3, searchTerm);
-            ps.setString(4, searchTerm);
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -116,17 +139,35 @@ public class KhachHang_DAO {
         String maKH = rs.getString("maKH");
         String tenKH = rs.getString("tenKH");
         String sdt = rs.getString("sdt");
-        String cccd = rs.getString("cccd");
+        java.sql.Date sqlNgaySinh = rs.getDate("ngaySinh");
+        LocalDate ngaySinh = (sqlNgaySinh != null) ? sqlNgaySinh.toLocalDate() : null;
         String email = rs.getString("email");
-        String tenLoaiKH = rs.getString("tenLoaiKH"); // Lấy tenLoaiKH từ LoaiKhachHang
-
-        return new KhachHang(maKH, tenKH, sdt, cccd, email, tenLoaiKH);
+        String tenLoaiKH = rs.getString("tenLoaiKH");
+        
+        return new KhachHang(maKH, tenKH, sdt, ngaySinh, email, tenLoaiKH);
+    }
+    
+    public KhachHang getKhachHangByMa(String maKH) throws SQLException {
+       
+        String sql = "SELECT kh.maKH, kh.tenKH, kh.sdt, kh.ngaySinh, kh.email, lkh.tenLoaiKH " +
+                     "FROM KhachHang kh LEFT JOIN LoaiKhachHang lkh ON kh.maLoaiKH = lkh.maLoaiKH " +
+                     "WHERE kh.maKH = ? AND kh.trangThai = N'Hoạt động'";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, maKH);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapRowToKhachHang(rs);
+                }
+            }
+        }
+        return null; 
     }
 
     public KhachHang timKhachHangTheoSDT(String sdt) throws SQLException {
-        String sql = "SELECT kh.maKH, kh.tenKH, kh.sdt, kh.cccd, kh.email, lkh.tenLoaiKH " +
-                    "FROM KhachHang kh LEFT JOIN LoaiKhachHang lkh ON kh.maLoaiKH = lkh.maLoaiKH " +
-                    "WHERE kh.sdt = ?";
+
+        String sql = "SELECT kh.maKH, kh.tenKH, kh.sdt, kh.ngaySinh, kh.email, lkh.tenLoaiKH " +
+                     "FROM KhachHang kh LEFT JOIN LoaiKhachHang lkh ON kh.maLoaiKH = lkh.maLoaiKH " +
+                     "WHERE kh.sdt = ? AND kh.trangThai = N'Hoạt động'";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, sdt);
             try (ResultSet rs = ps.executeQuery()) {

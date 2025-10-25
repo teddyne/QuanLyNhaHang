@@ -1,28 +1,29 @@
 package entity;
 
 import java.util.Objects;
+import java.time.LocalDate; // --- THAY ĐỔI: Thêm import
 
 public class KhachHang {
     private String maKH;
-    private String tenLH;
+    private String tenKH;
     private String sdt;
-    private String cccd;
+    private LocalDate ngaySinh; 
     private String email;
     private String loaiKH;
 
     // --- CONSTRUCTORS ---
 
-    public KhachHang(String maKH, String tenKH, String sdt, String cccd, String email, String loaiKH) {
+    public KhachHang(String maKH, String tenKH, String sdt, LocalDate ngaySinh, String email, String loaiKH) {
         setMaKH(maKH);
         setTenKH(tenKH);
         setSdt(sdt);
-        setCccd(cccd);
+        setNgaySinh(ngaySinh); 
         setEmail(email);
         setLoaiKH(loaiKH); 
     }
 
-    public KhachHang(String maKH, String tenKH, String sdt, String cccd, String email) {
-        this(maKH, tenKH, sdt, cccd, email, "Khách thường");
+    public KhachHang(String maKH, String tenKH, String sdt, LocalDate ngaySinh, String email) {
+        this(maKH, tenKH, sdt, ngaySinh, email, "Khách thường"); 
     }
 
     public KhachHang() {
@@ -44,13 +45,13 @@ public class KhachHang {
     }
 
     public String getTenKH() {
-        return tenLH;
+        return tenKH;
     }
 
     public void setTenKH(String tenKhachHang) {
         String regexTenKH = "^[A-ZÀ-Ỵ][a-zà-ỹ\\p{L}]*([ ]+[A-ZÀ-Ỵ][a-zà-ỹ\\p{L}]*)*$";
         if (tenKhachHang != null && !tenKhachHang.trim().isEmpty() && tenKhachHang.matches(regexTenKH))
-            this.tenLH = tenKhachHang;
+            this.tenKH = tenKhachHang;
         else
             throw new IllegalArgumentException("Tên khách hàng không hợp lệ! (Phải viết hoa chữ cái đầu).");
     }
@@ -79,17 +80,19 @@ public class KhachHang {
             throw new IllegalArgumentException("Số điện thoại không hợp lệ! (10 số, bắt đầu bằng 03,05,07,08,09).");
     }
 
-    public String getCccd() {
-        return cccd;
+
+    public LocalDate getNgaySinh() {
+        return ngaySinh;
     }
 
-    public void setCccd(String cccd) {
-        String regexCccd = "^\\d{12}$";
-        if (cccd == null || cccd.matches(regexCccd))
-            this.cccd = cccd;
-        else
-            throw new IllegalArgumentException("Căn cước công dân không hợp lệ! (Phải đủ 12 số).");
+    public void setNgaySinh(LocalDate ngaySinh) {
+ 
+        if (ngaySinh != null && ngaySinh.isAfter(LocalDate.now())) {
+            throw new IllegalArgumentException("Ngày sinh không hợp lệ (Không được là ngày trong tương lai).");
+        }
+        this.ngaySinh = ngaySinh;
     }
+   
 
     public String getloaiKH() {
         return loaiKH;
@@ -120,7 +123,8 @@ public class KhachHang {
 
     @Override
     public String toString() {
-        return "KhachHang [maKhachHang=" + maKH + ", tenKhachHang=" + tenLH + ", soDienThoai=" + sdt + 
-               ", cccd=" + cccd + ", email=" + email + ", loaiKhachHang=" + loaiKH + "]";
+        // --- THAY ĐỔI ---
+        return "KhachHang [maKhachHang=" + maKH + ", tenKhachHang=" + tenKH + ", soDienThoai=" + sdt + 
+               ", ngaySinh=" + ngaySinh + ", email=" + email + ", loaiKhachHang=" + loaiKH + "]";
     }
 }

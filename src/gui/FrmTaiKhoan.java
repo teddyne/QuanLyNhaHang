@@ -389,14 +389,20 @@ public class FrmTaiKhoan extends ThanhTacVu {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn tài khoản để xóa!", "Thông báo", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        int confirm = JOptionPane.showConfirmDialog(this, "Bạn có chắc muốn xóa tài khoản " + maTaiKhoan + "?", "Xác nhận", JOptionPane.YES_NO_OPTION);
+        
+        int confirm = JOptionPane.showConfirmDialog(this, 
+            "Bạn có chắc muốn xóa tài khoản " + maTaiKhoan + "?", "Xác nhận xóa", JOptionPane.YES_NO_OPTION);
+        
         if (confirm == JOptionPane.YES_OPTION) {
+            // Gọi method ẩn tài khoản thay vì xóa
             if (taiKhoanDAO.xoaTaiKhoan(maTaiKhoan)) {
                 JOptionPane.showMessageDialog(this, "Xóa tài khoản thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
-                loadDanhSachTaiKhoan();
+                loadDanhSachTaiKhoan(); 
                 lamMoiForm();
             } else {
-                JOptionPane.showMessageDialog(this, "Xóa tài khoản thất bại! Có thể do ràng buộc dữ liệu hoặc lỗi kết nối.", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, 
+                    "Xóa tài khoản thất bại!", 
+                    "Lỗi", JOptionPane.ERROR_MESSAGE);
             }
         }
     }

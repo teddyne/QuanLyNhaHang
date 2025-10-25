@@ -115,7 +115,7 @@ public class KhuVuc_DAO {
         }
     }
 
-    public boolean anKhuVuc(String maKhuVuc) throws SQLException {
+    public boolean xoaKhuVuc(String maKhuVuc) throws SQLException {
         String sql = "UPDATE KhuVuc SET trangThai = 'Ẩn' WHERE maKhuVuc = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, maKhuVuc);

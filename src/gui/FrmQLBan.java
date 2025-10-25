@@ -222,7 +222,7 @@ public class FrmQLBan extends ThanhTacVu {
 
         // Sự kiện nút
         btnThem.addActionListener(e -> themBan());
-        btnSua.addActionListener(e -> luuBan());
+        btnSua.addActionListener(e -> capNhatBan());
         btnXoa.addActionListener(e -> xoaBan());
         btnLamMoi.addActionListener(e -> lamMoiForm());
         btnLoaiBan.addActionListener(e -> {
@@ -397,25 +397,25 @@ public class FrmQLBan extends ThanhTacVu {
                 java.sql.Date sqlDate = new java.sql.Date(today.getTime());
                 java.sql.Time sqlTime = new java.sql.Time(today.getTime());
                 if (banDAO.checkTrung(maBan, sqlDate, sqlTime)) {
-                    JOptionPane.showMessageDialog(this, "Không thể ẩn bàn " + maBan + " vì đang có lịch đặt hoặc phục vụ!");
+                    JOptionPane.showMessageDialog(this, "Không thể xóa bàn " + maBan + " vì đang có lịch đặt hoặc phục vụ!");
                     return;
                 }
-                int confirm = JOptionPane.showConfirmDialog(this, "Bạn có chắc chắn muốn ẩn bàn " + maBan + "?", "Xác nhận ẩn", JOptionPane.YES_NO_OPTION);
+                int confirm = JOptionPane.showConfirmDialog(this, "Bạn có chắc chắn muốn xóa bàn " + maBan + "?", "Xác nhận xóa", JOptionPane.YES_NO_OPTION);
                 if (confirm == JOptionPane.YES_OPTION) {
-                    banDAO.anBan(maBan);
+                    banDAO.xoaBan(maBan);
                     loadData();
-                    JOptionPane.showMessageDialog(this, "Ẩn bàn thành công!");
+                    JOptionPane.showMessageDialog(this, "Xóa bàn thành công!");
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
-                JOptionPane.showMessageDialog(this, "Lỗi khi ẩn bàn: " + e.getMessage());
+                JOptionPane.showMessageDialog(this, "Lỗi khi xóa bàn: " + e.getMessage());
             }
         } else {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn bàn để ẩn!");
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn bàn để xóa!");
         }
     }
     
-	private void luuBan() {
+	private void capNhatBan() {
 	    String maBan = txtMaBan.getText().trim();
 	    String maKhuVuc = cbKhuVuc.getSelectedIndex() > 0 ? cbKhuVuc.getSelectedItem().toString().split(" - ")[0] : "";
 	    int soCho = 0;

@@ -151,7 +151,7 @@ public class FrmKhuVuc extends ThanhTacVu {
         // Khởi tạo các nút
         btnThem = taoNut("Thêm", new Color(46, 204, 113), buttonSize, buttonFont);
         btnSua = taoNut("Sửa", new Color(52, 152, 219), buttonSize, buttonFont);
-        btnAn = taoNut("Ẩn", new Color(231, 76, 60), buttonSize, buttonFont);
+        btnAn = taoNut("Xóa", new Color(231, 76, 60), buttonSize, buttonFont);
         btnLamMoi = taoNut("Làm mới", new Color(149, 165, 166), buttonSize, buttonFont);
         btnLuu = taoNut("Lưu", new Color(255, 193, 7), buttonSize, buttonFont);
         btnTraCuu = taoNut("Tra cứu", new Color(121, 89, 229), buttonSize, buttonFont);
@@ -190,7 +190,7 @@ public class FrmKhuVuc extends ThanhTacVu {
 
         // Sự kiện cho các nút
         btnThem.addActionListener(e -> themKhuVuc());
-        btnAn.addActionListener(e -> anKhuVuc());
+        btnAn.addActionListener(e -> xoaKhuVuc());
         btnSua.addActionListener(e -> suaKhuVuc());
         btnLuu.addActionListener(e -> luuKhuVuc());
         btnTraCuu.addActionListener(e -> traCuuKhuVuc());
@@ -266,32 +266,32 @@ public class FrmKhuVuc extends ThanhTacVu {
         txtMaKhuVuc.requestFocus();
     }
 
-    private void anKhuVuc() {
+    private void xoaKhuVuc() {
         int row = tblKhuVuc.getSelectedRow();
         if (row >= 0) {
             String maKhuVuc = (String) model.getValueAt(row, 0);
             try {
                 if (khuDAO.checkTrung(maKhuVuc)) {
-                    JOptionPane.showMessageDialog(this, "Không thể ẩn khu vực " + maKhuVuc + " vì vẫn còn bàn đang sử dụng!");
+                    JOptionPane.showMessageDialog(this, "Không thể xóa khu vực " + maKhuVuc + " vì vẫn còn bàn đang sử dụng!");
                     return;
                 }
                 int confirm = JOptionPane.showConfirmDialog(this, 
-                    "Ẩn khu vực " + maKhuVuc + "?", "Xác nhận ẩn", JOptionPane.YES_NO_OPTION);
+                    "Xóa khu vực " + maKhuVuc + "?", "Xác nhận xóa", JOptionPane.YES_NO_OPTION);
                 if (confirm == JOptionPane.YES_OPTION) {
-                    khuDAO.anKhuVuc(maKhuVuc);
+                    khuDAO.xoaKhuVuc(maKhuVuc);
                     model.removeRow(row);
                     if (refreshCallback != null) {
                         refreshCallback.accept(null);
                     }
-                    JOptionPane.showMessageDialog(this, "Ẩn khu vực thành công!");
+                    JOptionPane.showMessageDialog(this, "Xóa khu vực thành công!");
                     lamMoiForm();
                 }
             } catch (SQLException ex) {
-                JOptionPane.showMessageDialog(this, "Lỗi ẩn khu vực: " + ex.getMessage());
+                JOptionPane.showMessageDialog(this, "Lỗi xóa khu vực: " + ex.getMessage());
                 ex.printStackTrace();
             }
         } else {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn khu vực để ẩn!");
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn khu vực để xóa!");
         }
     }
 
@@ -306,6 +306,7 @@ public class FrmKhuVuc extends ThanhTacVu {
         } else {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn khu vực để sửa!");
         }
+        luuKhuVuc();
     }
 
     private void luuKhuVuc() {
@@ -319,7 +320,7 @@ public class FrmKhuVuc extends ThanhTacVu {
         }
 
         if (!trangThai.equals("Hoạt động") && !trangThai.equals("Ẩn")) {
-            JOptionPane.showMessageDialog(this, "Trạng thái phải là 'Hoạt động' hoặc 'Ẩn'!");
+            JOptionPane.showMessageDialog(this, "Trạng thái phải là 'Hoạt động' hoặc 'Ngừng Hoạt Động'!");
             return;
         }
 
@@ -389,24 +390,5 @@ public class FrmKhuVuc extends ThanhTacVu {
             JOptionPane.showMessageDialog(this, "Lỗi tra cứu khu vực: " + ex.getMessage());
             ex.printStackTrace();
         }
-    }
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            UIManager.put("TableHeader.font", new Font("Times New Roman", Font.BOLD, 20));
-            try {
-                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-            } catch (ClassNotFoundException | InstantiationException | IllegalAccessException
-                    | UnsupportedLookAndFeelException e) {
-                e.printStackTrace();
-            }
-            try {
-                new FrmKhuVuc().setExtendedState(JFrame.MAXIMIZED_BOTH);
-                new FrmKhuVuc().setVisible(true);
-            } catch (SQLException e) {
-                e.printStackTrace();
-                JOptionPane.showMessageDialog(null, "Lỗi khởi tạo: " + e.getMessage());
-            }
-        });
     }
 }
