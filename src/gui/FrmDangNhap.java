@@ -22,6 +22,7 @@ public class FrmDangNhap extends JFrame implements ActionListener, MouseListener
     private final JButton btnThoat;
     private final JButton btnQuenMatKhau;
     private final JLabel iconEye;
+    private Connection con = ConnectSQL.getConnection();
 
     private boolean isPasswordVisible = false;
 	private JButton btnTiepTuc;
@@ -29,8 +30,7 @@ public class FrmDangNhap extends JFrame implements ActionListener, MouseListener
 	private JButton btnDoiMK;
     
     public FrmDangNhap(){
-        ConnectSQL.getInstance().connect();
-
+    	Connection conn = ConnectSQL.getConnection();
         setTitle("Đăng nhập");
         setExtendedState(JFrame.MAXIMIZED_BOTH);
         setLocationRelativeTo(null);
@@ -201,7 +201,7 @@ public class FrmDangNhap extends JFrame implements ActionListener, MouseListener
             soDienThoai[0] = txtSoDienThoai.getText().trim();
             String maNhap = txtMaXacNhan.getText().trim();
 
-            TaiKhoan_DAO dao = new TaiKhoan_DAO();
+            TaiKhoan_DAO dao = new TaiKhoan_DAO(con);
             if (soDienThoai[0].isEmpty()) {
                 JOptionPane.showMessageDialog(dialog, "Vui lòng nhập số điện thoại!", "Lỗi", JOptionPane.ERROR_MESSAGE);
                 return;
@@ -289,7 +289,7 @@ public class FrmDangNhap extends JFrame implements ActionListener, MouseListener
                 return;
             }
 
-            TaiKhoan_DAO dao = new TaiKhoan_DAO();
+            TaiKhoan_DAO dao = new TaiKhoan_DAO(con);
             if (dao.capNhatMatKhauTheoSDT(soDienThoai, mkMoi)) {
                 JOptionPane.showMessageDialog(dialog, "Đổi mật khẩu thành công! Bạn có thể đăng nhập với mật khẩu mới.", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
                 dialog.dispose();
@@ -354,7 +354,7 @@ public class FrmDangNhap extends JFrame implements ActionListener, MouseListener
         SwingWorker<Boolean, Void> worker = new SwingWorker<>() {
             @Override
             protected Boolean doInBackground() throws Exception {
-                TaiKhoan_DAO taiKhoanDAO = new TaiKhoan_DAO();
+                TaiKhoan_DAO taiKhoanDAO = new TaiKhoan_DAO(con);
                 Thread.sleep(1000);
                 return taiKhoanDAO.kiemTraDangNhap(tk, mk);
             }

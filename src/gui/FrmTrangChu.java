@@ -97,7 +97,12 @@ public class FrmTrangChu extends JFrame {
         });
 
         btnThucDon.addActionListener(e -> {
-            new FrmThucDon().setVisible(true);
+            try {
+				new FrmThucDon().setVisible(true);
+			} catch (SQLException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
             dispose();
         });
 

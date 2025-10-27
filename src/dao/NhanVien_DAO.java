@@ -1,21 +1,23 @@
 package dao;
 
 import entity.NhanVien;
-import connectSQL.ConnectSQL;
 import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
 public class NhanVien_DAO {
+    private final Connection conn;
+
+    public NhanVien_DAO(Connection conn) {
+        this.conn = conn;
+    }
 
     public List<NhanVien> getAllNhanVien() {
         List<NhanVien> list = new ArrayList<>();
         String sql = "SELECT * FROM NhanVien";
-        try (Connection con = ConnectSQL.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql);
+        try (PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
-
             while (rs.next()) {
                 list.add(mapResultSetToNhanVien(rs));
             }
@@ -25,14 +27,11 @@ public class NhanVien_DAO {
         return list;
     }
 
-    // Lấy nhân viên còn làm (trangThai = 1)
     public List<NhanVien> getNhanVienDangLam() {
         List<NhanVien> list = new ArrayList<>();
         String sql = "SELECT * FROM NhanVien WHERE trangThai = 1";
-        try (Connection con = ConnectSQL.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql);
+        try (PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
-
             while (rs.next()) {
                 list.add(mapResultSetToNhanVien(rs));
             }
@@ -42,13 +41,10 @@ public class NhanVien_DAO {
         return list;
     }
 
-    // Thêm nhân viên
     public boolean themNhanVien(NhanVien nv) {
         String sql = "INSERT INTO NhanVien (maNhanVien, hoTen, anhNV, ngaySinh, gioiTinh, cccd, email, sdt, trangThai, chucVu) " +
                      "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        try (Connection con = ConnectSQL.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
-
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, nv.getMaNhanVien());
             ps.setString(2, nv.getHoTen());
             ps.setString(3, nv.getAnhNV());
@@ -59,22 +55,17 @@ public class NhanVien_DAO {
             ps.setString(8, nv.getSdt());
             ps.setBoolean(9, nv.isTrangThai());
             ps.setString(10, nv.getChucVu());
-
             return ps.executeUpdate() > 0;
-
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return false;
     }
 
-    // Cập nhật nhân viên
     public boolean capNhatNhanVien(NhanVien nv) {
         String sql = "UPDATE NhanVien SET hoTen=?, anhNV=?, ngaySinh=?, gioiTinh=?, cccd=?, email=?, sdt=?, trangThai=?, chucVu=? " +
                      "WHERE maNhanVien=?";
-        try (Connection con = ConnectSQL.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
-
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, nv.getHoTen());
             ps.setString(2, nv.getAnhNV());
             ps.setDate(3, nv.getNgaySinh() != null ? Date.valueOf(nv.getNgaySinh()) : null);
@@ -85,20 +76,16 @@ public class NhanVien_DAO {
             ps.setBoolean(8, nv.isTrangThai());
             ps.setString(9, nv.getChucVu());
             ps.setString(10, nv.getMaNhanVien());
-
             return ps.executeUpdate() > 0;
-
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return false;
     }
 
-    // Ẩn nhân viên (set trạng thái = 0)
     public boolean anNhanVien(String maNhanVien) {
         String sql = "UPDATE NhanVien SET trangThai = 0 WHERE maNhanVien = ?";
-        try (Connection con = ConnectSQL.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, maNhanVien);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -107,11 +94,9 @@ public class NhanVien_DAO {
         return false;
     }
 
-    // Tìm nhân viên theo mã
     public NhanVien timNhanVienTheoMa(String maNhanVien) {
         String sql = "SELECT * FROM NhanVien WHERE maNhanVien = ?";
-        try (Connection con = ConnectSQL.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, maNhanVien);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -124,14 +109,12 @@ public class NhanVien_DAO {
         return null;
     }
 
-    // Hàm tái sử dụng để map ResultSet -> NhanVien
     private NhanVien mapResultSetToNhanVien(ResultSet rs) throws SQLException {
         LocalDate ngaySinh = null;
         Date sqlDate = rs.getDate("ngaySinh");
         if (sqlDate != null) {
             ngaySinh = sqlDate.toLocalDate();
         }
-
         return new NhanVien(
                 rs.getString("maNhanVien"),
                 rs.getString("hoTen"),

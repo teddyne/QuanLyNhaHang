@@ -113,16 +113,11 @@ public class ThanhTacVu extends JFrame {
         hoaDon.setFont(fontItem);
         hoaDon.setIcon(taoIcon("img/hoadon.png", 30, 30));
         
-        JMenuItem nhanVien = new JMenuItem("Nhân Viên");
-        nhanVien.setFont(fontItem);
-        nhanVien.setIcon(taoIcon("img/nhanvien.png", 30, 30));
-
         danhMuc.add(ban);
         danhMuc.add(monAn);
         danhMuc.add(hoaDon);
         if ("QuanLy".equals(phanQuyen)) {
             danhMuc.add(khuVuc);
-            danhMuc.add(nhanVien);
         }
 
         menuBar.add(danhMuc);
@@ -141,9 +136,14 @@ public class ThanhTacVu extends JFrame {
         khuyenMai.setFont(fontItem);
         khuyenMai.setIcon(taoIcon("img/khuyenmai.png", 30, 30));
 
+        JMenuItem nhanVien = new JMenuItem("Nhân Viên");
+        nhanVien.setFont(fontItem);
+        nhanVien.setIcon(taoIcon("img/nhanvien.png", 30, 30));
+        
         capNhat.add(khachHang);
         if ("QuanLy".equals(phanQuyen)) {
             capNhat.add(khuyenMai);
+            capNhat.add(nhanVien);
         }
         
         menuBar.add(capNhat);
@@ -177,7 +177,7 @@ public class ThanhTacVu extends JFrame {
         tban.setFont(fontItem);
         tban.setIcon(taoIcon("img/ban.png", 30, 30));
         
-        JMenuItem tmon = new JMenuItem("Món");
+        JMenuItem tmon = new JMenuItem("Món ăn");
         tmon.setFont(fontItem);
         tmon.setIcon(taoIcon("img/thucdon.png", 30, 30));
         
@@ -319,7 +319,12 @@ public class ThanhTacVu extends JFrame {
         });
 
         monAn.addActionListener(e -> {
-            new FrmThucDon().setVisible(true);
+            try {
+				new FrmThucDon().setVisible(true);
+			} catch (SQLException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
             dispose();
         });
 

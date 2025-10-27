@@ -6,9 +6,13 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 
 import com.itextpdf.text.pdf.BaseFont;
+
+import connectSQL.ConnectSQL;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.Connection;
 import java.util.List;
 
 public class FrmChiTietHoaDon extends JFrame implements ActionListener{
@@ -141,7 +145,8 @@ public class FrmChiTietHoaDon extends JFrame implements ActionListener{
     }
 
     private void loadData(String maHD) {
-        HoaDon_DAO hdDAO = new HoaDon_DAO();
+    	Connection con = ConnectSQL.getConnection();
+        HoaDon_DAO hdDAO = new HoaDon_DAO(con);
         Object[] thongTin = hdDAO.layThongTinHoaDon(maHD);
 
         if (thongTin != null) {

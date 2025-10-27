@@ -3,100 +3,74 @@ package dao;
 import connectSQL.ConnectSQL;
 import entity.TaiKhoan;
 import entity.LichSuDangNhap;
-
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class TaiKhoan_DAO {
-    private Connection conn;
-    
+    private final Connection conn;
     public static TaiKhoan currentTaiKhoan;
 
-    public static TaiKhoan getCurrentTaiKhoan() {
-        return currentTaiKhoan;
+    public static TaiKhoan getCurrentTaiKhoan() { return currentTaiKhoan; }
+    public static void resetCurrentTaiKhoan() { currentTaiKhoan = null; }
+
+    public TaiKhoan_DAO(Connection conn) {
+        this.conn = conn;
     }
 
-    public static void resetCurrentTaiKhoan() {
-        currentTaiKhoan = null;
-    }
-
-    public TaiKhoan_DAO() {
-        this.conn = ConnectSQL.getConnection();
-    }
     public boolean kiemTraDangNhap(String user, String pass) {
-        Connection con = null;
-        PreparedStatement ps = null;
-        ResultSet rs = null;
-        PreparedStatement logPs = null;
-        try {
-            con = ConnectSQL.getConnection();
-            if (con == null) {
-                System.out.println("Kết nối cơ sở dữ liệu thất bại!");
-                return false;
-            }
-
-            String sql = "SELECT t.maTaiKhoan, t.soDienThoai, t.matKhau, t.maNhanVien, t.phanQuyen, n.hoTen " +
-                         "FROM TaiKhoan t INNER JOIN NhanVien n ON t.maNhanVien = n.maNhanVien " +
-                         "WHERE t.soDienThoai = ? OR t.maNhanVien = ?";
-            ps = con.prepareStatement(sql);
+        String sql = "SELECT t.maTaiKhoan, t.soDienThoai, t.matKhau, t.maNhanVien, t.phanQuyen, n.hoTen " +
+                     "FROM TaiKhoan t INNER JOIN NhanVien n ON t.maNhanVien = n.maNhanVien " +
+                     "WHERE t.soDienThoai = ? OR t.maNhanVien = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, user);
             ps.setString(2, user);
-            rs = ps.executeQuery();
-            boolean loginSuccess = false;
-            String maTaiKhoan = null;
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next() && rs.getString("matKhau").equals(pass)) {
+                    currentTaiKhoan = new TaiKhoan();
+                    currentTaiKhoan.setMaTaiKhoan(rs.getString("maTaiKhoan"));
+                    currentTaiKhoan.setSoDienThoai(rs.getString("soDienThoai"));
+                    currentTaiKhoan.setMatKhau(rs.getString("matKhau"));
+                    currentTaiKhoan.setMaNhanVien(rs.getString("maNhanVien"));
+                    currentTaiKhoan.setPhanQuyen(rs.getString("phanQuyen"));
+                    currentTaiKhoan.setHoTen(rs.getString("hoTen"));
 
-            if (rs.next() && rs.getString("matKhau").equals(pass)) {
-                currentTaiKhoan = new TaiKhoan();
-                currentTaiKhoan.setMaTaiKhoan(rs.getString("maTaiKhoan"));
-                currentTaiKhoan.setSoDienThoai(rs.getString("soDienThoai"));
-                currentTaiKhoan.setMatKhau(rs.getString("matKhau"));
-                currentTaiKhoan.setMaNhanVien(rs.getString("maNhanVien"));
-                currentTaiKhoan.setPhanQuyen(rs.getString("phanQuyen"));
-                currentTaiKhoan.setHoTen(rs.getString("hoTen"));
-                maTaiKhoan = rs.getString("maTaiKhoan");
-                try {
-                    currentTaiKhoan.setPhanQuyen(currentTaiKhoan.getPhanQuyen());
-                    loginSuccess = true;
-                } catch (IllegalArgumentException e) {
-                    System.out.println("Phân quyền không hợp lệ: " + e.getMessage());
+                    logDangNhap(rs.getString("maTaiKhoan"), true);
+                    return true;
+                } else {
+                    String maTK = timMaTaiKhoan(user);
+                    if (maTK != null) logDangNhap(maTK, false);
+                    return false;
                 }
             }
-
-            if (maTaiKhoan == null) {
-                String findSql = "SELECT maTaiKhoan FROM TaiKhoan WHERE soDienThoai = ? OR maNhanVien = ?";
-                PreparedStatement findPs = con.prepareStatement(findSql);
-                findPs.setString(1, user);
-                findPs.setString(2, user);
-                ResultSet findRs = findPs.executeQuery();
-                if (findRs.next()) {
-                    maTaiKhoan = findRs.getString("maTaiKhoan");
-                }
-                findRs.close();
-                findPs.close();
-            }
-
-            if (maTaiKhoan != null) {
-                String logSql = "INSERT INTO LichSuDangNhap (maTaiKhoan, trangThai) VALUES (?, ?)";
-                logPs = con.prepareStatement(logSql);
-                logPs.setString(1, maTaiKhoan);
-                logPs.setBoolean(2, loginSuccess);
-                logPs.executeUpdate();
-            }
-
-            return loginSuccess;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
-        } finally {
-            try {
-                if (rs != null) rs.close();
-                if (ps != null) ps.close();
-                if (logPs != null) logPs.close();
-                if (con != null) con.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
+        }
+    }
+
+    private String timMaTaiKhoan(String user) {
+        String sql = "SELECT maTaiKhoan FROM TaiKhoan WHERE soDienThoai = ? OR maNhanVien = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, user);
+            ps.setString(2, user);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getString("maTaiKhoan");
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private void logDangNhap(String maTaiKhoan, boolean trangThai) {
+        String sql = "INSERT INTO LichSuDangNhap (maTaiKhoan, trangThai) VALUES (?, ?)";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, maTaiKhoan);
+            ps.setBoolean(2, trangThai);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 
@@ -147,9 +121,7 @@ public class TaiKhoan_DAO {
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, soDienThoai);
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1) > 0;
-                }
+                if (rs.next()) return rs.getInt(1) > 0;
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -157,47 +129,41 @@ public class TaiKhoan_DAO {
         return false;
     }
 
-	public boolean xoaTaiKhoan(String maTaiKhoan) {
-	    String sql = "UPDATE taikhoan SET trangThai = 0 WHERE maTaiKhoan = ?";
-	    try (Connection conn = ConnectSQL.getConnection();
-	         PreparedStatement ps = conn.prepareStatement(sql)) {
-	        
-	        ps.setString(1, maTaiKhoan);
-	        int rowsAffected = ps.executeUpdate();
-	        return rowsAffected > 0;
-	    } catch (SQLException e) {
-	        e.printStackTrace();
-	        return false;
-	    }
-	}
+    public boolean xoaTaiKhoan(String maTaiKhoan) {
+        String sql = "UPDATE TaiKhoan SET trangThai = 0 WHERE maTaiKhoan = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, maTaiKhoan);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 
+    public List<TaiKhoan> layDanhSachTaiKhoan() {
+        List<TaiKhoan> danhSach = new ArrayList<>();
+        String sql = "SELECT t.*, n.hoTen FROM TaiKhoan t INNER JOIN NhanVien n ON t.maNhanVien = n.maNhanVien WHERE t.trangThai = 1 ORDER BY t.maTaiKhoan";
+        try (PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                TaiKhoan tk = new TaiKhoan();
+                tk.setMaTaiKhoan(rs.getString("maTaiKhoan"));
+                tk.setSoDienThoai(rs.getString("soDienThoai"));
+                tk.setMatKhau(rs.getString("matKhau"));
+                tk.setMaNhanVien(rs.getString("maNhanVien"));
+                tk.setPhanQuyen(rs.getString("phanQuyen"));
+                tk.setHoTen(rs.getString("hoTen"));
+                danhSach.add(tk);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return danhSach;
+    }
 
-	public List<TaiKhoan> layDanhSachTaiKhoan() {
-	    List<TaiKhoan> danhSach = new ArrayList<>();
-	    String sql = "SELECT t.*, n.hoTen FROM taikhoan t INNER JOIN NhanVien n ON t.maNhanVien = n.maNhanVien WHERE t.trangThai = 1 ORDER BY t.maTaiKhoan";
-	    
-	    try (Connection conn = ConnectSQL.getInstance().getConnection();
-	         PreparedStatement ps = conn.prepareStatement(sql);
-	         ResultSet rs = ps.executeQuery()) {
-	        while (rs.next()) {
-	            TaiKhoan tk = new TaiKhoan();
-	            tk.setMaTaiKhoan(rs.getString("maTaiKhoan"));
-	            tk.setSoDienThoai(rs.getString("soDienThoai"));
-	            tk.setMatKhau(rs.getString("matKhau"));
-	            tk.setMaNhanVien(rs.getString("maNhanVien"));
-	            tk.setPhanQuyen(rs.getString("phanQuyen"));
-	            tk.setHoTen(rs.getString("hoTen"));
-	            danhSach.add(tk);
-	        }
-	    } catch (SQLException e) {
-	        e.printStackTrace();
-	    }
-	    return danhSach;
-	}
-
-    public List<LichSuDangNhap> layLichSuDangNhap(String maTaiKhoan) {
-        List<LichSuDangNhap> dsLichSu = new ArrayList<>();
-        String sql = "SELECT maLichSu, maTaiKhoan, thoiGianDangNhap, trangThai FROM LichSuDangNhap WHERE maTaiKhoan = ?";
+    public List<LichSuDangNhap> layLichSuDangNhap(String maTaiKhoan) throws SQLException {
+        List<LichSuDangNhap> list = new ArrayList<>();
+        String sql = "SELECT * FROM LichSuDangNhap WHERE maTaiKhoan = ? ORDER BY thoiGianDangNhap DESC";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, maTaiKhoan);
             try (ResultSet rs = ps.executeQuery()) {
@@ -207,13 +173,11 @@ public class TaiKhoan_DAO {
                     ls.setMaTaiKhoan(rs.getString("maTaiKhoan"));
                     ls.setThoiGianDangNhap(rs.getTimestamp("thoiGianDangNhap"));
                     ls.setTrangThai(rs.getBoolean("trangThai"));
-                    dsLichSu.add(ls);
+                    list.add(ls);
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
-        return dsLichSu;
+        return list;
     }
 
     public String taoMaTaiKhoanMoi() {
@@ -230,7 +194,7 @@ public class TaiKhoan_DAO {
         return "TK001";
     }
 
-    public TaiKhoan layTaiKhoanDangNhapGanNhat() {
+    public TaiKhoan layTaiKhoanDangNhapGanNhat() throws SQLException {
         String sql = "SELECT TOP 1 t.maTaiKhoan, t.soDienThoai, t.matKhau, t.maNhanVien, t.phanQuyen, n.hoTen " +
                      "FROM TaiKhoan t INNER JOIN NhanVien n ON t.maNhanVien = n.maNhanVien " +
                      "INNER JOIN LichSuDangNhap l ON t.maTaiKhoan = l.maTaiKhoan " +
@@ -248,8 +212,6 @@ public class TaiKhoan_DAO {
                 tk.setHoTen(rs.getString("hoTen"));
                 return tk;
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
         return null;
     }
@@ -261,8 +223,8 @@ public class TaiKhoan_DAO {
                      "LEFT JOIN LichSuDangNhap ls ON t.maTaiKhoan = ls.maTaiKhoan " +
                      "GROUP BY t.maTaiKhoan, t.soDienThoai, t.matKhau, t.maNhanVien, t.phanQuyen, n.hoTen " +
                      "ORDER BY soLanDangNhap DESC";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            ResultSet rs = pstmt.executeQuery();
+        try (PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
             if (rs.next()) {
                 TaiKhoan tk = new TaiKhoan();
                 tk.setMaTaiKhoan(rs.getString("maTaiKhoan"));

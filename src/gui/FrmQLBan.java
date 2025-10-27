@@ -30,12 +30,12 @@ public class FrmQLBan extends ThanhTacVu {
     public FrmQLBan(Ban_DAO banDAO, KhuVuc_DAO khuVucDAO, LoaiBan_DAO loaiBanDAO, Consumer<Void> refreshCallback) throws SQLException {
         super();
         setTitle("Quản Lý Bàn");
-        ConnectSQL.getInstance().connect();
+        Connection conn = ConnectSQL.getConnection();
         this.banDAO = banDAO;
         this.khuVucDAO = khuVucDAO;
         this.loaiBanDAO = loaiBanDAO;
         this.refreshCallback = refreshCallback;
-
+ 
         // Panel chính
         JPanel mainPanel = new JPanel(new BorderLayout());
         mainPanel.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));

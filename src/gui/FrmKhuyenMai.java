@@ -5,8 +5,12 @@ import entity.KhuyenMai;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+
+import connectSQL.ConnectSQL;
+
 import java.awt.*;
 import java.awt.event.*;
+import java.sql.Connection;
 import java.sql.Date;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
@@ -38,6 +42,8 @@ public class FrmKhuyenMai extends JFrame implements ActionListener, MouseListene
 	private JPanel pMain;
 	private JTextField txtTrangThai;
 	private JButton btnThemLoai;
+    private Connection con = ConnectSQL.getConnection();
+
 
     public FrmKhuyenMai() {
         setTitle("Quản Lý Khuyến Mãi");
@@ -310,7 +316,7 @@ public class FrmKhuyenMai extends JFrame implements ActionListener, MouseListene
             cmbLoaiKM.removeAllItems();
             cmbLoaiKM.addItem("Tất cả");
 
-            dao.LoaiKhuyenMai_DAO loaiDAO = new dao.LoaiKhuyenMai_DAO();
+            dao.LoaiKhuyenMai_DAO loaiDAO = new dao.LoaiKhuyenMai_DAO(con);
             List<entity.LoaiKhuyenMai> list = loaiDAO.getAllLoaiKhuyenMai();
 
             for (entity.LoaiKhuyenMai loai : list) {

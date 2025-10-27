@@ -1,8 +1,6 @@
 package dao;
 
 import entity.LoaiBan;
-import connectSQL.ConnectSQL;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -13,6 +11,7 @@ import java.util.List;
 public class LoaiBan_DAO {
     private final Connection conn;
 
+    // CHỈ DÙNG CONSTRUCTOR NÀY
     public LoaiBan_DAO(Connection conn) {
         this.conn = conn;
     }

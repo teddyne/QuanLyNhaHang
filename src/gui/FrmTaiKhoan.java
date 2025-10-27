@@ -8,6 +8,7 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.*;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.List;
@@ -34,8 +35,8 @@ public class FrmTaiKhoan extends ThanhTacVu {
     public FrmTaiKhoan() throws SQLException {
         super();
         setTitle("Quản Lý Tài Khoản");
-        ConnectSQL.getInstance().connect();
-        taiKhoanDAO = new TaiKhoan_DAO();
+        Connection conn = ConnectSQL.getConnection();
+        taiKhoanDAO = new TaiKhoan_DAO(conn);
 
         // Panel chính
         JPanel mainPanel = new JPanel(new BorderLayout());
@@ -248,18 +249,20 @@ public class FrmTaiKhoan extends ThanhTacVu {
         btnXoa.addActionListener(e -> xoaTaiKhoan());
         btnLamMoi.addActionListener(e -> lamMoiForm());
 
-        chkGanNhat.addItemListener(e -> {
+        chkGanNhat.addActionListener(e -> {
             if (chkGanNhat.isSelected()) {
-            	chkGanNhat.setSelected(false);
-                locDangNhapGanNhat();
+                try {
+                    locDangNhapGanNhat();
+                } catch (SQLException ex) {
+                    JOptionPane.showMessageDialog(FrmTaiKhoan.this, "Lỗi: " + ex.getMessage());
+                }
             } else {
                 loadDanhSachTaiKhoan();
             }
         });
 
-        chkNhieuNhat.addItemListener(e -> {
+        chkNhieuNhat.addActionListener(e -> {
             if (chkNhieuNhat.isSelected()) {
-            	chkNhieuNhat.setSelected(false);
                 locDangNhapNhieuNhat();
             } else {
                 loadDanhSachTaiKhoan();
@@ -277,7 +280,12 @@ public class FrmTaiKhoan extends ThanhTacVu {
                     txtMaNhanVien.setText(modelTaiKhoan.getValueAt(row, 3).toString());
                     cmbPhanQuyen.setSelectedItem(modelTaiKhoan.getValueAt(row, 4).toString());
                     txtHoTen.setText(modelTaiKhoan.getValueAt(row, 5).toString());
-                    loadLichSuDangNhap(modelTaiKhoan.getValueAt(row, 0).toString());
+                    try {
+						loadLichSuDangNhap(modelTaiKhoan.getValueAt(row, 0).toString());
+					} catch (SQLException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
                 }
             }
         });
@@ -325,7 +333,7 @@ public class FrmTaiKhoan extends ThanhTacVu {
         }
     }
 
-    private void loadLichSuDangNhap(String maTaiKhoan) {
+    private void loadLichSuDangNhap(String maTaiKhoan) throws SQLException {
         modelLichSuDangNhap.setRowCount(0);
         List<LichSuDangNhap> dsLichSu = taiKhoanDAO.layLichSuDangNhap(maTaiKhoan);
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
@@ -421,7 +429,7 @@ public class FrmTaiKhoan extends ThanhTacVu {
         loadDanhSachTaiKhoan();
     }
 
-    private void locDangNhapGanNhat() {
+    private void locDangNhapGanNhat() throws SQLException {
         TaiKhoan tk = taiKhoanDAO.layTaiKhoanDangNhapGanNhat();
         if (tk != null) {
             modelTaiKhoan.setRowCount(0);

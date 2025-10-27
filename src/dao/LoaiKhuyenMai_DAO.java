@@ -1,20 +1,18 @@
 package dao;
 
-import connectSQL.ConnectSQL;
 import entity.LoaiKhuyenMai;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class LoaiKhuyenMai_DAO {
-    private Connection conn;
+    private final Connection conn;
 
-    public LoaiKhuyenMai_DAO() {
-        try {
-            conn = ConnectSQL.getConnection();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public LoaiKhuyenMai_DAO(Connection conn) {
+        this.conn = conn;
     }
 
     public boolean themLoaiKhuyenMai(LoaiKhuyenMai l) {
@@ -24,6 +22,7 @@ public class LoaiKhuyenMai_DAO {
             ps.setString(2, l.getTenLoai());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
+            e.printStackTrace();
             return false;
         }
     }
@@ -35,6 +34,7 @@ public class LoaiKhuyenMai_DAO {
             ps.setString(2, l.getMaLoai());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
+            e.printStackTrace();
             return false;
         }
     }
@@ -45,6 +45,7 @@ public class LoaiKhuyenMai_DAO {
             ps.setString(1, maLoai);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
+            e.printStackTrace();
             return false;
         }
     }
@@ -52,33 +53,31 @@ public class LoaiKhuyenMai_DAO {
     public List<LoaiKhuyenMai> getAllLoaiKhuyenMai() throws SQLException {
         List<LoaiKhuyenMai> list = new ArrayList<>();
         String sql = "SELECT maLoai, tenLoai FROM LoaiKhuyenMai";
-        PreparedStatement ps = conn.prepareStatement(sql);
-        ResultSet rs = ps.executeQuery();
-
-        while (rs.next()) {
-            LoaiKhuyenMai lkm = new LoaiKhuyenMai(
-                rs.getString("maLoai"),
-                rs.getString("tenLoai")
-            );
-            list.add(lkm);
+        try (PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                LoaiKhuyenMai lkm = new LoaiKhuyenMai(
+                    rs.getString("maLoai"),
+                    rs.getString("tenLoai")
+                );
+                list.add(lkm);
+            }
         }
-        rs.close();
-        ps.close();
         return list;
     }
-    
+
     public String getMaLoaiByTenLoai(String tenLoai) {
         String sql = "SELECT maLoai FROM LoaiKhuyenMai WHERE tenLoai = ?";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, tenLoai);
-            ResultSet rs = pstmt.executeQuery();
-            if (rs.next()) {
-                return rs.getString("maLoai");
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, tenLoai);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("maLoai");
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return null;
     }
-
 }

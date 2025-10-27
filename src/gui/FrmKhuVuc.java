@@ -31,10 +31,8 @@ public class FrmKhuVuc extends ThanhTacVu {
     public FrmKhuVuc(KhuVuc_DAO khuDAO, Consumer<Void> refreshCallback) throws SQLException {
         super();
         setTitle("Quản Lý Khu Vực");
-        ConnectSQL.getInstance().connect();
-        
+        Connection conn = ConnectSQL.getConnection();        
         if (khuDAO == null) {
-            Connection conn = ConnectSQL.getConnection();
             if (conn == null) {
                 throw new SQLException("Không thể kết nối cơ sở dữ liệu");
             }

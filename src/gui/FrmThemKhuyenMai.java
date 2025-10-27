@@ -6,8 +6,12 @@ import entity.KhuyenMai;
 import entity.LoaiKhuyenMai;
 
 import javax.swing.*;
+
+import connectSQL.ConnectSQL;
+
 import java.awt.*;
 import java.awt.event.*;
+import java.sql.Connection;
 import java.sql.Date;
 
 public class FrmThemKhuyenMai extends JFrame {
@@ -19,6 +23,8 @@ public class FrmThemKhuyenMai extends JFrame {
     private JPanel pNorth, pMain, p1, p2, p3, p4, p5, p6, p7, p8, p9;
     private JLabel lblTieuDe;
     private JLabel lblMa, lblTen, lblLoai, lblGiaTri, lblTuNgay, lblDenNgay, lblTrangThai, lblDonHangTu, lblDoiTuong, lblMon1, lblMon2, lblMonTang, lblGhiChu;
+
+    private Connection con = ConnectSQL.getConnection();
 
     public FrmThemKhuyenMai() {
         setTitle("Thêm Khuyến Mãi");
@@ -302,7 +308,7 @@ public class FrmThemKhuyenMai extends JFrame {
     private void loadLoaiKM() {
         try {
             cmbLoaiKM.removeAllItems();
-            LoaiKhuyenMai_DAO loaiDAO = new LoaiKhuyenMai_DAO();
+            LoaiKhuyenMai_DAO loaiDAO = new LoaiKhuyenMai_DAO(con);
             for (LoaiKhuyenMai loai : loaiDAO.getAllLoaiKhuyenMai()) {
                 cmbLoaiKM.addItem(loai.getTenLoai());
             }
@@ -331,7 +337,7 @@ public class FrmThemKhuyenMai extends JFrame {
 
             // Lấy maLoai từ tenLoai
             String tenLoai = cmbLoaiKM.getSelectedItem().toString();
-            LoaiKhuyenMai_DAO loaiDAO = new LoaiKhuyenMai_DAO();
+            LoaiKhuyenMai_DAO loaiDAO = new LoaiKhuyenMai_DAO(con);
             String maLoai = loaiDAO.getMaLoaiByTenLoai(tenLoai);
 
             if (maLoai == null) {

@@ -4,6 +4,7 @@ import dao.HoaDon_DAO;
 import dao.KhuyenMai_DAO;
 import dao.LoaiKhuyenMai_DAO;
 import entity.KhuyenMai;
+import entity.PhieuDatBan;
 import connectSQL.ConnectSQL;
 
 import javax.swing.*;
@@ -33,13 +34,15 @@ public class FrmThanhToan extends JFrame implements ActionListener {
     private JComboBox<KhuyenMai> cmbKhuyenMai;
     private JButton btnQuayLai, btnHuy, btnXacNhan;
     private DecimalFormat df = new DecimalFormat("#,##0 VND");
-    private HoaDon_DAO hoaDonDAO = new HoaDon_DAO();
+    private Connection con = ConnectSQL.getConnection();
+    private HoaDon_DAO hoaDonDAO = new HoaDon_DAO(con);
     private KhuyenMai_DAO kmDAO = new KhuyenMai_DAO();
     private double tongCong; // Tổng cộng trước VAT và khuyến mãi
     private double giamGia; // Giá trị giảm từ khuyến mãi
     private double phuThu; // Số tiền phụ thu
 	private JLabel lblDonViTien;
 	private JLabel lblDonVi;
+
 
     public FrmThanhToan(String maHD) {
         this();
@@ -362,7 +365,11 @@ public class FrmThanhToan extends JFrame implements ActionListener {
         loadKhuyenMai();
     }
 
-    private void loadKhuyenMai() {
+    public FrmThanhToan(String maBan, PhieuDatBan phieuDatBan, double tongTien) {
+		// TODO Auto-generated constructor stub
+	}
+
+	private void loadKhuyenMai() {
         try {
             List<KhuyenMai> dsKM = kmDAO.layDanhSachKhuyenMai();
             Collections.sort(dsKM, Comparator.comparing(KhuyenMai::getTenKM));
@@ -379,7 +386,7 @@ public class FrmThanhToan extends JFrame implements ActionListener {
         if (km == null) return 0;
         String maLoai = km.getMaLoai();
         try {
-            LoaiKhuyenMai_DAO loaiDAO = new LoaiKhuyenMai_DAO();
+            LoaiKhuyenMai_DAO loaiDAO = new LoaiKhuyenMai_DAO(con);
             String tenLoai = loaiDAO.getMaLoaiByTenLoai(maLoai);
             if (tenLoai.equals("Phần trăm")) {
                 return tongCong * (km.getGiaTri() / 100);
@@ -527,7 +534,7 @@ public class FrmThanhToan extends JFrame implements ActionListener {
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
             e.printStackTrace();
         }
-        ConnectSQL.getInstance().connect();
+        Connection conn = ConnectSQL.getConnection();
         new FrmThanhToan("HD0001").setVisible(true);
     }
 }

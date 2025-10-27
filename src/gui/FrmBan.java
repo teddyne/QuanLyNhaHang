@@ -57,6 +57,7 @@ import connectSQL.ConnectSQL;
 import dao.Ban_DAO;
 import dao.KhachHang_DAO;
 import dao.KhuVuc_DAO;
+import dao.LoaiBan_DAO;
 import dao.PhieuDatBan_DAO;
 import entity.Ban;
 import entity.KhuVuc;
@@ -75,6 +76,7 @@ public class FrmBan extends JFrame {
     private Map<String, JPanel> mapKhu = new HashMap<>();
     private Ban_DAO banDAO;
     private KhuVuc_DAO khuDAO;
+    private PhieuDatBan phieuDatBan;
     private JPanel pnlChinh;
     private JComboBox<String> cbTrangThai;
     private JComboBox<String> cbLoaiBan;
@@ -177,7 +179,12 @@ public class FrmBan extends JFrame {
         btnChuyenBan.addActionListener(e -> moFormChuyenBan());
         btnDatMon.addActionListener(e -> {
             if (banDangChon != null) {
-                xuLyDatMon();
+                try {
+					xuLyDatMon();
+				} catch (SQLException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
             } else {
                 JOptionPane.showMessageDialog(this, "Vui lòng chọn bàn trước!");
             }
@@ -722,8 +729,9 @@ public class FrmBan extends JFrame {
             	if (phieu == null) {
             	    phieu = phieuDatBanDAO.getByMaBanAndTrangThai(maBan, "Đặt");
             	}
-            	new FrmPhucVu(this, maBan, phieu, phieuDatBanDAO, banDAO).setVisible(true);
-                taiTrangThaiBanTuCSDL();
+            	LoaiBan_DAO loaiBanDAO = new LoaiBan_DAO(conn);
+            	FrmPhucVu frm = new FrmPhucVu(this, maBan, phieuDatBan, phieuDatBanDAO, banDAO, loaiBanDAO);
+            	taiTrangThaiBanTuCSDL();
             } catch (SQLException ex) {
                 JOptionPane.showMessageDialog(this, "Lỗi khi lấy thông tin phục vụ: " + ex.getMessage());
             }
@@ -1064,7 +1072,7 @@ public class FrmBan extends JFrame {
         taiLaiBangChinh();
     }
 
-    private void xuLyDatMon() {
+    private void xuLyDatMon() throws SQLException {
         String tt = layTrangThaiHienTai(banDangChon);
         if (!"Phục vụ".equals(tt)) {
             try {
@@ -1090,7 +1098,7 @@ public class FrmBan extends JFrame {
                 return;
             }
         }
-        new FrmOrder(banDangChon).setVisible(true);
+        new FrmDatMon(null, banDangChon).setVisible(true);
     }
 
     private void xuLyThanhToan() {

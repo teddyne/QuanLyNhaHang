@@ -9,21 +9,14 @@ public class MonAn {
     private boolean trangThai;
     private String moTa;
 
-    public MonAn() {}
-
     public MonAn(String maMon, String tenMon, String anhMon, LoaiMon loaiMon, double donGia, boolean trangThai, String moTa) {
-        setMaMon(maMon);
-        setTenMon(tenMon);
-        setAnhMon(anhMon);
-        setLoaiMon(loaiMon);
-        setDonGia(donGia);
-        setTrangThai(trangThai);
-        setMoTa(moTa);
-    }
-
-    // Copy constructor
-    public MonAn(MonAn other) {
-        this(other.maMon, other.tenMon, other.anhMon, other.loaiMon, other.donGia, other.trangThai, other.moTa);
+        this.maMon = maMon;
+        this.tenMon = tenMon;
+        this.anhMon = anhMon;
+        this.loaiMon = loaiMon;
+        this.donGia = donGia;
+        this.trangThai = trangThai;
+        this.moTa = moTa;
     }
 
     public String getMaMon() {
@@ -31,9 +24,6 @@ public class MonAn {
     }
 
     public void setMaMon(String maMon) {
-        if (maMon == null || !maMon.matches("^MON\\d{4}$")) {
-            throw new IllegalArgumentException("Mã món phải theo định dạng MONXXXX (XXXX là số)");
-        }
         this.maMon = maMon;
     }
 
@@ -42,12 +32,6 @@ public class MonAn {
     }
 
     public void setTenMon(String tenMon) {
-        if (tenMon == null || tenMon.trim().isEmpty()) {
-            throw new IllegalArgumentException("Tên món không được rỗng");
-        }
-        if (!tenMon.matches("^[\\p{L}][\\p{L}\\s]*$")) {
-            throw new IllegalArgumentException("Tên món chỉ được chứa chữ cái và khoảng trắng");
-        }
         this.tenMon = tenMon;
     }
 
@@ -64,9 +48,6 @@ public class MonAn {
     }
 
     public void setLoaiMon(LoaiMon loaiMon) {
-        if (loaiMon == null) {
-            throw new IllegalArgumentException("Loại món không được để trống");
-        }
         this.loaiMon = loaiMon;
     }
 
@@ -75,9 +56,6 @@ public class MonAn {
     }
 
     public void setDonGia(double donGia) {
-        if (donGia < 0) {
-            throw new IllegalArgumentException("Giá món không được nhỏ hơn 0");
-        }
         this.donGia = donGia;
     }
 
@@ -94,22 +72,6 @@ public class MonAn {
     }
 
     public void setMoTa(String moTa) {
-        if (moTa == null || moTa.trim().isEmpty()) {
-            throw new IllegalArgumentException("Mô tả không được rỗng");
-        }
         this.moTa = moTa;
-    }
-
-    @Override
-    public String toString() {
-        return "ThucDon{" +
-                "maMon='" + maMon + '\'' +
-                ", tenMon='" + tenMon + '\'' +
-                ", anhMon='" + anhMon + '\'' +
-                ", loaiMon=" + (loaiMon != null ? loaiMon.getTenLoai() : "null") +
-                ", donGia=" + donGia +
-                ", trangThai=" + (trangThai ? "Đang phục vụ" : "Ngừng phục vụ") +
-                ", moTa='" + moTa + '\'' +
-                '}';
     }
 }

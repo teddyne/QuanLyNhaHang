@@ -15,6 +15,7 @@ import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.sql.Connection;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -57,6 +58,7 @@ import org.jfree.chart.renderer.category.BarRenderer;
 import org.jfree.data.category.DefaultCategoryDataset;
 import com.toedter.calendar.JDateChooser;
 
+import connectSQL.ConnectSQL;
 import dao.HoaDon_DAO;
 
 public class FrmThongKe extends JPanel implements ActionListener {
@@ -91,7 +93,8 @@ public class FrmThongKe extends JPanel implements ActionListener {
     private List<Object[]> duLieuThongKeMonAn;
 
     public FrmThongKe() {
-        hoaDonDAO = new HoaDon_DAO();
+    	Connection con = ConnectSQL.getConnection();
+        hoaDonDAO = new HoaDon_DAO(con);
         setLayout(new BorderLayout());
         setBackground(COLOR_SECONDARY);
 

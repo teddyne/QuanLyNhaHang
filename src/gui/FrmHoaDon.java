@@ -5,9 +5,13 @@ import entity.HoaDon;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+
+import connectSQL.ConnectSQL;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.text.SimpleDateFormat;
+import java.sql.Connection;
 import java.sql.Date;
 import java.util.List;
 
@@ -40,7 +44,8 @@ public class FrmHoaDon extends JFrame implements ActionListener, MouseListener{
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        hdDAO = new HoaDon_DAO();
+        Connection con = ConnectSQL.getConnection();
+        hdDAO = new HoaDon_DAO(con);
         
         setJMenuBar(ThanhTacVu.getInstance().getJMenuBar());
         ThanhTacVu customMenu = ThanhTacVu.getInstance();

@@ -5,8 +5,12 @@ import entity.LoaiKhuyenMai;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+
+import connectSQL.ConnectSQL;
+
 import java.awt.*;
 import java.awt.event.*;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -18,6 +22,7 @@ public class FrmLoaiKhuyenMai extends JFrame {
     private LoaiKhuyenMai_DAO dao;
 	private Component lblMa;
 	private JLabel lblTen;
+    private Connection con = ConnectSQL.getConnection();
 
 	public FrmLoaiKhuyenMai() {
 	    setTitle("Quản lý Loại Khuyến Mãi");
@@ -25,7 +30,7 @@ public class FrmLoaiKhuyenMai extends JFrame {
 	    setLocationRelativeTo(null);
 	    setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
-	    dao = new LoaiKhuyenMai_DAO();
+	    dao = new LoaiKhuyenMai_DAO(con);
 
 	    //Nền trắng toàn JFrame
 	    getContentPane().setBackground(Color.WHITE);

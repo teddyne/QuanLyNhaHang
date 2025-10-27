@@ -43,9 +43,7 @@ public class FrmKhachHang extends ThanhTacVu {
     public FrmKhachHang(KhachHang_DAO khachHangDAO, LoaiKhachHang_DAO loaiKH_DAO, Consumer<Void> refreshCallback) throws SQLException {
         super();
 
-        ConnectSQL connectSQL = ConnectSQL.getInstance();
-        connectSQL.connect();
-        Connection conn = connectSQL.getConnection();
+        Connection conn = ConnectSQL.getConnection();
         if (conn == null) {
             throw new SQLException("Không thể kết nối đến cơ sở dữ liệu!");
         }
@@ -561,7 +559,6 @@ public class FrmKhachHang extends ThanhTacVu {
 
         SwingUtilities.invokeLater(() -> {
             ConnectSQL connectSQL = ConnectSQL.getInstance();
-            connectSQL.connect();
             Connection conn = connectSQL.getConnection();
             if (conn == null) {
                 JOptionPane.showMessageDialog(null, "Không thể kết nối đến cơ sở dữ liệu!", "Lỗi", JOptionPane.ERROR_MESSAGE);

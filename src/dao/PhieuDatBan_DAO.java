@@ -70,6 +70,23 @@ public class PhieuDatBan_DAO {
     	}
     	return list;
     }
+
+    public String layTenKhachHang(String maPhieu) throws SQLException {
+        String tenKhach = null;
+        String sql = "SELECT tenKhach FROM PhieuDatBan WHERE maPhieu = ?";
+
+        try (Connection conn = ConnectSQL.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, maPhieu);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    tenKhach = rs.getString("tenKhach");
+                }
+            }
+        }
+        return tenKhach;
+    }
     public PhieuDatBan getByMa(String maPhieu) throws SQLException {
         String sql = "SELECT * FROM PhieuDatBan WHERE maPhieu = ?";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -242,5 +259,29 @@ public class PhieuDatBan_DAO {
 	        e.printStackTrace();
 	    }
 	    return null;
+	}
+
+	public boolean capNhatTrangThaiPhieu(String maPhieu, String trangThaiMoi) {
+	    if (maPhieu == null || maPhieu.trim().isEmpty() || trangThaiMoi == null) {
+	        return false;
+	    }
+
+	    String sql = "UPDATE PhieuDatBan SET trangThai = ? WHERE maPhieu = ?";
+	    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+	        ps.setString(1, trangThaiMoi.trim());
+	        ps.setString(2, maPhieu.trim());
+
+	        int rowsAffected = ps.executeUpdate();
+	        return rowsAffected > 0;
+	    } catch (SQLException e) {
+	        System.err.println("Lỗi cập nhật trạng thái phiếu: " + e.getMessage());
+	        e.printStackTrace();
+	        return false;
+	    }
+	}
+
+	public String taoPhieuMoi(String maBan) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

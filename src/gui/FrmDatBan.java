@@ -251,19 +251,19 @@ public class FrmDatBan extends JDialog {
         btnDatMon.addActionListener(e -> {
             try {
                 JDialog datMonDialog = new JDialog(this, "ĐẶT MÓN - BÀN " + maBan, true);
-                datMonDialog.setSize(1400, 800);
+                datMonDialog.setSize(1500, 800);
                 datMonDialog.setLocationRelativeTo(this);
 
-                FrmDatMon frmDatMon = new FrmDatMon(datMonDialog, maBan);
+                FrmDatMon frmDatMon = new FrmDatMon(maBan, maBan);
                 datMonDialog.add(frmDatMon.getRootPane());
                 datMonDialog.setVisible(true);
 
-                String monList = frmDatMon.getDanhSachMonDat();
+                String monList = frmDatMon.layDanhSachMonDat();
                 if (!monList.isEmpty()) {
                     JOptionPane.showMessageDialog(this, "ĐÃ THÊM MÓN:\n" + monList, "Thành công!", JOptionPane.INFORMATION_MESSAGE);
                 }
 
-                tongTienMon = frmDatMon.getTongTienMon();
+                tongTienMon = frmDatMon.layTongTienMon();
                 capNhatTienCoc();
             } catch (SQLException ex) {
                 ex.printStackTrace();
@@ -352,10 +352,10 @@ public class FrmDatBan extends JDialog {
 
                 // Tìm hoặc thêm khách hàng
                 KhachHang kh = khachHangDAO.timKhachHangTheoSDT(sdt);
-                if (kh == null) {
-                    JOptionPane.showMessageDialog(this, "Khách hàng chưa tồn tại. Vui lòng thêm khách hàng trước!");
-                    return;
-                }
+//                if (kh == null) {
+//                    JOptionPane.showMessageDialog(this, "Khách hàng chưa tồn tại. Vui lòng thêm khách hàng trước!");
+//                    return;
+//                }
                 if (editD != null) {
                     phieuDatBanDAO.update(dNew);
                     JOptionPane.showMessageDialog(this, "Cập nhật phiếu đặt bàn thành công!");

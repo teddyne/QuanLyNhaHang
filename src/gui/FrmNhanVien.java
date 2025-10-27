@@ -8,8 +8,12 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import com.toedter.calendar.JDateChooser;
+
+import connectSQL.ConnectSQL;
+
 import java.awt.*;
 import java.awt.event.*;
+import java.sql.Connection;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -32,7 +36,8 @@ public class FrmNhanVien extends ThanhTacVu {
     private final JComboBox<String> cmbGioiTinh, cmbTrangThai;
     private final JLabel lblAnhNV;
     private String duongDanAnh = "default_avatar.png";
-    
+    private Connection con = ConnectSQL.getConnection();
+
     // Buttons
     private final JButton btnThem, btnSua, btnXoa, btnTraCuu;
 
@@ -40,7 +45,7 @@ public class FrmNhanVien extends ThanhTacVu {
         super();
         setTitle("Quản Lý Nhân Viên");
         
-        this.dao = new NhanVien_DAO();
+        this.dao = new NhanVien_DAO(con);
         
         JPanel mainPanel = new JPanel(new BorderLayout());
         mainPanel.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
@@ -522,7 +527,7 @@ public class FrmNhanVien extends ThanhTacVu {
         if (!found) {
             JOptionPane.showMessageDialog(this, "Không tìm thấy nhân viên!");
         }
-        lamMoiForm();
+//        lamMoiForm();
     }
 
     private void lamMoiForm() {
