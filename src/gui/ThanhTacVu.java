@@ -15,7 +15,7 @@ import dao.LoaiKhachHang_DAO;
 import dao.PhieuDatBan_DAO;
 import dao.TaiKhoan_DAO;
 import entity.Ban;
-import entity.KhachHang; // Đã thêm import
+import entity.KhachHang; 
 import entity.PhieuDatBan;
 import entity.TaiKhoan;
 
@@ -369,9 +369,6 @@ public class ThanhTacVu extends JFrame {
             }
         });
         
-        // ==================================================================
-        // PHẦN CODE MỚI ĐƯỢC THÊM CHO TÌM KIẾM KHÁCH HÀNG
-        // ==================================================================
         tkh.addActionListener(e -> {
             try {
                 moFormNhapMaKhachHang();
