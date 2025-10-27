@@ -12,17 +12,17 @@
 			<attribute name="module" value="true"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="D:/QuanLyNhaHang/lib/commons-collections4-4.4.jar"/>
+	<classpathentry kind="lib" path="D:/QuanLyNhaHang/lib/commons-compress-1.21.jar"/>
+	<classpathentry kind="lib" path="D:/QuanLyNhaHang/lib/jcommon-1.0.24.jar"/>
+	<classpathentry kind="lib" path="D:/QuanLyNhaHang/lib/jfreechart-1.5.4.jar"/>
+	<classpathentry kind="lib" path="D:/QuanLyNhaHang/lib/log4j-api-2.18.0.jar"/>
+	<classpathentry kind="lib" path="D:/QuanLyNhaHang/lib/mssql-jdbc-12.10.0.jre11.jar"/>
+	<classpathentry kind="lib" path="D:/QuanLyNhaHang/lib/poi-5.2.3.jar"/>
+	<classpathentry kind="lib" path="D:/QuanLyNhaHang/lib/poi-ooxml-5.2.3.jar"/>
+	<classpathentry kind="lib" path="D:/QuanLyNhaHang/lib/poi-ooxml-full-5.2.3.jar"/>
+	<classpathentry kind="lib" path="D:/QuanLyNhaHang/lib/xmlbeans-5.1.1.jar"/>
 	<classpathentry kind="lib" path="D:/QuanLyNhaHang/lib/jcalendar-1.4.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Admin/Downloads/jfreechart-1.5.4.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Admin/Downloads/jcommon-1.0.24.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Admin/Downloads/poi-5.2.3.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Admin/Downloads/poi-ooxml-5.2.3.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Admin/Downloads/commons-collections4-4.4.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Admin/Downloads/commons-compress-1.21.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Admin/Downloads/log4j-api-2.18.0.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Admin/Downloads/poi-ooxml-full-5.2.3.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Admin/Downloads/xmlbeans-5.1.1.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Admin/Downloads/itextpdf-5.5.13.4.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Admin/Downloads/commons-io-2.11.0.jar"/>
+	<classpathentry kind="lib" path="D:/QuanLyNhaHang/lib/itextpdf-5.5.13.4.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

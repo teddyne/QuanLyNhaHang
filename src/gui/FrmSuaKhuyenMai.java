@@ -391,4 +391,114 @@ public class FrmSuaKhuyenMai extends JFrame {
             JOptionPane.showMessageDialog(this, "Lỗi: " + e.getMessage());
         }
     }
+
+    private JButton taoNut(String text, Color baseColor, Dimension size, Font font) {
+        JButton btn = new JButton(text);
+        btn.setFont(font);
+        btn.setPreferredSize(size);
+        btn.setForeground(Color.WHITE);
+        btn.setBackground(baseColor);
+        btn.setFocusPainted(false);
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btn.setContentAreaFilled(false);
+        btn.setOpaque(true);
+
+        btn.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                btn.setBackground(baseColor.darker());
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                btn.setBackground(baseColor);
+            }
+        });
+
+        return btn;
+    }
+
+    private void loadLoaiKM() {
+        try {
+            cmbLoaiKM.removeAllItems();
+            LoaiKhuyenMai_DAO loaiDAO = new LoaiKhuyenMai_DAO();
+            for (LoaiKhuyenMai loai : loaiDAO.getAllLoaiKhuyenMai()) {
+                cmbLoaiKM.addItem(loai.getTenLoai());
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Lỗi tải loại KM: " + ex.getMessage());
+        }
+    }
+
+    private void luuKhuyenMai() {
+        try {
+            Date bd = new Date(((java.util.Date) spTuNgay.getValue()).getTime());
+            Date kt = new Date(((java.util.Date) spDenNgay.getValue()).getTime());
+            if (kt.before(bd)) {
+                JOptionPane.showMessageDialog(this, "Ngày kết thúc phải sau ngày bắt đầu!");
+                return;
+            }
+
+            // Lấy maLoai từ tenLoai
+            String tenLoai = cmbLoaiKM.getSelectedItem().toString();
+            LoaiKhuyenMai_DAO loaiDAO = new LoaiKhuyenMai_DAO();
+            String maLoai = loaiDAO.getMaLoaiByTenLoai(tenLoai);
+
+            if (maLoai == null) {
+                JOptionPane.showMessageDialog(this, "Loại khuyến mãi không hợp lệ!");
+                return;
+            }
+
+            double giaTri = 0;
+            double donHangTu = 0;
+            String mon1 = txtMon1.getText().isEmpty() ? null : txtMon1.getText();
+            String mon2 = txtMon2.getText().isEmpty() ? null : txtMon2.getText();
+            String monTang = txtMonTang.getText().isEmpty() ? null : txtMonTang.getText();
+
+            if (!tenLoai.equals("Tặng món")) {
+                try {
+                    giaTri = Double.parseDouble(txtGiaTri.getText());
+                    donHangTu = txtDonHangTu.getText().isEmpty() ? 0 : Double.parseDouble(txtDonHangTu.getText());
+                    mon1 = null;
+                    mon2 = null;
+                    monTang = null;
+                } catch (NumberFormatException e) {
+                    JOptionPane.showMessageDialog(this, "Giá trị và đơn hàng từ phải là số!");
+                    return;
+                }
+            } else {
+                if (monTang == null || monTang.trim().isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "Món tặng không được để trống khi loại là Tặng món!");
+                    return;
+                }
+            }
+
+            KhuyenMai km = new KhuyenMai(
+                    txtMaKM.getText(),
+                    txtTenKM.getText(),
+                    maLoai,
+                    giaTri,
+                    bd,
+                    kt,
+                    txtTrangThai.getText(),
+                    cmbDoiTuongApDung.getSelectedItem().toString(),
+                    donHangTu,
+                    mon1,
+                    mon2,
+                    monTang,
+                    txtGhiChu.getText().isEmpty() ? null : txtGhiChu.getText()
+            );
+
+            if (kmDAO.suaKhuyenMai(km)) {
+                JOptionPane.showMessageDialog(this, "Cập nhật thành công!");
+                dispose();
+            } else {
+                JOptionPane.showMessageDialog(this, "Cập nhật thất bại!");
+            }
+//        } catch (SQLException e) {
+//            JOptionPane.showMessageDialog(this, "Lỗi cơ sở dữ liệu: " + e.getMessage());
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Lỗi: " + e.getMessage());
+        }
+    }
 }

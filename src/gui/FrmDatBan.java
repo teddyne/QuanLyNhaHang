@@ -486,12 +486,18 @@ class FrmThemKhachHang extends JDialog {
         gbc.gridx = 0; gbc.gridy = 2; add(lblSDT, gbc);
         txtSDT = new JTextField(sdt, 20); txtSDT.setFont(fonttxt); txtSDT.setEditable(false);
         gbc.gridx = 1; add(txtSDT, gbc);
+        
+        JLabel lblNgaySinh = new JLabel("Ngày sinh:");
+        lblNgaySinh.setFont(font);
+        gbc.gridx = 0; 
+        gbc.gridy = 3; 
+        add(lblNgaySinh, gbc);
 
-        JLabel lblCCCD = new JLabel("CCCD:");
-        lblCCCD.setFont(font);
-        gbc.gridx = 0; gbc.gridy = 3; add(lblCCCD, gbc);
-        txtCCCD = new JTextField(20); txtCCCD.setFont(fonttxt);
-        gbc.gridx = 1; add(txtCCCD, gbc);
+        JDateChooser dateChooserNgaySinh = new JDateChooser();
+        dateChooserNgaySinh.setFont(fonttxt);
+        dateChooserNgaySinh.setDateFormatString("dd/MM/yyyy"); // định dạng ngày
+        gbc.gridx = 1; 
+        add(dateChooserNgaySinh, gbc);
 
         JLabel lblEmail = new JLabel("Email:");
         lblEmail.setFont(font);

@@ -15,7 +15,7 @@ import dao.LoaiKhachHang_DAO;
 import dao.PhieuDatBan_DAO;
 import dao.TaiKhoan_DAO;
 import entity.Ban;
-import entity.KhachHang; 
+import entity.KhachHang; // Đã thêm import
 import entity.PhieuDatBan;
 import entity.TaiKhoan;
 
@@ -369,9 +369,12 @@ public class ThanhTacVu extends JFrame {
             }
         });
         
+        // ==================================================================
+        // PHẦN CODE MỚI ĐƯỢC THÊM CHO TÌM KIẾM KHÁCH HÀNG
+        // ==================================================================
         tkh.addActionListener(e -> {
             try {
-                moFormNhapMaKhachHang();
+                moFormNhapSDTKhachHang();
             } catch (SQLException ex) {
                 JOptionPane.showMessageDialog(this, "Lỗi khi mở form tìm kiếm khách hàng: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
             }
@@ -637,7 +640,7 @@ public class ThanhTacVu extends JFrame {
     }
     
    
-    private void moFormNhapMaKhachHang() throws SQLException {
+    private void moFormNhapSDTKhachHang() throws SQLException {
 	    JDialog dlg = new JDialog(this, "Nhập Mã Khách Hàng", false);
 	    dlg.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 20));
 	    dlg.setSize(600, 120);
@@ -647,11 +650,11 @@ public class ThanhTacVu extends JFrame {
 	    Connection conn = ConnectSQL.getConnection();
 	    KhachHang_DAO khachHangDAO = new KhachHang_DAO(conn);
 	
-	    JLabel lblMaKH = new JLabel("Mã khách hàng:");
-	    lblMaKH.setFont(new Font("Times New Roman", Font.BOLD, 22));
+	    JLabel lblSdt = new JLabel("Số điện thoại:");
+	    lblSdt.setFont(new Font("Times New Roman", Font.BOLD, 22));
 	
-	    JTextField txtMaKH = new JTextField(15);
-	    txtMaKH.setFont(new Font("Times New Roman", Font.PLAIN, 22));
+	    JTextField txtSdt = new JTextField(15);
+	    txtSdt.setFont(new Font("Times New Roman", Font.PLAIN, 22));
 	    
 	    JButton btnTim = new JButton("Tìm");
         kieuNut(btnTim, new Color(102, 210, 74));
@@ -659,21 +662,21 @@ public class ThanhTacVu extends JFrame {
 	    btnTim.setFocusPainted(false);
 	    btnTim.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
 	
-	    dlg.add(lblMaKH);
-	    dlg.add(txtMaKH);
+	    dlg.add(lblSdt);
+	    dlg.add(txtSdt);
 	    dlg.add(btnTim);
 	
 	    btnTim.addActionListener(e -> {
-	        String maKH = txtMaKH.getText().trim();
-	        if (maKH.isEmpty()) {
-	            JOptionPane.showMessageDialog(dlg, "Vui lòng nhập mã khách hàng!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+	        String sdt = txtSdt.getText().trim();
+	        if (sdt.isEmpty()) {
+	            JOptionPane.showMessageDialog(dlg, "Vui lòng nhập Số điện thoại khách hàng!", "Thông báo", JOptionPane.WARNING_MESSAGE);
 	            return;
 	        }
 	
 	        try {
-	            KhachHang kh = khachHangDAO.getKhachHangByMa(maKH); 
+	            KhachHang kh = khachHangDAO.timKhachHangTheoSDT(sdt); 
 	            if (kh == null) {
-	                JOptionPane.showMessageDialog(dlg, "Không tìm thấy khách hàng với mã: " + maKH, "Thông báo", JOptionPane.ERROR_MESSAGE);
+	                JOptionPane.showMessageDialog(dlg, "Không tìm thấy khách hàng với Số điện thoại: " + sdt, "Thông báo", JOptionPane.ERROR_MESSAGE);
 	                return;
 	            }
 	
@@ -684,7 +687,7 @@ public class ThanhTacVu extends JFrame {
 	        }
 	    });
 	
-	    txtMaKH.addKeyListener(new KeyAdapter() {
+	    txtSdt.addKeyListener(new KeyAdapter() {
 	        @Override
 	        public void keyPressed(KeyEvent e) {
 	            if (e.getKeyCode() == KeyEvent.VK_ENTER) {

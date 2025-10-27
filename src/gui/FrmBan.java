@@ -340,8 +340,8 @@ public class FrmBan extends JFrame {
         gbc.gridwidth = 1;
 
         btnTim = new JButton("Tìm");
-        kieuNut(btnTim, new Color(173, 218, 245));
-        btnTim.setIcon(new ImageIcon(new ImageIcon("img/timkiem.png").getImage().getScaledInstance(16, 16, Image.SCALE_SMOOTH)));
+        kieuNut(btnTim, Color.white);
+        btnTim.setIcon(new ImageIcon(new ImageIcon("img/timkiem.png").getImage().getScaledInstance(25, 25, Image.SCALE_SMOOTH)));
         gbc.gridx = 4;
         gbc.gridy = 0;
         pnlLoc.add(btnTim, gbc);

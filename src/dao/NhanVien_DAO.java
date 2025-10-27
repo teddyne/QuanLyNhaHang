@@ -9,7 +9,6 @@ import java.util.List;
 
 public class NhanVien_DAO {
 
-    // Lấy tất cả nhân viên (bao gồm nghỉ việc)
     public List<NhanVien> getAllNhanVien() {
         List<NhanVien> list = new ArrayList<>();
         String sql = "SELECT * FROM NhanVien";

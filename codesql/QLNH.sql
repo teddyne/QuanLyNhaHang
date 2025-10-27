@@ -1,4 +1,12 @@
-﻿use QLNH
+﻿create database QLNH
+
+use QLNH
+--Bảng LoaiKhachHang
+CREATE TABLE LoaiKhachHang (
+    maLoaiKH NVARCHAR(20) PRIMARY KEY,
+    tenLoaiKH NVARCHAR(100) NOT NULL ,
+    moTa NVARCHAR(255) NULL -- Có thể thêm mô tả hoặc các thuộc tính khác sau này
+);
 
 --Bảng LoaiKhachHang
 CREATE TABLE LoaiKhachHang (
@@ -27,11 +35,12 @@ CREATE TABLE NhanVien (
     cccd NVARCHAR(50),
     email NVARCHAR(100),
     sdt VARCHAR(15) UNIQUE,
-    trangThai BIT,
-    chucVu NVARCHAR(50)
+	trangThai NVARCHAR(50),
+	chucVu NVARCHAR(50)
 );
 ALTER TABLE NhanVien DROP COLUMN trangThai;
 ALTER TABLE NhanVien ADD trangThai NVARCHAR(50);
+
 
 
 -- Bảng TaiKhoan
@@ -176,11 +185,11 @@ INSERT INTO NhanVien (maNhanVien, hoTen, anhNV, ngaySinh, gioiTinh, cccd, email,
 ('NV0004', N'Nguyễn Nam Khánh', 'nv4.img', '1995-10-25', 1, '075289364950', 'khanh@gmail.com', '0345678912', N'Đang làm việc', N'Lễ tân');
 
 -- Bảng TaiKhoan
-INSERT INTO TaiKhoan (soDienThoai, matKhau, maNhanVien, phanQuyen) VALUES
-('0987654321', 'hien123', 'NV0001', 'QuanLy'),
-('0978123456', 'thy456',  'NV0002', 'LeTan'),
-('0967812345', 'truc789', 'NV0003', 'LeTan'),
-('0345678912', 'khanh321','NV0004', 'LeTan');
+INSERT INTO TaiKhoan (maTaiKhoan, soDienThoai, matKhau, maNhanVien, phanQuyen) VALUES
+('TK001','0987654321', 'hien123', 'NV0001', 'QuanLy'),
+('TK002','0978123456', 'thy456',  'NV0002', 'LeTan'),
+('TK003','0967812345', 'truc789', 'NV0003', 'LeTan'),
+('TK004','0345678912', 'khanh321','NV0004', 'LeTan');
 
 -- Bảng KhuVuc
 INSERT INTO KhuVuc (maKhuVuc, tenKhuVuc, soLuongBan, trangThai) VALUES
@@ -241,12 +250,6 @@ INSERT INTO KhuyenMai (maKM, tenKM, maLoai, giaTri, ngayBatDau, ngayKetThuc, tra
 ('KM0002', N'Giảm 50k', 'L02', 50000, '2025-10-27', '2025-11-15', N'Sắp áp dụng', N'Tất cả', 500000, NULL, NULL, NULL, NULL),
 ('KM0003', N'Mua 2 tặng 1 flan', 'L03', 0, '2025-09-27', '2025-10-15', N'Đang áp dụng', N'Tất cả', 0, 'MON0003', 'MON0003', 'MON0003', NULL);
 
--- Bảng PhieuDatBan
-INSERT INTO PhieuDatBan (maPhieu, maBan, tenKhach, soDienThoai, soNguoi, ngayDen, gioDen, ghiChu, tienCoc, ghiChuCoc, trangThai) VALUES
-('P0001', 'A02', N'Nguyễn Văn A', '0912345678', 4, '2025-10-09', '18:00', N'Bàn VIP gần cửa sổ', 200000, N'Cọc tiền mặt', N'Đặt'),
-('P0002', 'B03', N'Trần Thị B', '0923456789', 3, '2025-10-08', '12:00', N'Ăn trưa sinh nhật', 0, NULL, N'Đặt'),
-('P0003', 'C03', N'Lê Văn C', '0934567890', 6, '2025-10-07', '19:30', N'Tiệc bạn bè', 500000, N'Chuyển khoản', N'Đặt');
-
 -- Bảng HoaDon
 INSERT INTO HoaDon (maHD, ngayLap, trangThai, maPhieu, maKH, maKM, maNhanVien, phuThu, ghiChu) VALUES
 ('HD0001', GETDATE(), N'Đã thanh toán', 'P0003', 'KH0003', 'KM0003', 'NV0002', 0, N'Áp dụng khuyến mãi tặng flan'),
@@ -262,6 +265,8 @@ INSERT INTO ChiTietHoaDon (maHD, maMon, soLuong, donGia, ghiChu) VALUES
 ('HD0003', 'MON0001', 1, 150000, NULL),
 ('HD0003', 'MON0002', 1, 40000, NULL);
 
+ALTER TABLE KhachHang
+ADD trangThai NVARCHAR(20) DEFAULT N'Hoạt động';
 select * from KhachHang
 select * from NhanVien
 select * from Ban
@@ -271,3 +276,5 @@ select * from HoaDon
 select * from ChiTietHoaDon
 select * from MonAn
 select * from TaiKhoan
+select * from LoaiKhuyenMai
+use QLNH
