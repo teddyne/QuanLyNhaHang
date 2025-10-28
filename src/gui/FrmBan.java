@@ -19,6 +19,7 @@ import java.awt.image.BufferedImage;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.text.SimpleDateFormat;
@@ -60,6 +61,8 @@ import dao.KhuVuc_DAO;
 import dao.LoaiBan_DAO;
 import dao.PhieuDatBan_DAO;
 import entity.Ban;
+import entity.ChiTietDatMon;
+import entity.ChiTietHoaDon;
 import entity.KhuVuc;
 import entity.PhieuDatBan;
 
@@ -95,7 +98,8 @@ public class FrmBan extends JFrame {
     private JButton btnDatLai;
     private ButtonGroup groupLoai;
     private Connection conn;
-
+    private FrmDatBan frmDatBan;
+    
     public FrmBan() throws SQLException {
         conn = ConnectSQL.getConnection();
         banDAO = new Ban_DAO(conn);
@@ -226,6 +230,8 @@ public class FrmBan extends JFrame {
         taiLaiBangChinh();
         xuLySuKienBoLoc();
     }
+    
+    
 
     private JButton taoNutMenu(String text, String iconPath) {
         JButton btn = new JButton(text);
@@ -690,30 +696,30 @@ public class FrmBan extends JFrame {
     }
 
     public String layTrangThaiHienTai(String maBan) {
-	    try {
-	        Date today = new Date(System.currentTimeMillis());
-	        List<PhieuDatBan> list = phieuDatBanDAO.getDatBanByBanAndNgay(maBan, today);
-	
-	        if (list != null && !list.isEmpty()) {
-	            for (PhieuDatBan phieu : list) {
-	                String trangThai = phieu.getTrangThai();
-	                if (trangThai != null && !trangThai.trim().isEmpty()) {
-	                    String cleanStatus = trangThai.trim();
-	                    if ("Phục vụ".equals(cleanStatus)) {
-	                        return "Phục vụ";
-	                    } else if ("Đặt".equals(cleanStatus)) {
-	                        return "Đặt";
-	                    }
-	                }
-	            }
-	        }
-	        return "Trống"; 
-	    } catch (SQLException e) {
-	        e.printStackTrace();
-	        System.err.println("Lỗi khi lấy trạng thái bàn " + maBan + ": " + e.getMessage());
-	        return "Trống"; 
-	    }
-	}
+        try {
+            Date today = new Date(System.currentTimeMillis());
+            List<PhieuDatBan> list = phieuDatBanDAO.getDatBanByBanAndNgay(maBan, today);
+            if (list != null && !list.isEmpty()) {
+                for (PhieuDatBan phieu : list) {
+                    String trangThai = phieu.getTrangThai();
+                    if (trangThai != null && !trangThai.trim().isEmpty()) {
+                        String cleanStatus = trangThai.trim();
+                        if ("Phục vụ".equals(cleanStatus)) {
+                            return "Phục vụ";
+                        } else if ("Đặt".equals(cleanStatus)) {
+                            return "Đặt";
+                        } else if ("Hoàn thành".equals(cleanStatus) || "Hủy".equals(cleanStatus)) {
+                            continue; // Bỏ qua các trạng thái đã xong
+                        }
+                    }
+                }
+            }
+            return "Trống"; // ← Không còn phiếu "Phục vụ" hay "Đặt" → Trống
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return "Trống";
+        }
+    }
 
     private void hienThiThongTinBan(String maBan) throws SQLException {
         Ban b = banDAO.getBanByMa(maBan);
@@ -818,11 +824,11 @@ public class FrmBan extends JFrame {
         JPanel pnlNut = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
         pnlNut.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
 
-        JButton btnDatMoi = new JButton("Đặt bàn");
-        kieuNut(btnDatMoi, new Color(52, 152, 219));
-        btnDatMoi.setPreferredSize(new Dimension(120, 35));
-        btnDatMoi.setForeground(Color.white);
-        pnlNut.add(btnDatMoi);
+        JButton btnDatBan = new JButton("Đặt bàn");
+        kieuNut(btnDatBan, new Color(52, 152, 219));
+        btnDatBan.setPreferredSize(new Dimension(120, 35));
+        btnDatBan.setForeground(Color.white);
+        pnlNut.add(btnDatBan);
 
         JButton btnSua = new JButton("Sửa");
         kieuNut(btnSua, new Color(255, 193, 7));
@@ -848,7 +854,7 @@ public class FrmBan extends JFrame {
         kieuNut(btnXoaLich, new Color(149, 165, 166));
         pnlNut.add(btnXoaLich);
 
-        btnDatMoi.addActionListener(e -> {
+        btnDatBan.addActionListener(e -> {
             try {
                 new FrmDatBan(this, maBan, null, phieuDatBanDAO, banDAO, khachHangDAO, conn).setVisible(true);
                 dialog.dispose();
@@ -860,55 +866,76 @@ public class FrmBan extends JFrame {
         });
 
         btnSua.addActionListener(e -> {
-            int selected = table.getSelectedRow();
-            if (selected >= 0) {
-                String maPhieu = (String) model.getValueAt(selected, 0);
-                try {
-                    PhieuDatBan d = phieuDatBanDAO.getByMa(maPhieu);
-                    new FrmDatBan(this, maBan, d, phieuDatBanDAO, banDAO, khachHangDAO, conn).setVisible(true);
-                    dialog.dispose();
-                    hienThiThongTinBan(maBan);
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                    JOptionPane.showMessageDialog(this, "Lỗi khi sửa lịch đặt bàn!");
+            int selectedRow = table.getSelectedRow();
+            if (selectedRow == -1) {
+                JOptionPane.showMessageDialog(dialog, "Vui lòng chọn một phiếu để sửa!");
+                return;
+            }
+
+            String maPhieu = (String) model.getValueAt(selectedRow, 0);
+            try {
+                PhieuDatBan phieuCanSua = phieuDatBanDAO.getByMa(maPhieu);
+                if (phieuCanSua == null) {
+                    JOptionPane.showMessageDialog(dialog, "Không tìm thấy phiếu!");
+                    return;
                 }
-            } else {
-                JOptionPane.showMessageDialog(dialog, "Chọn lịch để sửa!");
+
+                dialog.dispose(); // Đóng dialog cũ
+
+                // MỞ FORM SỬA VỚI DỮ LIỆU CŨ
+                FrmDatBan frmSua = new FrmDatBan(
+                    FrmBan.this, maBan, phieuCanSua,
+                    phieuDatBanDAO, banDAO, khachHangDAO, conn
+                );
+                frmSua.setTitle("Sửa phiếu đặt bàn - " + maPhieu);
+                frmSua.setVisible(true);
+
+                // TẢI LẠI SAU KHI SỬA XONG
+                frmSua.addWindowListener(new java.awt.event.WindowAdapter() {
+                    @Override
+                    public void windowClosed(java.awt.event.WindowEvent e) {
+                        try {
+                            hienThiThongTinBan(maBan);
+                        } catch (SQLException ex) {
+                            ex.printStackTrace();
+                        }
+                    }
+                });
+
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(dialog, "Lỗi: " + ex.getMessage());
             }
         });
 
         btnDangPhucVu.addActionListener(e -> {
             int selected = table.getSelectedRow();
-            if (selected >= 0) {
-                String maPhieu = (String) model.getValueAt(selected, 0);
-                try {
-                    PhieuDatBan d = phieuDatBanDAO.getByMa(maPhieu);
-                    if ("Đặt".equals(d.getTrangThai())) {
-                        d.setTrangThai("Phục vụ");
-                        phieuDatBanDAO.update(d);
-                        model.setValueAt("Phục vụ", selected, 9);
-                        taiLaiBangChinh();
-                    }
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                    JOptionPane.showMessageDialog(this, "Lỗi khi cập nhật trạng thái phục vụ!");
-                }
-            } else {
-                try {
-                    PhieuDatBan d = new PhieuDatBan();
-                    d.setMaPhieu(phieuDatBanDAO.generateMaPhieu());
-                    d.setMaBan(maBan);
-                    d.setNgayDen(new Date(System.currentTimeMillis()));
-                    d.setGioDen(new Time(System.currentTimeMillis()));
-                    d.setTrangThai("Phục vụ");
-                    phieuDatBanDAO.add(d);
-                    taiLaiBangChinh();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                    JOptionPane.showMessageDialog(this, "Lỗi khi thêm lịch phục vụ!");
-                }
+            if (selected < 0) {
+                JOptionPane.showMessageDialog(dialog, "Chọn phiếu đặt bàn!");
+                return;
             }
-            dialog.dispose();
+
+            String maPhieu = (String) model.getValueAt(selected, 0);
+            try {
+                PhieuDatBan phieu = phieuDatBanDAO.getByMa(maPhieu);
+                if (!"Đặt".equals(phieu.getTrangThai())) {
+                    JOptionPane.showMessageDialog(dialog, "Phiếu không ở trạng thái Đặt!");
+                    return;
+                }
+
+                dialog.dispose();
+
+                LoaiBan_DAO loaiBanDAO = new LoaiBan_DAO(conn);
+                FrmPhucVu frmPhucVu = new FrmPhucVu(this, maBan, phieu,
+                    phieuDatBanDAO, banDAO, loaiBanDAO);
+
+                String maNV = "NV001"; // THAY BẰNG: Login.getMaNhanVien()
+                frmPhucVu.chuyenSangPhucVu(maNV);
+
+                taiLaiBangChinh();
+
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
         });
 
         btnHuy.addActionListener(e -> {
@@ -1062,6 +1089,7 @@ public class FrmBan extends JFrame {
 
         dlg.setVisible(true);
     }
+    
     private void moFormChuyenBan() {
         if (banDangChon == null) {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn bàn cần chuyển!");
@@ -1109,21 +1137,79 @@ public class FrmBan extends JFrame {
         }
 
         // Mở FrmDatMon với maPhieu đúng
-        new FrmDatMon(banDangChon, maPhieuHienTai).setVisible(true);
+        new FrmDatMon(conn, banDangChon, maPhieuHienTai).setVisible(true);
     }
-
 
     private void xuLyThanhToan() {
         String tt = layTrangThaiHienTai(banDangChon);
-        if ("Phục vụ".equals(tt)) {
-            new FrmThanhToan().setVisible(true);
-            taiLaiBangChinh();
-        } else {
+        if (!"Phục vụ".equals(tt)) {
             JOptionPane.showMessageDialog(this, "Bàn phải ở trạng thái phục vụ để thanh toán!");
+            return;
         }
+
+        String maHD = timMaHoaDonHienTai();
+        if (maHD == null) {
+            JOptionPane.showMessageDialog(this, "Không tìm thấy hóa đơn để thanh toán!");
+            return;
+        }
+
+        // DÙNG CONSTRUCTOR HIỆN TẠI (3 tham số)
+        FrmThanhToan frm = new FrmThanhToan(maHD, banDangChon, () -> {
+            try {
+                // === 1. CẬP NHẬT PHIẾU ĐẶT BÀN → "Hoàn thành" ===
+                java.sql.Date today = new java.sql.Date(System.currentTimeMillis());
+                List<PhieuDatBan> listPhieu = phieuDatBanDAO.getDatBanByBanAndNgay(banDangChon, today);
+                for (PhieuDatBan p : listPhieu) {
+                    if ("Phục vụ".equals(p.getTrangThai())) {
+                        p.setTrangThai("Hoàn thành");
+                        phieuDatBanDAO.update(p); // DÙNG conn CỦA FrmBan → đồng bộ
+                    }
+                }
+
+                // === 2. CẬP NHẬT TRẠNG THÁI BÀN TRONG CSDL ===
+                capNhatTrangThai(banDangChon, "Trống");
+
+                // === 3. CẬP NHẬT GIAO DIỆN NGAY LẬP TỨC ===
+                BanPanel bp = mapBan.get(banDangChon);
+                if (bp != null) {
+                    bp.capNhatBieuTuong(); // ĐỔI MÀU TRẮNG NGAY
+                }
+
+                // === 4. LÀM MỚI DIALOG THÔNG TIN (nếu đang mở) ===
+                hienThiThongTinBan(banDangChon);
+
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(FrmBan.this, "Lỗi cập nhật trạng thái bàn!");
+            }
+        });
+
+        frm.setVisible(true);
+    }
+    private String timMaHoaDonHienTai() {
+        try {
+            String sql = """
+                SELECT hd.maHD 
+                FROM HoaDon hd
+                JOIN PhieuDatBan pdb ON hd.maPhieu = pdb.maPhieu
+                WHERE pdb.maBan = ? 
+                  AND pdb.ngayDen = ? 
+                  AND hd.trangThai = 'Chưa thanh toán'
+                """;
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, banDangChon);
+            ps.setDate(2, new java.sql.Date(System.currentTimeMillis()));
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getString("maHD");
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        return null;
     }
 
-    private ImageIcon toMauBieuTuong(ImageIcon nguon, Color mau) {
+	private ImageIcon toMauBieuTuong(ImageIcon nguon, Color mau) {
         Image imgNguon = nguon.getImage();
         BufferedImage imgTinted = new BufferedImage(imgNguon.getWidth(null),
             imgNguon.getHeight(null), BufferedImage.TYPE_INT_ARGB);
@@ -1217,7 +1303,6 @@ public class FrmBan extends JFrame {
             stmt.executeUpdate();
         }
     }
-
 
 
     public static void main(String[] args) {

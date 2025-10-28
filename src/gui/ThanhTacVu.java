@@ -223,6 +223,26 @@ public class ThanhTacVu extends JFrame {
 
             thongKe.add(monBanChay);
             thongKe.add(doanhThu);
+            
+            theoNgay.addActionListener(e -> {
+                new FrmThongKeChinh(1).setVisible(true); 
+                dispose(); 
+            });
+
+            monBanChay.addActionListener(e -> {
+                new FrmThongKeChinh(0).setVisible(true); 
+                dispose(); 
+            });
+
+            theoThang.addActionListener(e -> {
+                new FrmThongKeChinh(2).setVisible(true);
+                dispose(); 
+            });
+
+            theoNam.addActionListener(e -> {
+                new FrmThongKeChinh(3).setVisible(true);
+                dispose(); 
+            });
 
             menuBar.add(thongKe);
             menuBar.add(Box.createHorizontalStrut(30));

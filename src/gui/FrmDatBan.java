@@ -14,11 +14,13 @@ import java.sql.Connection;
 import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.Time;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 import java.util.regex.Pattern;
 import com.toedter.calendar.JDateChooser;
+import connectSQL.ConnectSQL;
 import java.time.ZoneId;
-
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JDialog;
@@ -33,19 +35,25 @@ import javax.swing.JTextField;
 import javax.swing.SpinnerDateModel;
 import javax.swing.SwingConstants;
 import javax.swing.Timer;
-
 import dao.Ban_DAO;
+import dao.ChiTietDatMon_DAO;
+import dao.HoaDon_DAO;
 import dao.KhachHang_DAO;
+import dao.MonAn_DAO;
 import dao.PhieuDatBan_DAO;
 import entity.Ban;
+import entity.ChiTietDatMon;
 import entity.KhachHang;
+import entity.MonAn;
 import entity.PhieuDatBan;
+import entity.MonDat;
 
 public class FrmDatBan extends JDialog {
     private static final Color COLOR_RED_WINE = new Color(169, 55, 68);
     private PhieuDatBan_DAO phieuDatBanDAO;
     private Ban_DAO banDAO;
     private KhachHang_DAO khachHangDAO;
+    private List<MonDat> danhSachMonDat = new ArrayList<>();
     private String maBan;
     private PhieuDatBan editD;
     private Font fontBig = new Font("Times New Roman", Font.BOLD, 22);
@@ -60,23 +68,37 @@ public class FrmDatBan extends JDialog {
     private JSpinner spnGio;
     private double tongTienMon = 0.0;
     private Connection conn;
-
-    public FrmDatBan(JFrame parent, String maBan, PhieuDatBan editD, PhieuDatBan_DAO phieuDatBanDAO, Ban_DAO banDAO, KhachHang_DAO khachHangDAO, Connection conn) throws SQLException {
-        super(parent, editD == null ? "Đặt bàn" : "Sửa đặt bàn", true);
+	private Object maPhieu;
+	private FrmDatMon frmDatMon;
+	
+    public FrmDatBan(JFrame parent, String maBan, PhieuDatBan phieu, PhieuDatBan_DAO phieuDatBanDAO, Ban_DAO banDAO, KhachHang_DAO khachHangDAO, Connection conn) throws SQLException {
+        super(parent, phieu == null ? "Đặt bàn" : "Sửa đặt bàn", true);
+        
         this.maBan = maBan;
-        this.editD = editD;
         this.phieuDatBanDAO = phieuDatBanDAO;
         this.banDAO = banDAO;
         this.khachHangDAO = khachHangDAO;
         this.conn = conn;
+        this.maPhieu = (phieu != null) ? phieu.getMaPhieu() : "";
+        this.danhSachMonDat = new ArrayList<>();
         initComponents();
+        // Nếu đang sửa phiếu => load dữ liệu chi tiết món đã đặt
+        if (phieu != null) {
+            ChiTietDatMon_DAO chiTietDAO = new ChiTietDatMon_DAO(conn);
+            List<ChiTietDatMon> dsChiTiet = chiTietDAO.layTheoPhieu(phieu.getMaPhieu());
+            MonAn_DAO monDAO = new MonAn_DAO(conn);
+            for (ChiTietDatMon ct : dsChiTiet) {
+                MonAn mon = monDAO.layMonAnTheoMa(ct.getMaMon());
+                MonDat monDat = new MonDat(mon, ct.getSoLuong(), ct.getDonGia(), ct.getGhiChu());
+                danhSachMonDat.add(monDat);
+            }
+        }
     }
-
     private void initComponents() throws SQLException {
         setSize(800, 700);
         setLayout(new BorderLayout(15, 15));
         setLocationRelativeTo(getParent());
-
+        new ChiTietDatMon_DAO(conn);
         // Header
         JLabel lblTieuDe = new JLabel("PHIẾU ĐẶT BÀN - Mã bàn: " + maBan, SwingConstants.CENTER);
         lblTieuDe.setOpaque(true);
@@ -85,22 +107,18 @@ public class FrmDatBan extends JDialog {
         lblTieuDe.setFont(new Font("Times New Roman", Font.BOLD, 25));
         lblTieuDe.setBorder(javax.swing.BorderFactory.createEmptyBorder(5, 0, 5, 0));
         add(lblTieuDe, BorderLayout.NORTH);
-
         // Form
         JPanel pForm = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
-
         JTextField txtMaPhieu = new JTextField(editD != null ? editD.getMaPhieu() : phieuDatBanDAO.generateMaPhieu());
         txtMaPhieu.setEditable(false);
         txtMaPhieu.setFont(fontBig);
-
         txtTen = new JTextField(editD != null ? editD.getTenKhach() : "", 20);
         txtTen.setFont(fontBig);
         txtSDT = new JTextField(editD != null ? editD.getSoDienThoai() : "", 15);
         txtSDT.setFont(fontBig);
-
         btnCheckKH = taoNut("Kiểm tra", new Color(100, 149, 237), null, fontBig);
 
         SpinnerDateModel dateModel = new SpinnerDateModel(editD != null ? editD.getNgayDen() : new java.util.Date(), null, null, Calendar.DAY_OF_MONTH);
@@ -126,7 +144,6 @@ public class FrmDatBan extends JDialog {
         JTextArea txtGhiChuCK = new JTextArea(editD != null ? editD.getGhiChuCoc() : "", 2, 20);
         txtGhiChuCK.setFont(fontBig);
         txtGhiChuCK.setEnabled(chkCK.isSelected());
-
         Font buttonFont = new Font("Times New Roman", Font.BOLD, 20);
         Dimension buttonSize = new Dimension(120, 35);
         btnDatMon = taoNut("Đặt món", new Color(50, 205, 50), buttonSize, fontBig);
@@ -250,95 +267,95 @@ public class FrmDatBan extends JDialog {
 
         btnDatMon.addActionListener(e -> {
             try {
+                String maPhieu = txtMaPhieu.getText().trim();
+                if (maPhieu.isEmpty()) {
+                    // Chỉ tạo mã tạm, KHÔNG lưu DB
+                    maPhieu = "P" + System.currentTimeMillis();
+                    txtMaPhieu.setText(maPhieu);
+                }
+
+               // Mở form đặt món (chưa lưu DB)
                 JDialog datMonDialog = new JDialog(this, "ĐẶT MÓN - BÀN " + maBan, true);
                 datMonDialog.setSize(1500, 800);
                 datMonDialog.setLocationRelativeTo(this);
-
-                FrmDatMon frmDatMon = new FrmDatMon(maBan, maBan);
+                frmDatMon = new FrmDatMon(conn, maPhieu, maBan);
                 datMonDialog.add(frmDatMon.getRootPane());
                 datMonDialog.setVisible(true);
 
-                String monList = frmDatMon.layDanhSachMonDat();
-                if (!monList.isEmpty()) {
-                    JOptionPane.showMessageDialog(this, "ĐÃ THÊM MÓN:\n" + monList, "Thành công!", JOptionPane.INFORMATION_MESSAGE);
+                // Sau khi đóng dialog
+                if (frmDatMon != null) {
+                    danhSachMonDat = frmDatMon.getDanhSachMonDat();
+                    String monList = frmDatMon.layDanhSachMonDat();
+
+                   if (!monList.isEmpty()) {
+                        JOptionPane.showMessageDialog(this, "ĐÃ CHỌN MÓN:\n" + monList);
+                    }
+
+                    tongTienMon = frmDatMon.layTongTienMon();
+                    capNhatTienCoc();
                 }
 
-                tongTienMon = frmDatMon.layTongTienMon();
-                capNhatTienCoc();
-            } catch (SQLException ex) {
+            } catch (Exception ex) {
                 ex.printStackTrace();
-                JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage());
+                JOptionPane.showMessageDialog(this, "Lỗi khi mở form đặt món: " + ex.getMessage());
             }
         });
 
+
         btnLuu.addActionListener(e -> {
+            Connection conn = null;
             try {
-                String sdt = txtSDT.getText().trim();
+                conn = ConnectSQL.getConnection();
+                conn.setAutoCommit(false); // BẮT ĐẦU TRANSACTION
+
+               String sdt = txtSDT.getText().trim();
                 if (!validateSDT(sdt)) {
                     JOptionPane.showMessageDialog(this, "Số điện thoại phải là 10 số hợp lệ theo Việt Nam!");
                     return;
                 }
 
-                // Lấy ngày và giờ từ JSpinner
+                int soNguoi;
+                try {
+                    soNguoi = Integer.parseInt(txtSoNguoi.getText().trim());
+                    if (soNguoi <= 0) throw new Exception();
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(this, "Số người phải là số dương!");
+                    return;
+                }
+
+                double tienCoc;
+                try {
+                    String str = txtTienCoc.getText().trim();
+                    tienCoc = str.isEmpty() ? 200000 : Double.parseDouble(str);
+                    if (tienCoc < 0) throw new Exception();
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(this, "Tiền cọc không hợp lệ!");
+                    return;
+                }
                 java.util.Date ngayUtil = (java.util.Date) spnNgay.getValue();
                 java.util.Date gioUtil = (java.util.Date) spnGio.getValue();
 
-                // Gộp ngày và giờ
-                java.util.Calendar ngayDatCalendar = Calendar.getInstance();
-                ngayDatCalendar.setTime(ngayUtil);
-                java.util.Calendar gioDatCalendar = Calendar.getInstance();
-                gioDatCalendar.setTime(gioUtil);
+                Calendar cal = Calendar.getInstance();
+                cal.setTime(ngayUtil);
+                int year = cal.get(Calendar.YEAR);
+                int month = cal.get(Calendar.MONTH);
+                int day = cal.get(Calendar.DAY_OF_MONTH);
 
-                java.util.Calendar thoiDiemDat = Calendar.getInstance();
-                thoiDiemDat.set(
-                    ngayDatCalendar.get(Calendar.YEAR),
-                    ngayDatCalendar.get(Calendar.MONTH),
-                    ngayDatCalendar.get(Calendar.DAY_OF_MONTH),
-                    gioDatCalendar.get(Calendar.HOUR_OF_DAY),
-                    gioDatCalendar.get(Calendar.MINUTE),
-                    0
-                );
+               cal.setTime(gioUtil);
+                int hour = cal.get(Calendar.HOUR_OF_DAY);
+                int minute = cal.get(Calendar.MINUTE);
 
-                // Chuyển đổi sang java.sql.Date và java.sql.Time
-                java.sql.Date ngay = new java.sql.Date(thoiDiemDat.getTimeInMillis());
-                java.sql.Time gio = new java.sql.Time(thoiDiemDat.getTimeInMillis());
+                cal.set(year, month, day, hour, minute, 0);
+                java.sql.Date ngay = new java.sql.Date(cal.getTimeInMillis());
+                java.sql.Time gio = new java.sql.Time(cal.getTimeInMillis());
 
-                // Kiểm tra cách 1 tiếng (giữ lại, có thể bỏ nếu không cần)
-                if (editD == null && !phieuDatBanDAO.checkCachGio(maBan, ngay, gio, 1)) {
+                                if (editD == null && !phieuDatBanDAO.checkCachGio(maBan, ngay, gio, 1)) {
                     JOptionPane.showMessageDialog(this, "Lịch đặt phải cách ít nhất 1 tiếng với lịch khác cùng ngày!");
                     return;
                 }
 
-                // Kiểm tra số người
-                int soNguoi;
-                try {
-                    soNguoi = Integer.parseInt(txtSoNguoi.getText().trim());
-                    if (soNguoi <= 0) {
-                        JOptionPane.showMessageDialog(this, "Số người phải lớn hơn 0!");
-                        return;
-                    }
-                } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(this, "Số người phải là số hợp lệ!");
-                    return;
-                }
-
-                // Kiểm tra tiền cọc
-                double tienCoc;
-                try {
-                    String tienCocStr = txtTienCoc.getText().trim();
-                    tienCoc = tienCocStr.isEmpty() ? 200000 : Double.parseDouble(tienCocStr);
-                    if (tienCoc < 0) {
-                        JOptionPane.showMessageDialog(this, "Tiền cọc không được âm!");
-                        return;
-                    }
-                } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(this, "Tiền cọc phải là số hợp lệ!");
-                    return;
-                }
-
-                // Tạo hoặc cập nhật phiếu đặt bàn
                 PhieuDatBan dNew = editD != null ? editD : new PhieuDatBan();
-                dNew.setMaPhieu(txtMaPhieu.getText());
+                dNew.setMaPhieu(txtMaPhieu.getText().trim());
                 dNew.setMaBan(maBan);
                 dNew.setTenKhach(txtTen.getText().trim());
                 dNew.setSoDienThoai(sdt);
@@ -348,37 +365,58 @@ public class FrmDatBan extends JDialog {
                 dNew.setGhiChu(txtGhiChu.getText());
                 dNew.setTienCoc(tienCoc);
                 dNew.setGhiChuCoc(chkCK.isSelected() ? txtGhiChuCK.getText() : "");
-                dNew.setTrangThai(editD != null ? dNew.getTrangThai() : "Đặt");
-
-                // Tìm hoặc thêm khách hàng
-                KhachHang kh = khachHangDAO.timKhachHangTheoSDT(sdt);
-//                if (kh == null) {
-//                    JOptionPane.showMessageDialog(this, "Khách hàng chưa tồn tại. Vui lòng thêm khách hàng trước!");
-//                    return;
-//                }
+                dNew.setTrangThai(editD != null ? editD.getTrangThai() : "Đặt");
+                PhieuDatBan_DAO phieuDAO = new PhieuDatBan_DAO(conn);
                 if (editD != null) {
-                    phieuDatBanDAO.update(dNew);
-                    JOptionPane.showMessageDialog(this, "Cập nhật phiếu đặt bàn thành công!");
+                    phieuDAO.update(dNew);
                 } else {
-                    phieuDatBanDAO.add(dNew);
-                    batDauNhacNho(dNew);
-                    JOptionPane.showMessageDialog(this, "Đặt bàn thành công!");
+                    phieuDAO.add(dNew);
                 }
+                if (!danhSachMonDat.isEmpty()) {
+                    ChiTietDatMon_DAO chiTietDAO = new ChiTietDatMon_DAO(conn); // CÙNG conn
+                    chiTietDAO.xoaTheoPhieu(dNew.getMaPhieu());
+
+                    for (MonDat item : danhSachMonDat) {
+                        ChiTietDatMon ct = new ChiTietDatMon(
+                            dNew.getMaPhieu(),
+                            item.getMon().getMaMon(),
+                            item.getSoLuong(),
+                            item.getMon().getDonGia(),
+                            item.getGhiChu()
+                        );
+                        chiTietDAO.themChiTiet(ct);
+                    }
+                }
+                conn.commit();
+               JOptionPane.showMessageDialog(this, "Đặt bàn và món thành công!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
                 dispose();
-            } catch (SQLException ex) {
+            } catch (Exception ex) {
+                if (conn != null) {
+                    try {
+                        conn.rollback();
+                    } catch (SQLException r) {
+                        r.printStackTrace();
+                    }
+                }
+                JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
                 ex.printStackTrace();
-                JOptionPane.showMessageDialog(this, "Lỗi khi lưu phiếu đặt bàn: " + ex.getMessage());
+            } finally {
+                if (conn != null) {
+                    try {
+                        conn.setAutoCommit(true);
+                        conn.close();
+                    } catch (SQLException closeEx) {
+                        closeEx.printStackTrace();
+                    }
+                }
             }
         });
-
-        btnHuy.addActionListener(e -> dispose());
+       btnHuy.addActionListener(e -> dispose());
     }
-
     private void capNhatTienCoc() {
         double tienCoc = (tongTienMon > 0) ? tongTienMon : 200000;
         txtTienCoc.setText(String.valueOf(tienCoc));
     }
-
     private boolean validateSDT(String sdt) {
         return Pattern.matches("0\\d{9}", sdt);
     }
@@ -419,7 +457,7 @@ public class FrmDatBan extends JDialog {
         btn.setContentAreaFilled(false);
         btn.setOpaque(true);
 
-        btn.addMouseListener(new MouseAdapter() {
+       btn.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
                 btn.setBackground(baseColor.darker());
@@ -450,11 +488,11 @@ class FrmThemKhachHang extends JDialog {
         initComponents(sdt, ten);
     }
 
-    private void initComponents(String sdt, String ten) {
+   private void initComponents(String sdt, String ten) {
         setSize(450, 350);
         setLayout(new GridBagLayout());
         setLocationRelativeTo(getParent());
-        
+
         getContentPane().setBackground(Color.WHITE);
 
         GridBagConstraints gbc = new GridBagConstraints();
@@ -486,17 +524,17 @@ class FrmThemKhachHang extends JDialog {
         gbc.gridx = 0; gbc.gridy = 2; add(lblSDT, gbc);
         txtSDT = new JTextField(sdt, 20); txtSDT.setFont(fonttxt); txtSDT.setEditable(false);
         gbc.gridx = 1; add(txtSDT, gbc);
-        
+
         JLabel lblNgaySinh = new JLabel("Ngày sinh:");
         lblNgaySinh.setFont(font);
-        gbc.gridx = 0; 
-        gbc.gridy = 3; 
+        gbc.gridx = 0;
+        gbc.gridy = 3;
         add(lblNgaySinh, gbc);
 
         JDateChooser dateChooserNgaySinh = new JDateChooser();
         dateChooserNgaySinh.setFont(fonttxt);
         dateChooserNgaySinh.setDateFormatString("dd/MM/yyyy"); // định dạng ngày
-        gbc.gridx = 1; 
+        gbc.gridx = 1;
         add(dateChooserNgaySinh, gbc);
 
         JLabel lblEmail = new JLabel("Email:");
@@ -550,23 +588,18 @@ class FrmNhacNho extends JDialog {
         this.phieuDatBanDAO = new PhieuDatBan_DAO(conn);
         initComponents();
     }
-
     private void initComponents() {
         setSize(300, 200);
         setLayout(new BorderLayout());
         setLocationRelativeTo(getParent());
-
         JLabel lblMessage = new JLabel("Đã quá 1 tiếng, khách chưa đến. Hủy bàn?", SwingConstants.CENTER);
         add(lblMessage, BorderLayout.CENTER);
-
         JPanel pButtons = new JPanel();
         JButton btnHuyBan = new JButton("Hủy bàn");
         JButton btnDong = new JButton("Đóng");
-
         pButtons.add(btnHuyBan);
         pButtons.add(btnDong);
         add(pButtons, BorderLayout.SOUTH);
-
         btnHuyBan.addActionListener(e -> {
             try {
                 pdb.setTrangThai("Hủy");
@@ -577,7 +610,6 @@ class FrmNhacNho extends JDialog {
                 ex.printStackTrace();
             }
         });
-
         btnDong.addActionListener(e -> dispose());
     }
 }

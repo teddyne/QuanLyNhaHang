@@ -381,6 +381,10 @@ public class FrmHoaDon extends JFrame implements ActionListener, MouseListener{
         return btn;
     }
 	
+	public void capNhatDuLieu() {
+        loadDanhSachHoaDon(); // Tải lại toàn bộ danh sách
+    }
+	
 	public static void main(String[] args) {
 		 UIManager.put("TableHeader.font", new Font("Times New Roman", Font.BOLD, 14));
 	        try {

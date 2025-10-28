@@ -263,71 +263,86 @@ public class HoaDon_DAO {
         }
         return null;
     }
+    
+    public boolean thanhToanHoaDon(
+            String maHD,
+            double tienKhachDua,      // chỉ để kiểm tra ở UI
+            double tienSauGiam,       // chỉ để kiểm tra ở UI
+            String maKM,
+            String maKH,
+            double phuThu,
+            String ghiChu) {
 
-    public boolean thanhToanHoaDon(String maHD, double tongTien, double phuThu, String ghiChu) {
-        String sqlUpdateHD = "UPDATE HoaDon SET trangThai = N'Đã thanh toán', phuThu = ?, ghiChu = ?, ngayLap = GETDATE() WHERE maHD = ?";
-        String sqlGetBan = "SELECT maBan FROM PhieuDatBan WHERE maPhieu = (SELECT maPhieu FROM HoaDon WHERE maHD = ?)";
+        String sqlUpdateHD =
+                "UPDATE HoaDon SET " +
+                "trangThai = N'Đã thanh toán', " +
+                "maKM = ?, maKH = ?, phuThu = ?, ghiChu = ?, ngayLap = GETDATE() " +
+                "WHERE maHD = ?";
+
+        String sqlGetBan = "SELECT p.maBan FROM HoaDon hd " +
+                           "JOIN PhieuDatBan p ON hd.maPhieu = p.maPhieu " +
+                           "WHERE hd.maHD = ?";
+
         String sqlUpdateBan = "UPDATE Ban SET trangThai = N'Trống' WHERE maBan = ?";
-        
-        PreparedStatement psHD = null, psBan = null, psGetBan = null;
-        ResultSet rs = null;
+
         Connection conn = null;
+        PreparedStatement psHD = null, psGet = null, psBan = null;
+        ResultSet rs = null;
 
         try {
             conn = ConnectSQL.getInstance().getConnection();
-            conn.setAutoCommit(false); // bắt đầu transaction
+            conn.setAutoCommit(false);   // transaction
 
-            // 1️⃣ Cập nhật hóa đơn
+            // ---- 1. Cập nhật HoaDon ----
             psHD = conn.prepareStatement(sqlUpdateHD);
-            psHD.setDouble(1, phuThu);
-            psHD.setString(2, ghiChu);
-            psHD.setString(3, maHD);
-            int affectedRows = psHD.executeUpdate();
+            psHD.setString(1, maKM);
+            psHD.setString(2, maKH);
+            psHD.setDouble(3, phuThu);
+            // ghi chú thông minh
+            String ghiChuFinal = (maKM != null)
+                    ? "Áp dụng khuyến mãi: " + maKM
+                    : (ghiChu != null && !ghiChu.trim().isEmpty() ? ghiChu : null);
+            psHD.setString(4, ghiChuFinal);
+            psHD.setString(5, maHD);
 
-            if (affectedRows == 0) {
+            int rows = psHD.executeUpdate();
+            if (rows == 0) {
                 conn.rollback();
-                JOptionPane.showMessageDialog(null, "Không tìm thấy hóa đơn: " + maHD);
+                JOptionPane.showMessageDialog(null, "Không tìm thấy hoá đơn: " + maHD, "Lỗi", JOptionPane.ERROR_MESSAGE);
                 return false;
             }
 
-            // 2️⃣ Lấy mã bàn từ phiếu đặt bàn của hóa đơn đó
-            psGetBan = conn.prepareStatement(sqlGetBan);
-            psGetBan.setString(1, maHD);
-            rs = psGetBan.executeQuery();
-
+            // ---- 2. Lấy maBan ----
+            psGet = conn.prepareStatement(sqlGetBan);
+            psGet.setString(1, maHD);
+            rs = psGet.executeQuery();
             if (rs.next()) {
                 String maBan = rs.getString("maBan");
-
-                // 3️⃣ Cập nhật trạng thái bàn về Trống
+                // ---- 3. Cập nhật trạng thái bàn ----
                 psBan = conn.prepareStatement(sqlUpdateBan);
                 psBan.setString(1, maBan);
                 psBan.executeUpdate();
             }
 
-            conn.commit(); // ✅ Xác nhận transaction
-            JOptionPane.showMessageDialog(null, "Thanh toán thành công hóa đơn " + maHD);
+            conn.commit();
+            JOptionPane.showMessageDialog(null, "Thanh toán thành công hoá đơn " + maHD, "Thông báo", JOptionPane.INFORMATION_MESSAGE);
             return true;
 
         } catch (Exception e) {
-            try {
-                if (conn != null) conn.rollback();
-            } catch (SQLException ex) {
-                ex.printStackTrace();
+            if (conn != null) {
+                try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
             }
             e.printStackTrace();
-            JOptionPane.showMessageDialog(null, "Lỗi khi thanh toán: " + e.getMessage());
+            JOptionPane.showMessageDialog(null, "Lỗi khi thanh toán: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
             return false;
-
         } finally {
             try {
                 if (rs != null) rs.close();
                 if (psHD != null) psHD.close();
+                if (psGet != null) psGet.close();
                 if (psBan != null) psBan.close();
-                if (psGetBan != null) psGetBan.close();
                 if (conn != null) conn.setAutoCommit(true);
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+            } catch (SQLException e) { e.printStackTrace(); }
         }
     }
 
@@ -351,6 +366,21 @@ public class HoaDon_DAO {
         return null;
     }
 
+    public String layMaKhachTuTen(String tenKH, String sdt) {
+        String sql = "SELECT maKH FROM KhachHang WHERE tenKH = ? AND sdt = ?";
+        try (Connection con = ConnectSQL.getInstance().getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, tenKH);
+            ps.setString(2, sdt);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getString("maKH");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 
     public List<Object[]> getHoaDonTheoThoiGian(java.sql.Date ngayBatDau, java.sql.Date ngayKetThuc) {
         List<Object[]> ds = new ArrayList<>();

@@ -7,6 +7,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Date;
 import java.sql.Time;
 import java.util.ArrayList;
@@ -74,10 +75,7 @@ public class PhieuDatBan_DAO {
     public String layTenKhachHang(String maPhieu) throws SQLException {
         String tenKhach = null;
         String sql = "SELECT tenKhach FROM PhieuDatBan WHERE maPhieu = ?";
-
-        try (Connection conn = ConnectSQL.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, maPhieu);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -87,6 +85,7 @@ public class PhieuDatBan_DAO {
         }
         return tenKhach;
     }
+
     public PhieuDatBan getByMa(String maPhieu) throws SQLException {
         String sql = "SELECT * FROM PhieuDatBan WHERE maPhieu = ?";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -171,16 +170,18 @@ public class PhieuDatBan_DAO {
     }
 
     public String generateMaPhieu() throws SQLException {
-        String sql = "SELECT 'MP' + RIGHT('000' + CAST(ISNULL(MAX(CAST(SUBSTRING(maPhieu, 3, 3) AS INT)), 0) + 1 AS VARCHAR(3)), 3) AS NewmaPhieu FROM PhieuDatBan";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql);
-             ResultSet rs = pstmt.executeQuery()) {
+        String sql = "SELECT TOP 1 maPhieu FROM PhieuDatBan ORDER BY maPhieu DESC";
+        try (Statement st = conn.createStatement();
+             ResultSet rs = st.executeQuery(sql)) {
             if (rs.next()) {
-                return rs.getString("NewmaPhieu");
+                String last = rs.getString(1);
+                int num = Integer.parseInt(last.substring(3)) + 1;
+                return String.format("PDB%03d", num);
             }
+            return "PDB0001";
         }
-        return "MP001"; // Giá trị mặc định nếu bảng rỗng
     }
-
+    
     public void delete(String maPhieu) throws SQLException {
         String sql = "DELETE FROM PhieuDatBan WHERE maPhieu = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
