@@ -279,6 +279,30 @@ public class PhieuDatBan_DAO {
 	        return false;
 	    }
 	}
+	
+	public String layMaBanTheoPhieu(String maPhieu) {
+        String sql = "SELECT maBan FROM PhieuDatBan WHERE maPhieu = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, maPhieu);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getString("maBan");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+	
+//	public void capNhatTrangThai(PhieuDatBan phieu) throws SQLException {
+//	    String sql = "UPDATE PhieuDatBan SET trangThai = ? WHERE maPhieu = ?";
+//	    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+//	        stmt.setString(1, phieu.getTrangThai());
+//	        stmt.setString(2, phieu.getMaPhieu());
+//	        stmt.executeUpdate();
+//	    }
+//	}
+
 
 	public String taoPhieuMoi(String maBan) {
 		// TODO Auto-generated method stub

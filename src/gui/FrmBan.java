@@ -1062,7 +1062,6 @@ public class FrmBan extends JFrame {
 
         dlg.setVisible(true);
     }
-
     private void moFormChuyenBan() {
         if (banDangChon == null) {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn bàn cần chuyển!");
@@ -1074,14 +1073,23 @@ public class FrmBan extends JFrame {
 
     private void xuLyDatMon() throws SQLException {
         String tt = layTrangThaiHienTai(banDangChon);
+        String maPhieuHienTai = null;
+
         if (!"Phục vụ".equals(tt)) {
             try {
                 Date today = new Date(System.currentTimeMillis());
                 List<PhieuDatBan> list = phieuDatBanDAO.getDatBanByBanAndNgay(banDangChon, today);
-                PhieuDatBan existingDat = list.stream().filter(p -> "Đặt".equals(p.getTrangThai())).findFirst().orElse(null);
+
+                // Tìm phiếu đã đặt
+                PhieuDatBan existingDat = list.stream()
+                        .filter(p -> "Đặt".equals(p.getTrangThai()))
+                        .findFirst()
+                        .orElse(null);
+
                 if (existingDat != null) {
                     existingDat.setTrangThai("Phục vụ");
                     phieuDatBanDAO.update(existingDat);
+                    maPhieuHienTai = existingDat.getMaPhieu(); // dùng phiếu đã tồn tại
                 } else {
                     PhieuDatBan d = new PhieuDatBan();
                     d.setMaPhieu(phieuDatBanDAO.generateMaPhieu());
@@ -1090,6 +1098,7 @@ public class FrmBan extends JFrame {
                     d.setGioDen(new Time(System.currentTimeMillis()));
                     d.setTrangThai("Phục vụ");
                     phieuDatBanDAO.add(d);
+                    maPhieuHienTai = d.getMaPhieu(); // phiếu mới tạo
                 }
                 taiLaiBangChinh();
             } catch (SQLException ex) {
@@ -1098,8 +1107,11 @@ public class FrmBan extends JFrame {
                 return;
             }
         }
-        new FrmDatMon(null, banDangChon).setVisible(true);
+
+        // Mở FrmDatMon với maPhieu đúng
+        new FrmDatMon(banDangChon, maPhieuHienTai).setVisible(true);
     }
+
 
     private void xuLyThanhToan() {
         String tt = layTrangThaiHienTai(banDangChon);
@@ -1196,6 +1208,17 @@ public class FrmBan extends JFrame {
             }
         }
     }
+    
+    public void capNhatTrangThai(String maBan, String trangThai) throws SQLException {
+        String sql = "UPDATE Ban SET trangThai = ? WHERE maBan = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, trangThai);
+            stmt.setString(2, maBan);
+            stmt.executeUpdate();
+        }
+    }
+
+
 
     public static void main(String[] args) {
         try {

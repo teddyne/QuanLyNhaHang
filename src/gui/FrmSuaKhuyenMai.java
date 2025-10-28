@@ -242,7 +242,7 @@ public class FrmSuaKhuyenMai extends JFrame {
         p8.setBackground(Color.WHITE);
         p9.setBackground(Color.WHITE);
         // Tải dữ liệu ban đầu
-        LoaiKhuyenMai_DAO loaiDAO = new LoaiKhuyenMai_DAO(con);
+        LoaiKhuyenMai_DAO loaiDAO = new LoaiKhuyenMai_DAO();
         String tenLoai = loaiDAO.getMaLoaiByTenLoai(km.getMaLoai());
         cmbLoaiKM.setSelectedItem(tenLoai != null ? tenLoai : "");
 
@@ -317,7 +317,7 @@ public class FrmSuaKhuyenMai extends JFrame {
     private void loadLoaiKM() {
         try {
             cmbLoaiKM.removeAllItems();
-            LoaiKhuyenMai_DAO loaiDAO = new LoaiKhuyenMai_DAO(con);
+            LoaiKhuyenMai_DAO loaiDAO = new LoaiKhuyenMai_DAO();
             for (LoaiKhuyenMai loai : loaiDAO.getAllLoaiKhuyenMai()) {
                 cmbLoaiKM.addItem(loai.getTenLoai());
             }
@@ -337,7 +337,7 @@ public class FrmSuaKhuyenMai extends JFrame {
 
             // Lấy maLoai từ tenLoai
             String tenLoai = cmbLoaiKM.getSelectedItem().toString();
-            LoaiKhuyenMai_DAO loaiDAO = new LoaiKhuyenMai_DAO(con);
+            LoaiKhuyenMai_DAO loaiDAO = new LoaiKhuyenMai_DAO();
             String maLoai = loaiDAO.getMaLoaiByTenLoai(tenLoai);
 
             if (maLoai == null) {

@@ -94,7 +94,7 @@ public class FrmThongKe extends JPanel implements ActionListener {
 
     public FrmThongKe() {
     	Connection con = ConnectSQL.getConnection();
-        hoaDonDAO = new HoaDon_DAO(con);
+        hoaDonDAO = new HoaDon_DAO();
         setLayout(new BorderLayout());
         setBackground(COLOR_SECONDARY);
 

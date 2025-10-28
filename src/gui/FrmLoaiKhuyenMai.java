@@ -30,7 +30,7 @@ public class FrmLoaiKhuyenMai extends JFrame {
 	    setLocationRelativeTo(null);
 	    setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
-	    dao = new LoaiKhuyenMai_DAO(con);
+	    dao = new LoaiKhuyenMai_DAO();
 
 	    //Nền trắng toàn JFrame
 	    getContentPane().setBackground(Color.WHITE);

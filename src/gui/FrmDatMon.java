@@ -57,7 +57,12 @@ public class FrmDatMon extends JFrame {
     private JPanel pnlLuoiMon;
 
     private String maBan;
+    private double phuThu;
+    private String ghiChu;
+
     private String maPhieu;
+    private String maKH;
+    private String maKM;
     private String maHoaDon;
     private String maNhanVien = "NV000";
     private String tenKhach = "Khách vãng lai";
@@ -88,6 +93,7 @@ public class FrmDatMon extends JFrame {
         initComponents();
         setExtendedState(JFrame.MAXIMIZED_BOTH);
         setLocationRelativeTo(null);
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setVisible(true);
     }
 
@@ -107,8 +113,8 @@ public class FrmDatMon extends JFrame {
     private void khoiTaoDAO() throws SQLException {
 	    monAnDAO = new MonAn_DAO(con);
 	    loaiMonDAO = new LoaiMon_DAO(con);
-	    hoaDonDAO = new HoaDon_DAO(con);
-	    chiTietHoaDonDAO = new ChiTietHoaDon_DAO(con);
+	    hoaDonDAO = new HoaDon_DAO();
+	    chiTietHoaDonDAO = new ChiTietHoaDon_DAO();
 	    phieuDatBanDAO = new PhieuDatBan_DAO(ConnectSQL.getConnection());
 	}
 
@@ -526,7 +532,7 @@ public class FrmDatMon extends JFrame {
             }
 
             if (maHoaDon == null) {
-                maHoaDon = hoaDonDAO.taoHoaDonMoi(maBan, maPhieu, maNhanVien);
+                maHoaDon = hoaDonDAO.taoHoaDonMoi(maPhieu, maNhanVien, maKH, maKM, phuThu, ghiChu);
             }
 
             chiTietHoaDonDAO.xoaChiTietTheoHoaDon(maHoaDon);
@@ -578,15 +584,19 @@ public class FrmDatMon extends JFrame {
         SwingUtilities.invokeLater(() -> {
             try {
                 UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-                try {
-					new FrmDatMon(null, "BAN001");
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+
+                String maPhieu = JOptionPane.showInputDialog("Nhập mã phiếu đặt bàn:");
+                if (maPhieu != null && !maPhieu.isEmpty()) {
+                    // Lấy mã bàn từ phiếu
+                    PhieuDatBan_DAO phieuDAO = new PhieuDatBan_DAO(ConnectSQL.getConnection());
+                    String maBan = phieuDAO.layMaBanTheoPhieu(maPhieu);
+
+                    new FrmDatMon(maBan, maPhieu);
+                }
             } catch (Exception e) {
                 e.printStackTrace();
-			}
+            }
         });
     }
+
 }

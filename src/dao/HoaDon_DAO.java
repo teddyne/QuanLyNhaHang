@@ -6,56 +6,67 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.JOptionPane;
+
 public class HoaDon_DAO {
-    private final Connection conn;
+    //private final Connection conn;
     private Object tenKhach;
     private Object maNhanVien;
 
-    public HoaDon_DAO(Connection conn) {
-        this.conn = conn;
+//    public HoaDon_DAO() {
+//        this.conn = conn;
+//    }
+ // Trong HoaDon_DAO
+    public static HoaDon_DAO getInstance() {
+        return new HoaDon_DAO();
     }
 
-    public String taoHoaDonMoi(String maBan, String maPhieu, String maNhanVien) throws SQLException {
-        String sql = "INSERT INTO HoaDon (maBan, maPhieuDatBan, maNhanVien, ngayLap, tongTien) " +
-                     "VALUES (?, ?, ?, GETDATE(), 0); SELECT SCOPE_IDENTITY();";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, maBan);
-            ps.setString(2, maPhieu != null ? maPhieu : null);
-            ps.setString(3, maNhanVien);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getString(1);
-                }
-            }
+
+    public String taoHoaDonMoi(String maPhieu, String maNhanVien, String maKH, String maKM, double phuThu, String ghiChu) throws SQLException {
+        String sql = "INSERT INTO HoaDon (maHD, maPhieu, maKH, maKM, maNhanVien, phuThu, ghiChu) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String maHD = taoMaHoaDon(); // tự sinh mã HD
+        try (Connection con = ConnectSQL.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, maHD);
+            ps.setString(2, maPhieu);
+            ps.setString(3, maKH);
+            ps.setString(4, maKM);
+            ps.setString(5, maNhanVien);
+            ps.setDouble(6, phuThu);
+            ps.setString(7, ghiChu);
+            ps.executeUpdate();
         }
-        return null;
+        return maHD;
     }
 
+ // Lấy maHD từ maPhieu
     public String layMaHoaDonTheoPhieu(String maPhieu) throws SQLException {
         String sql = "SELECT maHD FROM HoaDon WHERE maPhieu = ?";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection con = ConnectSQL.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, maPhieu);
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getString("maHD");
-                }
+                if (rs.next()) return rs.getString("maHD");
             }
         }
         return null;
     }
 
+    // Tự sinh mã hóa đơn mới
     private String taoMaHoaDon() throws SQLException {
         String query = "SELECT MAX(maHD) AS maHD FROM HoaDon";
-        try (PreparedStatement stmt = conn.prepareStatement(query);
-             ResultSet rs = stmt.executeQuery()) {
+        try (Connection con = ConnectSQL.getConnection();
+             PreparedStatement ps = con.prepareStatement(query);
+             ResultSet rs = ps.executeQuery()) {
             if (rs.next()) {
                 String maxMaHD = rs.getString("maHD");
-                if (maxMaHD == null) return "HD001";
-                int number = Integer.parseInt(maxMaHD.substring(2)) + 1;
-                return String.format("HD%03d", number);
+                if (maxMaHD == null) return "HD0001";
+                int num = Integer.parseInt(maxMaHD.substring(2)) + 1;
+                return String.format("HD%04d", num);
             }
         }
-        return "HD001";
+        return "HD0001";
     }
 
     public List<Object[]> layDanhSachHoaDonDayDu() {
@@ -70,8 +81,9 @@ public class HoaDon_DAO {
                      "LEFT JOIN Ban b ON p.maBan = b.maBan " +
                      "LEFT JOIN ChiTietHoaDon ct ON hd.maHD = ct.maHD " +
                      "GROUP BY hd.maHD, b.maBan, hd.ngayLap, kh.tenKH, kh.sdt, nv.hoTen, km.tenKM";
-        try (PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+        try (Connection con = ConnectSQL.getConnection();
+        	PreparedStatement stmt = con.prepareStatement(sql);
+            ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
                 Object[] row = {
                     rs.getString("maHD"),
@@ -95,29 +107,31 @@ public class HoaDon_DAO {
         Object[] thongTin = null;
         String sql = """
             SELECT kh.tenKH, kh.sdt, b.maBan, nv.hoTen, hd.ngayLap, km.tenKM,
-                   SUM(ct.soLuong * ct.donGia) AS tongTien
+                   ISNULL(SUM(ct.soLuong * ct.donGia), 0) AS tongTien
             FROM HoaDon hd
-            JOIN KhachHang kh ON hd.maKH = kh.maKH
-            JOIN NhanVien nv ON hd.maNhanVien = nv.maNhanVien
-            JOIN PhieuDatBan pdb ON hd.maPhieu = pdb.maPhieu
-            JOIN Ban b ON pdb.maBan = b.maBan
+            LEFT JOIN KhachHang kh ON hd.maKH = kh.maKH
+            LEFT JOIN NhanVien nv ON hd.maNhanVien = nv.maNhanVien
+            LEFT JOIN PhieuDatBan pdb ON hd.maPhieu = pdb.maPhieu
+            LEFT JOIN Ban b ON pdb.maBan = b.maBan
             LEFT JOIN KhuyenMai km ON hd.maKM = km.maKM
-            JOIN ChiTietHoaDon ct ON hd.maHD = ct.maHD
+            LEFT JOIN ChiTietHoaDon ct ON hd.maHD = ct.maHD
             WHERE hd.maHD = ?
             GROUP BY kh.tenKH, kh.sdt, b.maBan, nv.hoTen, hd.ngayLap, km.tenKM
         """;
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+
+        try (Connection con = ConnectSQL.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, maHD);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     thongTin = new Object[]{
-                        rs.getString("tenKH"),
-                        rs.getString("sdt"),
-                        rs.getString("maBan"),
-                        rs.getString("hoTen"),
-                        rs.getDate("ngayLap"),
-                        rs.getString("tenKM"),
-                        rs.getDouble("tongTien")
+                        rs.getString("tenKH"),    // có thể NULL
+                        rs.getString("sdt"),      // có thể NULL
+                        rs.getString("maBan"),    // có thể NULL
+                        rs.getString("hoTen"),    // có thể NULL
+                        rs.getTimestamp("ngayLap"),
+                        rs.getString("tenKM"),    // có thể NULL
+                        rs.getDouble("tongTien")  // 0 nếu không có chi tiết
                     };
                 }
             }
@@ -127,6 +141,7 @@ public class HoaDon_DAO {
         return thongTin;
     }
 
+
     public List<Object[]> layChiTietHoaDon(String maHD) {
         List<Object[]> list = new ArrayList<>();
         String sql = """
@@ -135,7 +150,8 @@ public class HoaDon_DAO {
             JOIN MonAn ma ON ct.maMon = ma.maMon
             WHERE ct.maHD = ?
         """;
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection con = ConnectSQL.getConnection();
+        	PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, maHD);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -176,7 +192,8 @@ public class HoaDon_DAO {
         if (ngayLap != null) sql.append(" AND CONVERT(date, hd.ngayLap) = ? ");
         sql.append(" GROUP BY hd.maHD, b.maBan, hd.ngayLap, kh.tenKH, kh.sdt, nv.hoTen, km.tenKM");
 
-        try (PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+        try (Connection con = ConnectSQL.getConnection();
+        	PreparedStatement ps = con.prepareStatement(sql.toString())) {
             int index = 1;
             if (maHD != null && !maHD.isEmpty()) ps.setString(index++, "%" + maHD + "%");
             if (tenKH != null && !tenKH.isEmpty()) ps.setString(index++, "%" + tenKH + "%");
@@ -211,10 +228,11 @@ public class HoaDon_DAO {
             SELECT TOP 1 hd.maHD
             FROM HoaDon hd
             JOIN PhieuDatBan p ON hd.maPhieu = p.maPhieu
-            WHERE p.maBan = ? AND hd.trangThai = N'Chưa thanh toán'
+            WHERE p.maBan = ?
             ORDER BY hd.ngayLap DESC
         """;
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection con = ConnectSQL.getConnection();
+        	PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, maBan);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -226,6 +244,113 @@ public class HoaDon_DAO {
         }
         return maHD;
     }
+    
+    public Object[] layThongTinKhachTuPhieuDatBan(String maHD) {
+        String sql = "SELECT pdb.tenKhach, pdb.soDienThoai " +
+                     "FROM HoaDon hd " +
+                     "JOIN PhieuDatBan pdb ON hd.maPhieu = pdb.maPhieu " +
+                     "WHERE hd.maHD = ?";
+        try (Connection con = ConnectSQL.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, maHD);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new Object[]{ rs.getString("tenKhach"), rs.getString("soDienThoai") };
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public boolean thanhToanHoaDon(String maHD, double tongTien, double phuThu, String ghiChu) {
+        String sqlUpdateHD = "UPDATE HoaDon SET trangThai = N'Đã thanh toán', phuThu = ?, ghiChu = ?, ngayLap = GETDATE() WHERE maHD = ?";
+        String sqlGetBan = "SELECT maBan FROM PhieuDatBan WHERE maPhieu = (SELECT maPhieu FROM HoaDon WHERE maHD = ?)";
+        String sqlUpdateBan = "UPDATE Ban SET trangThai = N'Trống' WHERE maBan = ?";
+        
+        PreparedStatement psHD = null, psBan = null, psGetBan = null;
+        ResultSet rs = null;
+        Connection conn = null;
+
+        try {
+            conn = ConnectSQL.getInstance().getConnection();
+            conn.setAutoCommit(false); // bắt đầu transaction
+
+            // 1️⃣ Cập nhật hóa đơn
+            psHD = conn.prepareStatement(sqlUpdateHD);
+            psHD.setDouble(1, phuThu);
+            psHD.setString(2, ghiChu);
+            psHD.setString(3, maHD);
+            int affectedRows = psHD.executeUpdate();
+
+            if (affectedRows == 0) {
+                conn.rollback();
+                JOptionPane.showMessageDialog(null, "Không tìm thấy hóa đơn: " + maHD);
+                return false;
+            }
+
+            // 2️⃣ Lấy mã bàn từ phiếu đặt bàn của hóa đơn đó
+            psGetBan = conn.prepareStatement(sqlGetBan);
+            psGetBan.setString(1, maHD);
+            rs = psGetBan.executeQuery();
+
+            if (rs.next()) {
+                String maBan = rs.getString("maBan");
+
+                // 3️⃣ Cập nhật trạng thái bàn về Trống
+                psBan = conn.prepareStatement(sqlUpdateBan);
+                psBan.setString(1, maBan);
+                psBan.executeUpdate();
+            }
+
+            conn.commit(); // ✅ Xác nhận transaction
+            JOptionPane.showMessageDialog(null, "Thanh toán thành công hóa đơn " + maHD);
+            return true;
+
+        } catch (Exception e) {
+            try {
+                if (conn != null) conn.rollback();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Lỗi khi thanh toán: " + e.getMessage());
+            return false;
+
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (psHD != null) psHD.close();
+                if (psBan != null) psBan.close();
+                if (psGetBan != null) psGetBan.close();
+                if (conn != null) conn.setAutoCommit(true);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+    public String layMaBanTheoHoaDon(String maHD) {
+        String sql = "SELECT b.maBan FROM HoaDon hd " +
+                     "JOIN PhieuDatBan p ON hd.maPhieu = p.maPhieu " +
+                     "JOIN Ban b ON p.maBan = b.maBan " +
+                     "WHERE hd.maHD = ?";
+        try (Connection con = ConnectSQL.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, maHD);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getString("maBan");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
 
     public List<Object[]> getHoaDonTheoThoiGian(java.sql.Date ngayBatDau, java.sql.Date ngayKetThuc) {
         List<Object[]> ds = new ArrayList<>();
@@ -241,7 +366,8 @@ public class HoaDon_DAO {
                      "WHERE CONVERT(date, hd.ngayLap) BETWEEN ? AND ? " +
                      "GROUP BY hd.maHD, b.maBan, hd.ngayLap, kh.tenKH, kh.sdt, nv.hoTen, km.tenKM " +
                      "ORDER BY hd.ngayLap ASC";
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection con = ConnectSQL.getConnection();
+        	PreparedStatement stmt = con.prepareStatement(sql)) {
             stmt.setDate(1, ngayBatDau);
             stmt.setDate(2, ngayKetThuc);
             try (ResultSet rs = stmt.executeQuery()) {
@@ -281,7 +407,8 @@ public class HoaDon_DAO {
             ORDER BY
             tongSoLuong DESC
         """;
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection con = ConnectSQL.getConnection();
+        	PreparedStatement stmt = con.prepareStatement(sql)) {
             stmt.setDate(1, ngayBatDau);
             stmt.setDate(2, ngayKetThuc);
             try (ResultSet rs = stmt.executeQuery()) {

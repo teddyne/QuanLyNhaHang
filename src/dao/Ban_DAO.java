@@ -229,4 +229,18 @@ public class Ban_DAO {
 	    psBanCu.setString(1, maBanCu);
 	    psBanCu.executeUpdate();
 	}
+    
+    public boolean capNhatTrangThai(String maBan, String trangThaiMoi) {
+        String sql = "UPDATE Ban SET trangThai = ? WHERE maBan = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, trangThaiMoi);
+            ps.setString(2, maBan);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+
 }

@@ -146,12 +146,16 @@ public class KhuyenMai {
 		this.ghiChu = ghiChu;
 	}
 
+//	@Override
+//	public String toString() {
+//		return "KhuyenMai [maKM=" + maKM + ", tenKM=" + tenKM + ", maLoai=" + maLoai + ", giaTri=" + giaTri
+//				+ ", ngayBatDau=" + ngayBatDau + ", ngayKetThuc=" + ngayKetThuc + ", trangThai=" + trangThai
+//				+ ", doiTuongApDung=" + doiTuongApDung + ", donHangTu=" + donHangTu + ", mon1=" + mon1 + ", mon2="
+//				+ mon2 + ", monTang=" + monTang + ", ghiChu=" + ghiChu + "]";
+//	}
 	@Override
 	public String toString() {
-		return "KhuyenMai [maKM=" + maKM + ", tenKM=" + tenKM + ", maLoai=" + maLoai + ", giaTri=" + giaTri
-				+ ", ngayBatDau=" + ngayBatDau + ", ngayKetThuc=" + ngayKetThuc + ", trangThai=" + trangThai
-				+ ", doiTuongApDung=" + doiTuongApDung + ", donHangTu=" + donHangTu + ", mon1=" + mon1 + ", mon2="
-				+ mon2 + ", monTang=" + monTang + ", ghiChu=" + ghiChu + "]";
+	    return tenKM;
 	}
     
 }

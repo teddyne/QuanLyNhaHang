@@ -24,6 +24,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
@@ -42,7 +43,7 @@ import entity.LoaiBan;
 import entity.MonAn;
 import entity.PhieuDatBan;
 
-public class FrmPhucVu extends JDialog {
+public class FrmPhucVu extends JFrame {
     private static final Color COLOR_RED_WINE = new Color(128, 0, 0);
     private Ban_DAO banDAO;
     private PhieuDatBan_DAO phieuDatBanDAO;
@@ -51,12 +52,15 @@ public class FrmPhucVu extends JDialog {
 
     private String maBan;
     private Ban ban;
+    private HoaDon_DAO hoaDonDAO;
     private LoaiBan loaiBan;
     private PhieuDatBan phieuDatBan;
 
     public FrmPhucVu(JFrame parent, String maBan, PhieuDatBan phieuDatBan, PhieuDatBan_DAO phieuDatBanDAO, Ban_DAO banDAO, LoaiBan_DAO loaiBanDAO) throws SQLException {
-        super(parent, "Phục vụ - Bàn " + maBan, true);
-        try {
+    	setTitle("Phục vụ - Bàn " + maBan);
+    	setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+    	try {
+        	this.hoaDonDAO = HoaDon_DAO.getInstance();
             this.maBan = maBan;
             this.banDAO = banDAO;
             this.phieuDatBanDAO = phieuDatBanDAO;
@@ -442,20 +446,33 @@ public class FrmPhucVu extends JDialog {
             try {
                 String maPhieu = phieuDatBan != null ? phieuDatBan.getMaPhieu() : null;
                 System.out.println("Gọi đặt món với maBan: " + maBan + ", maPhieu: " + maPhieu);
+
                 FrmDatMon frmDatMon = new FrmDatMon(maBan, maPhieu);
+                frmDatMon.setVisible(true); // <-- Bắt buộc phải gọi
             } catch (SQLException ex) {
                 ex.printStackTrace();
                 JOptionPane.showMessageDialog(this, "Lỗi mở form đặt món: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
             }
         });
+
         
         btnThanhToan.addActionListener(e -> {
             if (ban != null) {
-                xuLyThanhToan(modelMon);
-            } else {
-                JOptionPane.showMessageDialog(this, "Vui lòng chọn bàn trước!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                try {
+                    String maHD = hoaDonDAO.getMaHoaDonTheoBan(ban.getMaBan());
+                    if (maHD != null) {
+                    	FrmThanhToan frmTT = new FrmThanhToan(maHD);
+                    	frmTT.setVisible(true);
+                    } else {
+                        JOptionPane.showMessageDialog(this, "Bàn chưa có hóa đơn!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+                    }
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(this, "Lỗi khi mở Thanh Toán: " + ex.getMessage());
+                    ex.printStackTrace();
+                }
             }
         });
+
 
         btnDong.addActionListener(e -> dispose());
 
@@ -473,7 +490,7 @@ public class FrmPhucVu extends JDialog {
         String trangThai = layTrangThaiHienTai(maBan, phieuDatBanDAO);
         if ("Phục vụ".equals(trangThai)) {
             double tongTien = calculateTongTien(modelMon);
-			new FrmThanhToan(maBan, phieuDatBan, tongTien).setVisible(true); // Adjust constructor as needed
+			new FrmThanhToan().setVisible(true); // Adjust constructor as needed
 			dispose();
 			if (getParent() instanceof FrmBan) {
 			    ((FrmBan) getParent()).taiLaiBangChinh();
@@ -529,13 +546,13 @@ public class FrmPhucVu extends JDialog {
         if (maPhieu == null || maPhieu.isEmpty()) {
             return null;
         }
-        HoaDon_DAO hoaDonDAO = new HoaDon_DAO(ConnectSQL.getConnection());
-        return hoaDonDAO.layMaHoaDonTheoPhieu(maPhieu);
+        HoaDon_DAO dao = HoaDon_DAO.getInstance();
+        return dao.layMaHoaDonTheoPhieu(maPhieu);
     }
 
     private Object[][] getMonAnByMaHD(String maHD) throws SQLException {
 	    MonAn_DAO monAnDAO = new MonAn_DAO(con);
-	    ChiTietHoaDon_DAO chiTietHoaDonDAO = new ChiTietHoaDon_DAO(ConnectSQL.getConnection());
+	    ChiTietHoaDon_DAO chiTietHoaDonDAO = new ChiTietHoaDon_DAO();
 	    List<ChiTietHoaDon> chiTietList = chiTietHoaDonDAO.layChiTietTheoHoaDon(maHD);
 	    Object[][] monData = new Object[chiTietList.size()][4];
 	    

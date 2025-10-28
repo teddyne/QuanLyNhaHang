@@ -45,7 +45,7 @@ public class FrmHoaDon extends JFrame implements ActionListener, MouseListener{
         setLocationRelativeTo(null);
 
         Connection con = ConnectSQL.getConnection();
-        hdDAO = new HoaDon_DAO(con);
+        hdDAO = new HoaDon_DAO();
         
         setJMenuBar(ThanhTacVu.getInstance().getJMenuBar());
         ThanhTacVu customMenu = ThanhTacVu.getInstance();

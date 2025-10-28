@@ -153,8 +153,109 @@ public class BanDialog extends JDialog {
         }
     }
 
+//    protected boolean thucHienHanhDong(String banDich) {
+//        PreparedStatement ps = null;
+//        try {
+//            String trangThaiBanDich = parentFrame.layTrangThaiHienTai(banDich);
+//            if (!"Trống".equals(trangThaiBanDich)) {
+//                JOptionPane.showMessageDialog(this, "Bàn đích " + banDich + " không trống!");
+//                return false;
+//            }
+//
+//            Date homNay = new Date(System.currentTimeMillis());
+//            List<PhieuDatBan> danhSachPhieu = phieuDatBanDAO.getDatBanByBanAndNgay(banChinh, homNay);
+//
+//            if (danhSachPhieu == null || danhSachPhieu.isEmpty()) {
+//                JOptionPane.showMessageDialog(this, "Bàn " + banChinh + " không có phiếu!");
+//                return false;
+//            }
+//
+//            connection.setAutoCommit(false);
+//
+//            List<String> maPhieuDaCapNhat = new ArrayList<>();
+//            int soLuongCapNhat = 0;
+//
+//            for (PhieuDatBan phieu : danhSachPhieu) {
+//                String trangThaiPhieu = phieu.getTrangThai();
+//                if (trangThaiPhieu != null &&
+//                    ("Đặt".equals(trangThaiPhieu.trim()) || "Phục vụ".equals(trangThaiPhieu.trim()))) {
+//
+//                    String maPhieuCu = phieu.getMaPhieu();
+//                    String maBanCu = phieu.getMaBan();
+//
+//                    try {
+//                        PhieuDatBan phieuUpdate = new PhieuDatBan();
+//                        phieuUpdate.setMaPhieu(maPhieuCu);
+//                        phieuUpdate.setMaBan(banDich);
+//                        phieuUpdate.setTenKhach(phieu.getTenKhach());
+//                        phieuUpdate.setSoNguoi(phieu.getSoNguoi());
+//                        phieuUpdate.setTrangThai(phieu.getTrangThai());
+//                        phieuUpdate.setNgayDen(phieu.getNgayDen());
+//                        phieuUpdate.setGioDen(phieu.getGioDen());
+//                        phieuUpdate.setGhiChu(phieu.getGhiChu());
+//                        phieuUpdate.setTienCoc(phieu.getTienCoc());
+//                        phieuUpdate.setGhiChuCoc(phieu.getGhiChuCoc());
+//                        phieuUpdate.setSoDienThoai(phieu.getSoDienThoai());
+//
+//                        phieuDatBanDAO.update(phieuUpdate);
+//                        soLuongCapNhat++;
+//                        maPhieuDaCapNhat.add(maPhieuCu);
+//
+//                    } catch (Exception ex) {
+//                        for (String maPhieuRollback : maPhieuDaCapNhat) {
+//                            try {
+//                                PhieuDatBan phieuRollback = phieuDatBanDAO.getByMa(maPhieuRollback);
+//                                if (phieuRollback != null) {
+//                                    phieuRollback.setMaBan(maBanCu);
+//                                    phieuDatBanDAO.update(phieuRollback);
+//                                }
+//                            } catch (Exception rollbackEx) {
+//                                System.err.println("Rollback lỗi: " + rollbackEx.getMessage());
+//                            }
+//                        }
+//                        connection.rollback();
+//                        JOptionPane.showMessageDialog(this, "Lỗi chuyển: " + ex.getMessage());
+//                        return false;
+//                    }
+//                }
+//            }
+//
+//            if (soLuongCapNhat > 0) {
+//                Ban ban = banDAO.getBanByMa(banChinh);
+//                if (ban != null) {
+//                    ban.setTrangThai("Trống");
+//                    banDAO.capNhatBan(ban);
+//                }
+//                connection.commit();
+//                
+//                return true;
+//            } else {
+//                connection.rollback();
+//                JOptionPane.showMessageDialog(this, "Không có phiếu nào được chuyển!");
+//                return false;
+//            }
+//
+//        } catch (SQLException e) {
+//            try {
+//                connection.rollback();
+//            } catch (SQLException rollbackEx) {
+//                rollbackEx.printStackTrace();
+//            }
+//            e.printStackTrace();
+//            JOptionPane.showMessageDialog(this, "Lỗi DB: " + e.getMessage());
+//            return false;
+//        } finally {
+//            if (ps != null) {
+//                try {
+//                    ps.close();
+//                } catch (SQLException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        }
+//    }
+    
     protected boolean thucHienHanhDong(String banDich) {
-        PreparedStatement ps = null;
         try {
             String trangThaiBanDich = parentFrame.layTrangThaiHienTai(banDich);
             if (!"Trống".equals(trangThaiBanDich)) {
@@ -166,8 +267,15 @@ public class BanDialog extends JDialog {
             List<PhieuDatBan> danhSachPhieu = phieuDatBanDAO.getDatBanByBanAndNgay(banChinh, homNay);
 
             if (danhSachPhieu == null || danhSachPhieu.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Bàn " + banChinh + " không có phiếu!");
-                return false;
+                // Nếu bàn cũ chưa có phiếu, tạo một phiếu mới để tránh lỗi FK
+                PhieuDatBan phieuMoi = new PhieuDatBan();
+                String maPhieu = "PD" + System.currentTimeMillis(); // sinh mã tạm
+                phieuMoi.setMaPhieu(maPhieu);
+                phieuMoi.setMaBan(banChinh);
+                phieuMoi.setNgayDen(homNay);
+                phieuDatBanDAO.add(phieuMoi);
+                danhSachPhieu = new ArrayList<>();
+                danhSachPhieu.add(phieuMoi);
             }
 
             connection.setAutoCommit(false);
@@ -177,31 +285,22 @@ public class BanDialog extends JDialog {
 
             for (PhieuDatBan phieu : danhSachPhieu) {
                 String trangThaiPhieu = phieu.getTrangThai();
-                if (trangThaiPhieu != null &&
-                    ("Đặt".equals(trangThaiPhieu.trim()) || "Phục vụ".equals(trangThaiPhieu.trim()))) {
+                if (trangThaiPhieu == null || 
+                    "Đặt".equals(trangThaiPhieu.trim()) || 
+                    "Phục vụ".equals(trangThaiPhieu.trim())) {
 
                     String maPhieuCu = phieu.getMaPhieu();
                     String maBanCu = phieu.getMaBan();
 
                     try {
-                        PhieuDatBan phieuUpdate = new PhieuDatBan();
-                        phieuUpdate.setMaPhieu(maPhieuCu);
-                        phieuUpdate.setMaBan(banDich);
-                        phieuUpdate.setTenKhach(phieu.getTenKhach());
-                        phieuUpdate.setSoNguoi(phieu.getSoNguoi());
-                        phieuUpdate.setTrangThai(phieu.getTrangThai());
-                        phieuUpdate.setNgayDen(phieu.getNgayDen());
-                        phieuUpdate.setGioDen(phieu.getGioDen());
-                        phieuUpdate.setGhiChu(phieu.getGhiChu());
-                        phieuUpdate.setTienCoc(phieu.getTienCoc());
-                        phieuUpdate.setGhiChuCoc(phieu.getGhiChuCoc());
-                        phieuUpdate.setSoDienThoai(phieu.getSoDienThoai());
-
-                        phieuDatBanDAO.update(phieuUpdate);
+                        // Cập nhật bàn đích
+                        phieu.setMaBan(banDich);
+                        phieuDatBanDAO.update(phieu);
                         soLuongCapNhat++;
                         maPhieuDaCapNhat.add(maPhieuCu);
 
                     } catch (Exception ex) {
+                        // rollback nếu lỗi
                         for (String maPhieuRollback : maPhieuDaCapNhat) {
                             try {
                                 PhieuDatBan phieuRollback = phieuDatBanDAO.getByMa(maPhieuRollback);
@@ -227,7 +326,6 @@ public class BanDialog extends JDialog {
                     banDAO.capNhatBan(ban);
                 }
                 connection.commit();
-                
                 return true;
             } else {
                 connection.rollback();
@@ -244,16 +342,9 @@ public class BanDialog extends JDialog {
             e.printStackTrace();
             JOptionPane.showMessageDialog(this, "Lỗi DB: " + e.getMessage());
             return false;
-        } finally {
-            if (ps != null) {
-                try {
-                    ps.close();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
         }
     }
+
 
     protected void thietLapSuKien() {
         btnTim.addActionListener(e -> {

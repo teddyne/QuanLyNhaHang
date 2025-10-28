@@ -146,7 +146,7 @@ public class FrmChiTietHoaDon extends JFrame implements ActionListener{
 
     private void loadData(String maHD) {
     	Connection con = ConnectSQL.getConnection();
-        HoaDon_DAO hdDAO = new HoaDon_DAO(con);
+        HoaDon_DAO hdDAO = new HoaDon_DAO();
         Object[] thongTin = hdDAO.layThongTinHoaDon(maHD);
 
         if (thongTin != null) {

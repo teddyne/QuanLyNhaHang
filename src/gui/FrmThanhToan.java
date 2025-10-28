@@ -1,10 +1,10 @@
 package gui;
 
+import dao.Ban_DAO;
 import dao.HoaDon_DAO;
 import dao.KhuyenMai_DAO;
 import dao.LoaiKhuyenMai_DAO;
 import entity.KhuyenMai;
-import entity.PhieuDatBan;
 import connectSQL.ConnectSQL;
 
 import javax.swing.*;
@@ -22,6 +22,7 @@ import java.util.List;
 
 public class FrmThanhToan extends JFrame implements ActionListener {
 
+    private String maHD; // lưu mã hóa đơn hiện tại
     private JLabel lblTieuDe;
     private JLabel lblKH, lblSDT, lblNgayLap, lblBan, lblNV;
     private JLabel valKH, valSDT, valNgayLap, valBan, valNV;
@@ -34,23 +35,32 @@ public class FrmThanhToan extends JFrame implements ActionListener {
     private JComboBox<KhuyenMai> cmbKhuyenMai;
     private JButton btnQuayLai, btnHuy, btnXacNhan;
     private DecimalFormat df = new DecimalFormat("#,##0 VND");
-    private Connection con = ConnectSQL.getConnection();
-    private HoaDon_DAO hoaDonDAO = new HoaDon_DAO(con);
+    private HoaDon_DAO hoaDonDAO = new HoaDon_DAO();
     private KhuyenMai_DAO kmDAO = new KhuyenMai_DAO();
+    private LoaiKhuyenMai_DAO loaiDAO = new LoaiKhuyenMai_DAO();
     private double tongCong; // Tổng cộng trước VAT và khuyến mãi
     private double giamGia; // Giá trị giảm từ khuyến mãi
     private double phuThu; // Số tiền phụ thu
-	private JLabel lblDonViTien;
-	private JLabel lblDonVi;
+    private JLabel lblDonViTien;
+    private JLabel lblDonVi;
 
+    // đối tượng sentinel dùng khi không có KM
+    private final KhuyenMai NO_PROMO = createNoPromo();
 
     public FrmThanhToan(String maHD) {
-        this();
+        this.maHD = maHD;
+        initComponents();
         loadDuLieuHoaDon(maHD);
         loadChiTietHoaDon(maHD);
+        loadKhuyenMaiTotNhat();
     }
 
     public FrmThanhToan() {
+        initComponents();
+        loadKhuyenMai(); // fallback: load tất cả KM nếu gọi constructor rỗng
+    }
+    
+    private void initComponents() {
         setTitle("Thanh toán");
         setSize(1050, 700);
         setLocationRelativeTo(null);
@@ -75,7 +85,7 @@ public class FrmThanhToan extends JFrame implements ActionListener {
         table.setFont(new Font("Times New Roman", Font.PLAIN, 16));
         table.setRowHeight(30);
         JScrollPane scroll = new JScrollPane(table);
-	    scroll.getViewport().setBackground(Color.WHITE);
+        scroll.getViewport().setBackground(Color.WHITE);
         pMain.add(scroll, BorderLayout.CENTER);
 
         // === Hàng dưới: 2 cột (Thông tin và Tổng hóa đơn) ===
@@ -86,7 +96,9 @@ public class FrmThanhToan extends JFrame implements ActionListener {
         // === Cột trái: Thông tin hóa đơn ===
         JPanel pLeft = new JPanel();
         pLeft.setLayout(new BoxLayout(pLeft, BoxLayout.Y_AXIS));
-        pLeft.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(new Color(165, 42, 42), 2),"Thông tin hóa đơn", 0, 0, new Font("Times New Roman", Font.BOLD, 22)));
+        pLeft.setBorder(BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(new Color(165, 42, 42), 2),
+                "Thông tin hóa đơn", 0, 0, new Font("Times New Roman", Font.BOLD, 22)));
 
         Font foBoLoc = new Font("Times New Roman", Font.BOLD, 18);
         Font foTxt = new Font("Times New Roman", Font.PLAIN, 18);
@@ -157,7 +169,9 @@ public class FrmThanhToan extends JFrame implements ActionListener {
         // === Cột phải: Tổng hóa đơn ===
         JPanel pRight = new JPanel();
         pRight.setLayout(new BoxLayout(pRight, BoxLayout.Y_AXIS));
-        pRight.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(new Color(165, 42, 42), 2),"Tổng hóa đơn", 0, 0, new Font("Times New Roman", Font.BOLD, 22)));
+        pRight.setBorder(BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(new Color(165, 42, 42), 2),
+                "Tổng hóa đơn", 0, 0, new Font("Times New Roman", Font.BOLD, 22)));
 
         // Tổng cộng
         JPanel p6 = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 2));
@@ -324,11 +338,11 @@ public class FrmThanhToan extends JFrame implements ActionListener {
         Font buttonFont = new Font("Times New Roman", Font.BOLD, 16);
         Dimension btnSize = new Dimension(150, 50);
         Dimension buttonSize = new Dimension(100, 35);
-        
+
         btnQuayLai = taoNut("Quay lại", new Color(255, 193, 7), buttonSize, buttonFont);
         btnHuy = taoNut("Hủy", new Color(231, 76, 60), buttonSize, buttonFont);
         btnXacNhan = taoNut("Xác nhận", new Color(46, 204, 113), buttonSize, buttonFont);
-        
+
         for (JButton btn : new JButton[]{btnQuayLai, btnHuy, btnXacNhan}) {
             btn.setMaximumSize(btnSize);
             btn.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -341,6 +355,7 @@ public class FrmThanhToan extends JFrame implements ActionListener {
         pSouth.add(btnXacNhan);
         add(pSouth, BorderLayout.SOUTH);
 
+        // background
         pMain.setBackground(Color.WHITE);
         p1.setBackground(Color.WHITE);
         p2.setBackground(Color.WHITE);
@@ -359,148 +374,12 @@ public class FrmThanhToan extends JFrame implements ActionListener {
         pBottom.setBackground(Color.WHITE);
         pLeft.setBackground(Color.WHITE);
         pRight.setBackground(Color.WHITE);
-        pMain.setBackground(Color.WHITE);
         pSouth.setBackground(Color.WHITE);
-        // Load danh sách khuyến mãi
+
+        // load all promotions (dùng cho trường hợp mở form rỗng)
         loadKhuyenMai();
     }
 
-    public FrmThanhToan(String maBan, PhieuDatBan phieuDatBan, double tongTien) {
-		// TODO Auto-generated constructor stub
-	}
-
-	private void loadKhuyenMai() {
-        try {
-            List<KhuyenMai> dsKM = kmDAO.layDanhSachKhuyenMai();
-            Collections.sort(dsKM, Comparator.comparing(KhuyenMai::getTenKM));
-            cmbKhuyenMai.addItem(null); // Thêm tùy chọn không chọn khuyến mãi
-            for (KhuyenMai km : dsKM) {
-                cmbKhuyenMai.addItem(km);
-            }
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Lỗi tải danh sách khuyến mãi: " + e.getMessage());
-        }
-    }
-
-    private double tinhGiamGia(KhuyenMai km) {
-        if (km == null) return 0;
-        String maLoai = km.getMaLoai();
-        try {
-            LoaiKhuyenMai_DAO loaiDAO = new LoaiKhuyenMai_DAO(con);
-            String tenLoai = loaiDAO.getMaLoaiByTenLoai(maLoai);
-            if (tenLoai.equals("Phần trăm")) {
-                return tongCong * (km.getGiaTri() / 100);
-            } else if (tenLoai.equals("Giảm trực tiếp")) {
-                return km.getGiaTri();
-            } else if (tenLoai.equals("Tặng món") && km.getMonTang() != null) {
-                String sql = "SELECT donGia FROM MonAn WHERE maMon = ?";
-                try (Connection con = ConnectSQL.getConnection();
-                     PreparedStatement ps = con.prepareStatement(sql)) {
-                    ps.setString(1, km.getMonTang());
-                    try (ResultSet rs = ps.executeQuery()) {
-                        if (rs.next()) {
-                            return rs.getDouble("donGia");
-                        }
-                    }
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Lỗi khi tính giảm giá: " + e.getMessage());
-        }
-        return 0;
-    }
-
-    private void tinhTienThua() {
-        try {
-            double tienKhachDua = txtTienNhan.getText().isEmpty() ? 0 : Double.parseDouble(txtTienNhan.getText().trim());
-            double vat = tongCong * 0.08;
-            double tienSauGiam = tongCong + vat - giamGia + phuThu;
-            double tienThua = tienKhachDua - tienSauGiam;
-            valTongHD.setText(df.format(tienSauGiam));
-            valTienThanhToan.setText(df.format(tienSauGiam));
-            valThua.setText(df.format(tienThua < 0 ? 0 : tienThua));
-            txtTienNhan.setText(String.format("%.0f", tienSauGiam));
-        } catch (NumberFormatException e) {
-            valTongHD.setText(df.format(tongCong + (tongCong * 0.08) - giamGia + phuThu));
-            valTienThanhToan.setText(df.format(tongCong + (tongCong * 0.08) - giamGia + phuThu));
-            valThua.setText(df.format(0));
-        }
-    }
-
-    private void loadDuLieuHoaDon(String maHD) {
-        Object[] thongTin = hoaDonDAO.layThongTinHoaDon(maHD);
-        if (thongTin == null) {
-            JOptionPane.showMessageDialog(this, "Không tìm thấy hóa đơn " + maHD);
-            return;
-        }
-
-        valKH.setText((String) thongTin[0]);
-        valSDT.setText((String) thongTin[1]);
-        valBan.setText((String) thongTin[2]);
-        valNV.setText((String) thongTin[3]);
-        valNgayLap.setText(thongTin[4].toString());
-        valCoc.setText(df.format(0));
-
-        tongCong = (double) thongTin[6];
-        valTongCong.setText(df.format(tongCong));
-
-        double vat = tongCong * 0.08;
-        giamGia = 0;
-        phuThu = 0;
-        double tongHD = tongCong + vat - giamGia + phuThu;
-        valTongHD.setText(df.format(tongHD));
-        valTienThanhToan.setText(df.format(tongHD));
-        txtTienNhan.setText(String.format("%.0f", tongHD));
-        valThua.setText(df.format(0));
-    }
-
-    private void loadChiTietHoaDon(String maHD) {
-        List<Object[]> dsCT = hoaDonDAO.layChiTietHoaDon(maHD);
-        model.setRowCount(0);
-        int stt = 1;
-        for (Object[] row : dsCT) {
-            model.addRow(new Object[]{
-                    stt++,
-                    row[1],
-                    row[2],
-                    df.format(row[3]),
-                    df.format(row[4])
-            });
-        }
-    }
-
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        Object source = e.getSource();
-        if (source == btnQuayLai || source == btnHuy) {
-            dispose();
-        } else if (source == btnXacNhan) {
-            try {
-                double tienKhachDua = Double.parseDouble(txtTienNhan.getText().trim());
-                double vat = tongCong * 0.08;
-                double tienSauGiam = tongCong + vat - giamGia + phuThu;
-                if (tienKhachDua < tienSauGiam) {
-                    JOptionPane.showMessageDialog(this, "Tiền khách đưa không đủ!", "Lỗi", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-                KhuyenMai selectedKM = (KhuyenMai) cmbKhuyenMai.getSelectedItem();
-                String maKM = selectedKM != null ? selectedKM.getMaKM() : null;
-                // Cập nhật hóa đơn với mã khuyến mãi và phụ thu (nếu có)
-                // hoaDonDAO.capNhatThanhToan(maHD, maKM, tienKhachDua, phuThu); // Cần thêm phương thức này trong HoaDon_DAO
-                JOptionPane.showMessageDialog(this, "Thanh toán thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
-                dispose();
-            } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(this, "Vui lòng nhập số tiền hợp lệ!", "Lỗi", JOptionPane.ERROR_MESSAGE);
-            }
-        } else if (source == cmbKhuyenMai) {
-            KhuyenMai selectedKM = (KhuyenMai) cmbKhuyenMai.getSelectedItem();
-            giamGia = tinhGiamGia(selectedKM);
-            tinhTienThua();
-        }
-    }
-    
     private JButton taoNut(String text, Color baseColor, Dimension size, Font font) {
         JButton btn = new JButton(text);
         btn.setFont(font);
@@ -527,14 +406,230 @@ public class FrmThanhToan extends JFrame implements ActionListener {
         return btn;
     }
 
-    public static void main(String[] args) {
-    	UIManager.put("TableHeader.font", new Font("Times New Roman", Font.BOLD, 14));
+    private KhuyenMai createNoPromo() {
+        KhuyenMai k = new KhuyenMai();
+        k.setMaKM(null);
+        k.setTenKM("Không có khuyến mãi phù hợp");
+        return k;
+    }
+
+    private void loadKhuyenMai() {
         try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
+            List<KhuyenMai> dsKM = kmDAO.layDanhSachKhuyenMai();
+            Collections.sort(dsKM, Comparator.comparing(KhuyenMai::getTenKM));
+            cmbKhuyenMai.removeAllItems();
+            cmbKhuyenMai.addItem(NO_PROMO); // mặc định: không chọn KM
+            for (KhuyenMai km : dsKM) {
+                cmbKhuyenMai.addItem(km);
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Lỗi tải danh sách khuyến mãi: " + e.getMessage());
+        }
+    }
+
+
+    private void loadKhuyenMaiTotNhat() {
+        try {
+            // Lấy danh sách khuyến mãi hợp lệ (DAO phải nhận maHD)
+            List<KhuyenMai> dsKM = kmDAO.getDanhSachKhuyenMaiHopLe(maHD, tongCong);
+
+            cmbKhuyenMai.removeAllItems();
+
+            if (dsKM == null || dsKM.isEmpty()) {
+                cmbKhuyenMai.addItem(NO_PROMO);
+                giamGia = 0;
+            } else {
+                // Thêm tất cả khuyến mãi hợp lệ vào combobox (đã sắp xếp trong DAO)
+                for (KhuyenMai km : dsKM) {
+                    cmbKhuyenMai.addItem(km);
+                }
+
+                // Lấy khuyến mãi tốt nhất (DAO sẽ trả phần tử đầu theo thứ tự ưu tiên)
+                KhuyenMai kmTotNhat = kmDAO.getKhuyenMaiTotNhat(tongCong, maHD);
+
+                // Nếu DAO trả về null (an toàn), chọn phần tử đầu trong danh sách
+                if (kmTotNhat == null) {
+                    cmbKhuyenMai.setSelectedIndex(0);
+                    giamGia = tinhGiamGia((KhuyenMai) cmbKhuyenMai.getSelectedItem());
+                } else {
+                    cmbKhuyenMai.setSelectedItem(kmTotNhat);
+                    giamGia = tinhGiamGia(kmTotNhat);
+                }
+            }
+
+            tinhTienThua();
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Lỗi khi tải khuyến mãi: " + e.getMessage());
             e.printStackTrace();
         }
-        Connection conn = ConnectSQL.getConnection();
-        new FrmThanhToan("HD0001").setVisible(true);
     }
+
+
+
+   
+    private double tinhGiamGia(KhuyenMai km) {
+        if (km == null || km.getMaKM() == null) return 0;
+        // Lấy tên loại theo mã loại; DAO phải có phương thức tương ứng
+        String tenLoai;
+        try {
+            tenLoai = loaiDAO.getTenLoaiByMaLoai(km.getMaLoai()); // hãy đảm bảo DAO có hàm này
+        } catch (Exception ex) {
+            // fallback: nếu không lấy được tên, dùng mã loại
+            tenLoai = km.getMaLoai();
+        }
+
+        try {
+            if ("Phần trăm".equalsIgnoreCase(tenLoai) || "L01".equalsIgnoreCase(km.getMaLoai())) {
+                return tongCong * (km.getGiaTri() / 100.0);
+            } else if ("Giảm trực tiếp".equalsIgnoreCase(tenLoai) || "L02".equalsIgnoreCase(km.getMaLoai())) {
+                return km.getGiaTri();
+            } else if ("Tặng món".equalsIgnoreCase(tenLoai) || "L03".equalsIgnoreCase(km.getMaLoai())) {
+                if (km.getMonTang() != null) {
+                    String sql = "SELECT donGia FROM MonAn WHERE maMon = ?";
+                    try (Connection con = ConnectSQL.getInstance().getConnection();
+                         PreparedStatement ps = con.prepareStatement(sql)) {
+                        ps.setString(1, km.getMonTang());
+                        try (ResultSet rs = ps.executeQuery()) {
+                            if (rs.next()) {
+                                return rs.getDouble("donGia");
+                            }
+                        }
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Lỗi khi tính giảm giá: " + e.getMessage());
+        }
+        return 0;
+    }
+
+    private void tinhTienThua() {
+        try {
+            double tienKhachDua = txtTienNhan.getText().isEmpty() ? 0 : Double.parseDouble(txtTienNhan.getText().trim());
+            double vat = tongCong * 0.08;
+            double tienSauGiam = tongCong + vat - giamGia + phuThu;
+            double tienThua = tienKhachDua - tienSauGiam;
+            valTongHD.setText(df.format(tienSauGiam));
+            valTienThanhToan.setText(df.format(tienSauGiam));
+            valThua.setText(df.format(tienThua < 0 ? 0 : tienThua));
+            // IMPORTANT: không ghi đè txtTienNhan ở đây — người dùng nhập tiền
+        } catch (NumberFormatException e) {
+            double vat = tongCong * 0.08;
+            double tienSauGiam = tongCong + vat - giamGia + phuThu;
+            valTongHD.setText(df.format(tienSauGiam));
+            valTienThanhToan.setText(df.format(tienSauGiam));
+            valThua.setText(df.format(0));
+        }
+    }
+    
+    private void loadDuLieuHoaDon(String maHD) {
+        Object[] thongTin = hoaDonDAO.layThongTinHoaDon(maHD);
+        if (thongTin == null) {
+            JOptionPane.showMessageDialog(this, "Không tìm thấy hóa đơn " + maHD);
+            return;
+        }
+
+        Object[] khach = hoaDonDAO.layThongTinKhachTuPhieuDatBan(maHD);
+        if (khach != null) {
+            valKH.setText((String) khach[0]);
+            valSDT.setText((String) khach[1]);
+        } else {
+            valKH.setText("Không xác định");
+            valSDT.setText("Không xác định");
+        }
+        valBan.setText((String) thongTin[2]);
+        valNV.setText((String) thongTin[3]);
+        valNgayLap.setText(thongTin[4].toString());
+        valCoc.setText(df.format(0));
+
+        Object tongObj = thongTin[6];
+        if (tongObj instanceof Number) {
+            tongCong = ((Number) tongObj).doubleValue();
+        } else {
+            try {
+                tongCong = Double.parseDouble(String.valueOf(tongObj));
+            } catch (Exception ex) {
+                tongCong = 0;
+            }
+        }
+        valTongCong.setText(df.format(tongCong));
+
+        double vat = tongCong * 0.08;
+        giamGia = 0;
+        phuThu = 0;
+        double tongHD = tongCong + vat - giamGia + phuThu;
+        valTongHD.setText(df.format(tongHD));
+        valTienThanhToan.setText(df.format(tongHD));
+
+        txtTienNhan.setText("");          // để người dùng nhập
+        valThua.setText(df.format(0));    // tiền thừa mặc định 0
+    }
+
+
+    private void loadChiTietHoaDon(String maHD) {
+        List<Object[]> dsCT = hoaDonDAO.layChiTietHoaDon(maHD);
+        model.setRowCount(0);
+        int stt = 1;
+        for (Object[] row : dsCT) {
+            model.addRow(new Object[]{
+                    stt++,
+                    row[1],
+                    row[2],
+                    df.format(row[3]),
+                    df.format(row[4])
+            });
+        }
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        Object source = e.getSource();
+        if (source == btnQuayLai || source == btnHuy) {
+            dispose();
+        } else if (source == btnXacNhan) {
+            try {
+                double tienKhachDua = txtTienNhan.getText().isEmpty() ? 0 : Double.parseDouble(txtTienNhan.getText().trim());
+                double vat = tongCong * 0.08;
+                double tienSauGiam = tongCong + vat - giamGia + phuThu;
+
+                if (tienKhachDua < tienSauGiam) {
+                    JOptionPane.showMessageDialog(this, "Tiền khách đưa không đủ!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                KhuyenMai selectedKM = (KhuyenMai) cmbKhuyenMai.getSelectedItem();
+                String maKM = (selectedKM == null || selectedKM.getMaKM() == null) ? null : selectedKM.getMaKM();
+
+                HoaDon_DAO hoaDonDAO = new HoaDon_DAO();
+                Ban_DAO banDAO = new Ban_DAO(null);
+
+                //Cập nhật hóa đơn
+                boolean capNhatHD = hoaDonDAO.thanhToanHoaDon(maHD, tienKhachDua, tienSauGiam, maKM);
+
+                // Lấy mã bàn từ hóa đơn hoặc phiếu đặt bàn để cập nhật trạng thái
+                String maBan = hoaDonDAO.layMaBanTheoHoaDon(maHD);
+                boolean capNhatBan = banDAO.capNhatTrangThai(maBan, "Trống");
+
+                if (capNhatHD && capNhatBan) {
+                    JOptionPane.showMessageDialog(this, "Thanh toán thành công! Dữ liệu đã được cập nhật.", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                    dispose();
+                } else {
+                    JOptionPane.showMessageDialog(this, "Thanh toán thành công nhưng chưa cập nhật đủ dữ liệu!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+                }
+
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Vui lòng nhập số tiền hợp lệ!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    
+        else if (source == cmbKhuyenMai) {
+            KhuyenMai selectedKM = (KhuyenMai) cmbKhuyenMai.getSelectedItem();
+            giamGia = tinhGiamGia(selectedKM);
+            tinhTienThua();
+        }
+    }
+
 }

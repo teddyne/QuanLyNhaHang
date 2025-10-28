@@ -258,4 +258,92 @@ public class KhuyenMai_DAO {
         }
         return "";
     }
+    
+    public List<KhuyenMai> getDanhSachKhuyenMaiHopLe(String maHD, double tongHoaDon) {
+        List<KhuyenMai> dsKM = new ArrayList<>();
+
+        try (Connection conn = ConnectSQL.getInstance().getConnection()) { // tạo connection mới mỗi lần gọi
+            if (conn == null) {
+                System.err.println("❌ Không thể kết nối CSDL");
+                return dsKM;
+            }
+
+            String sql = """
+                SELECT * FROM KhuyenMai
+                WHERE trangThai = N'Đang áp dụng'
+                AND GETDATE() BETWEEN ngayBatDau AND ngayKetThuc
+            """;
+
+            try (PreparedStatement stmt = conn.prepareStatement(sql);
+                 ResultSet rs = stmt.executeQuery()) {
+
+                ChiTietHoaDon_DAO chiTietDAO = new ChiTietHoaDon_DAO();
+
+                while (rs.next()) {
+                    double donHangTu = rs.getDouble("donHangTu");
+                    if (tongHoaDon < donHangTu) continue;
+
+                    KhuyenMai km = new KhuyenMai(
+                        rs.getString("maKM"),
+                        rs.getString("tenKM"),
+                        rs.getString("maLoai"),
+                        rs.getDouble("giaTri"),
+                        rs.getDate("ngayBatDau"),
+                        rs.getDate("ngayKetThuc"),
+                        rs.getString("trangThai"),
+                        rs.getString("doiTuongApDung"),
+                        donHangTu,
+                        rs.getString("mon1"),
+                        rs.getString("mon2"),
+                        rs.getString("monTang"),
+                        rs.getString("ghiChu")
+                    );
+
+                    // Kiểm tra khuyến mãi tặng món
+                    if ("L03".equals(km.getMaLoai())) {
+                        List<String> monTrongHD = chiTietDAO.getDanhSachMonTheoHoaDon(maHD);
+
+                        boolean coMonHopLe =
+                            (km.getMon1() != null && monTrongHD.contains(km.getMon1())) ||
+                            (km.getMon2() != null && monTrongHD.contains(km.getMon2()));
+
+                        if (!coMonHopLe) continue;
+                    }
+
+                    dsKM.add(km);
+                }
+
+                // Sắp xếp theo ưu tiên và giá trị
+                dsKM.sort((a, b) -> {
+                    int uuTienA = getUuTien(a.getMaLoai());
+                    int uuTienB = getUuTien(b.getMaLoai());
+                    if (uuTienA != uuTienB)
+                        return Integer.compare(uuTienA, uuTienB);
+                    return Double.compare(b.getGiaTri(), a.getGiaTri());
+                });
+
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return dsKM;
+    }
+
+    private int getUuTien(String maLoai) {
+        return switch (maLoai) {
+            case "L03" -> 1; // Tặng món (cao nhất)
+            case "L01" -> 2; // Giảm %
+            case "L02" -> 3; // Giảm tiền mặt
+            default -> 4;
+        };
+    }
+
+    public KhuyenMai getKhuyenMaiTotNhat(double tongHoaDon, String maHD) {
+        List<KhuyenMai> dsHopLe = getDanhSachKhuyenMaiHopLe(maHD, tongHoaDon);
+        if (dsHopLe.isEmpty()) return null;
+
+        // ✅ Lấy khuyến mãi đầu tiên (đã sắp xếp theo ưu tiên và giá trị)
+        return dsHopLe.get(0);
+    }
 }

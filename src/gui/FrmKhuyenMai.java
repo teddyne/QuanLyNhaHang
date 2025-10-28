@@ -316,7 +316,7 @@ public class FrmKhuyenMai extends JFrame implements ActionListener, MouseListene
             cmbLoaiKM.removeAllItems();
             cmbLoaiKM.addItem("Tất cả");
 
-            dao.LoaiKhuyenMai_DAO loaiDAO = new dao.LoaiKhuyenMai_DAO(con);
+            dao.LoaiKhuyenMai_DAO loaiDAO = new dao.LoaiKhuyenMai_DAO();
             List<entity.LoaiKhuyenMai> list = loaiDAO.getAllLoaiKhuyenMai();
 
             for (entity.LoaiKhuyenMai loai : list) {
