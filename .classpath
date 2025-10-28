@@ -24,5 +24,6 @@
 	<classpathentry kind="lib" path="D:/QuanLyNhaHang/lib/xmlbeans-5.1.1.jar"/>
 	<classpathentry kind="lib" path="D:/QuanLyNhaHang/lib/jcalendar-1.4.jar"/>
 	<classpathentry kind="lib" path="D:/QuanLyNhaHang/lib/itextpdf-5.5.13.4.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Admin/Downloads/commons-io-2.11.0.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

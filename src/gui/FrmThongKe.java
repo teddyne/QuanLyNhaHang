@@ -2,7 +2,7 @@ package gui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component; 
+import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -82,9 +82,12 @@ public class FrmThongKe extends JPanel implements ActionListener {
 	private final Color COLOR_SECONDARY = new Color(240, 240, 240);
 	private final Color COLOR_TEXT = new Color(51, 51, 51);
 	private final Color COLOR_PANEL_BG = Color.WHITE;
-	private final Font FONT_TITLE = new Font("Segoe UI", Font.BOLD, 18);
-	private final Font FONT_GENERAL = new Font("Segoe UI", Font.PLAIN, 14);
-	private final Font FONT_BUTTON = new Font("Segoe UI", Font.BOLD, 14);
+	
+	// ===== BẮT ĐẦU SỬA CODE (1/7) - Thay đổi hằng số Font =====
+	private final Font FONT_TITLE = new Font("Times New Roman", Font.BOLD, 18);
+	private final Font FONT_GENERAL = new Font("Times New Roman", Font.PLAIN, 14);
+	private final Font FONT_BUTTON = new Font("Times New Roman", Font.BOLD, 14);
+	// ===== KẾT THÚC SỬA CODE =====
 
 	private HoaDon_DAO hoaDonDAO;
 
@@ -95,7 +98,7 @@ public class FrmThongKe extends JPanel implements ActionListener {
 	private JPanel pnlBieuDoTongQuan;
 	private List<Object[]> duLieuThongKeTongQuan;
 
-	// ===== BIẾN LƯU TRỮ GIÁ TRỊ TÓM TẮT (SỬA LỖI LOGIC) =====
+	// ===== BIẾN LƯU TRỮ GIÁ TRỊ TÓM TẮT =====
 	private double tongDoanhThuTongQuan;
 	private int tongSoHoaDonTongQuan;
 	private double doanhThuTrungBinhTongQuan;
@@ -112,7 +115,6 @@ public class FrmThongKe extends JPanel implements ActionListener {
 	private JButton btnXemThang, btnXuatExcel3;
 	private JPanel pnlBieuDoThang;
 	private List<Object[]> duLieuThongKeThang; // Dữ liệu thô để xuất excel
-	// ===== BỔ SUNG MỚI =====
 	private JLabel lblTongDoanhThu_Thang, lblTongSoHoaDon_Thang, lblDoanhThuTrungBinh_Thang;
 
 	// ===== BỔ SUNG BIẾN CHO TAB 4 (NĂM) =====
@@ -120,33 +122,44 @@ public class FrmThongKe extends JPanel implements ActionListener {
 	private JButton btnXemNam, btnXuatExcel4;
 	private JPanel pnlBieuDoNam;
 	private List<Object[]> duLieuThongKeNam; // Dữ liệu thô để xuất excel
-	// ===== BỔ SUNG MỚI =====
 	private JLabel lblTongDoanhThu_Nam, lblTongSoHoaDon_Nam, lblDoanhThuTrungBinh_Nam;
 
 	public FrmThongKe() {
 		hoaDonDAO = new HoaDon_DAO();
+		
+		// ===== BẮT ĐẦU SỬA CODE (2/7) - Set Font Toàn cục =====
+		// Đặt font "Times New Roman" làm font mặc định cho toàn bộ ứng dụng
+		// (Sử dụng hằng số FONT_GENERAL vừa được đổi tên)
+		java.util.Enumeration<Object> keys = UIManager.getDefaults().keys();
+		while (keys.hasMoreElements()) {
+			Object key = keys.nextElement();
+			Object value = UIManager.get(key);
+			if (value instanceof javax.swing.plaf.FontUIResource) {
+				UIManager.put(key, new javax.swing.plaf.FontUIResource(FONT_GENERAL));
+			}
+		}
+		// ===== KẾT THÚC SỬA CODE =====
+		
 		setLayout(new BorderLayout());
 		setBackground(Color.WHITE); // Nền form chính
 
-	// ===== BẮT ĐẦU SỬA CODE (TÙY CHỈNH JTABBEDPANE) =====
-
 		// Yêu cầu: Nền XÁM, chữ ĐEN cho tab KHÔNG ĐƯỢC CHỌN
 		UIManager.put("TabbedPane.background", COLOR_SECONDARY); // Màu xám
-		UIManager.put("TabbedPane.foreground", Color.BLACK);     // Chữ đen
+		UIManager.put("TabbedPane.foreground", Color.BLACK); // Chữ đen
 
 		// Yêu cầu: Nền ĐỎ, chữ TRẮNG cho tab ĐANG ĐƯỢC CHỌN
 		UIManager.put("TabbedPane.selected", COLOR_PRIMARY); // Màu đỏ
 		UIManager.put("TabbedPane.selectedForeground", Color.WHITE); // Chữ trắng
 
-		// Tùy chỉnh bổ sung
 		UIManager.put("TabbedPane.focus", COLOR_PRIMARY); // Viền focus
-		UIManager.put("TabbedPane.contentBorderInsets", new Insets(0, 0, 0, 0)); 
-		UIManager.put("TabbedPane.tabsOverlapBorder", true); 
-		
-		// ===== KẾT THÚC SỬA CODE =====
+		UIManager.put("TabbedPane.contentBorderInsets", new Insets(0, 0, 0, 0));
+		UIManager.put("TabbedPane.tabsOverlapBorder", true);
 
 		JTabbedPane tabbedPane = new JTabbedPane();
-		tabbedPane.setFont(new Font("Segoe UI", Font.BOLD, 16));
+		
+		// ===== BẮT ĐẦU SỬA CODE (3/7) - Font cho JTabbedPane =====
+		tabbedPane.setFont(new Font("Times New Roman", Font.BOLD, 16));
+		// ===== KẾT THÚC SỬA CODE =====
 		add(tabbedPane, BorderLayout.CENTER);
 
 		// Thêm Tab 1
@@ -155,46 +168,41 @@ public class FrmThongKe extends JPanel implements ActionListener {
 
 		// Thêm Tab 2
 		JPanel pnlThongKeMonAn = createTabThongKeMonAn();
-		// pnlThongKeMonAn.setBackground(COLOR_PANEL_BG); // Đã sửa trong hàm create...
 		tabbedPane.addTab("Thống kê theo Món ăn", pnlThongKeMonAn);
 
 		// Thêm Tab 3
 		JPanel pnlThongKeThang = createTabThongKeTheoThang();
-		// (Không cần setBackground vì hàm createTab... đã làm)
 		tabbedPane.addTab("Thống kê theo Tháng", pnlThongKeThang);
 
 		// Thêm Tab 4
 		JPanel pnlThongKeNam = createTabThongKeTheoNam();
-		// (Không cần setBackground vì hàm createTab... đã làm)
 		tabbedPane.addTab("Thống kê theo Năm", pnlThongKeNam);
 	}
 
 // =================================================================================
-	// ===== PHƯƠNG THỨC TẠO TAB TỔNG QUAN (TAB 1) - ĐÃ ĐIỀU CHỈNH GIAO DIỆN =====
+	// ===== PHƯƠNG THỨC TẠO TAB TỔNG QUAN (TAB 1) =====
 	// =================================================================================
 	private JPanel createTabThongKeTongQuan() {
 		JPanel pnlTab = new JPanel(new BorderLayout(20, 20));
 		
-		// ===== BẮT ĐẦU SỬA CODE (Đổi nền Tab về TRẮNG) =====
-		pnlTab.setBackground(COLOR_PANEL_BG); // Nền trắng
-		// ===== KẾT THÚC SỬA CODE =====
+		pnlTab.setBackground(COLOR_PANEL_BG);
 		
 		pnlTab.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
 		// 1. Tạo Panel Top (chứa cả 2 phần control và tóm tắt)
 		JPanel pnlTop = new JPanel(new GridBagLayout());
-		pnlTop.setOpaque(false); // Trong suốt để lấy nền trắng của pnlTab
+		pnlTop.setOpaque(false);
 		GridBagConstraints gbc = new GridBagConstraints();
 		gbc.weighty = 1.0;
 		gbc.fill = GridBagConstraints.BOTH;
 
 		// 2. Tạo Panel Trái (Thời gian)
 		JPanel pnlThoiGianWrapper = new JPanel(new BorderLayout());
-		pnlThoiGianWrapper.setBackground(COLOR_SECONDARY); // Nền xám (Giữ nguyên)
+		pnlThoiGianWrapper.setBackground(COLOR_SECONDARY);
 		
-		// 2b. Tạo Panel Header (Thanh tiêu đề đỏ)
+		// 2b. Tạo Panel Header
 		JPanel pnlHeaderThoiGian = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
-		pnlHeaderThoiGian.setBackground(COLOR_PRIMARY); 
+		pnlHeaderThoiGian.setBackground(COLOR_PRIMARY);
 
 		JLabel lblTitleThoiGian = new JLabel("Thời gian");
 		lblTitleThoiGian.setFont(FONT_TITLE);
@@ -205,12 +213,12 @@ public class FrmThongKe extends JPanel implements ActionListener {
 
 		// 2c. Tạo Panel Content (chứa 2 cột chọn ngày và nút)
 		JPanel pnlThoiGianContent = new JPanel(new GridLayout(1, 2, 30, 10));
-		pnlThoiGianContent.setBackground(COLOR_SECONDARY); // Nền xám (Giữ nguyên)
+		pnlThoiGianContent.setBackground(COLOR_SECONDARY);
 		pnlThoiGianContent.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
 
 		// --- Cột 1: Chứa các JDateChooser ---
 		JPanel pnlChonNgay = new JPanel(new GridLayout(2, 1, 10, 15));
-		pnlChonNgay.setOpaque(false); // Lấy nền xám
+		pnlChonNgay.setOpaque(false);
 
 		dateChooserBatDau1 = new JDateChooser();
 		dateChooserBatDau1.setPreferredSize(new Dimension(150, 30));
@@ -244,17 +252,16 @@ public class FrmThongKe extends JPanel implements ActionListener {
 		
 		pnlThoiGianWrapper.add(pnlThoiGianContent, BorderLayout.CENTER);
 
-		// Thêm pnlThoiGianWrapper (panel mới) vào pnlTop (vị trí bên trái)
 		gbc.gridx = 0;
 		gbc.gridy = 0;
 		gbc.weightx = 2.0;
 		gbc.insets = new Insets(0, 0, 0, 10);
-		pnlTop.add(pnlThoiGianWrapper, gbc); 
+		pnlTop.add(pnlThoiGianWrapper, gbc);
 
 		// 3. Tạo Panel Phải (Kết quả tóm tắt)
 		JPanel pnlTomTat = new JPanel(new GridLayout(1, 3, 20, 20));
-		pnlTomTat.setBackground(COLOR_SECONDARY); // Nền xám (Giữ nguyên)
-		pnlTomTat.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10)); // Bỏ viền (Giữ nguyên)
+		pnlTomTat.setBackground(COLOR_SECONDARY);
+		pnlTomTat.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
 
 		lblTongDoanhThu = createResultLabel("0 VNĐ", "Tổng Doanh thu");
 		lblTongSoHoaDon = createResultLabel("0", "Tổng số Hóa đơn");
@@ -264,7 +271,6 @@ public class FrmThongKe extends JPanel implements ActionListener {
 		pnlTomTat.add(lblTongSoHoaDon);
 		pnlTomTat.add(lblDoanhThuTrungBinh);
 		
-		// Thêm pnlTomTat (Phải) với weightx = 3.0
 		gbc.gridx = 1;
 		gbc.gridy = 0;
 		gbc.weightx = 3.0;
@@ -290,10 +296,7 @@ public class FrmThongKe extends JPanel implements ActionListener {
 	private JPanel createTabThongKeMonAn() {
 		JPanel pnlTab = new JPanel(new BorderLayout(10, 10));
 		
-		// ===== BẮT ĐẦU SỬA CODE (Sửa lỗi nền xám) =====
-		// pnlTab.setBackground(COLOR_SECONDARY); // Lỗi: Nền xám
 		pnlTab.setBackground(COLOR_PANEL_BG); // Sửa: Nền trắng
-		// ===== KẾT THÚC SỬA CODE =====
 		
 		pnlTab.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
@@ -333,7 +336,7 @@ public class FrmThongKe extends JPanel implements ActionListener {
 	}
 
 	// =================================================================================
-	// ===== BỔ SUNG: PHƯƠNG THỨC TẠO TAB THEO THÁNG (TAB 3) - GIAO DIỆN MỚI =====
+	// =====PHƯƠNG THỨC TẠO TAB THEO THÁNG (TAB 3)=====
 	// =================================================================================
 	private JPanel createTabThongKeTheoThang() {
 		JPanel pnlTab = new JPanel(new BorderLayout(20, 20));
@@ -342,17 +345,17 @@ public class FrmThongKe extends JPanel implements ActionListener {
 
 		// 1. Tạo Panel Top (chứa cả 2 phần control và tóm tắt)
 		JPanel pnlTop = new JPanel(new GridBagLayout());
-		pnlTop.setOpaque(false); // Trong suốt để lấy nền trắng của pnlTab
+		pnlTop.setOpaque(false);
 		GridBagConstraints gbc = new GridBagConstraints();
 		gbc.weighty = 1.0;
 		gbc.fill = GridBagConstraints.BOTH;
 
 		// 2. Tạo Panel Trái (Thời gian)
 		JPanel pnlThoiGianWrapper = new JPanel(new BorderLayout());
-		pnlThoiGianWrapper.setBackground(COLOR_SECONDARY); // Nền xám
+		pnlThoiGianWrapper.setBackground(COLOR_SECONDARY);
 		
 		JPanel pnlHeaderThoiGian = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
-		pnlHeaderThoiGian.setBackground(COLOR_PRIMARY); 
+		pnlHeaderThoiGian.setBackground(COLOR_PRIMARY);
 		JLabel lblTitleThoiGian = new JLabel("Thời gian");
 		lblTitleThoiGian.setFont(FONT_TITLE);
 		lblTitleThoiGian.setForeground(Color.WHITE);
@@ -360,12 +363,12 @@ public class FrmThongKe extends JPanel implements ActionListener {
 		pnlThoiGianWrapper.add(pnlHeaderThoiGian, BorderLayout.NORTH);
 
 		JPanel pnlThoiGianContent = new JPanel(new GridLayout(1, 2, 30, 10));
-		pnlThoiGianContent.setBackground(COLOR_SECONDARY); 
+		pnlThoiGianContent.setBackground(COLOR_SECONDARY);
 		pnlThoiGianContent.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
 
 		// --- Cột 1: Chứa các JDateChooser (DÙNG BIẾN ...3) ---
 		JPanel pnlChonNgay = new JPanel(new GridLayout(2, 1, 10, 15));
-		pnlChonNgay.setOpaque(false); 
+		pnlChonNgay.setOpaque(false);
 
 		dateChooserBatDau3 = new JDateChooser();
 		dateChooserBatDau3.setPreferredSize(new Dimension(150, 30));
@@ -384,7 +387,7 @@ public class FrmThongKe extends JPanel implements ActionListener {
 
 		// --- Cột 2: Chứa các JButton (DÙNG BIẾN ...Thang và ...3) ---
 		JPanel pnlNutBam = new JPanel(new GridLayout(2, 1, 10, 10));
-		pnlNutBam.setOpaque(false); 
+		pnlNutBam.setOpaque(false);
 
 		btnXemThang = createStyledButton("Xem thống kê", "img/preview.png");
 		btnXemThang.addActionListener(this);
@@ -401,12 +404,12 @@ public class FrmThongKe extends JPanel implements ActionListener {
 		gbc.gridy = 0;
 		gbc.weightx = 2.0;
 		gbc.insets = new Insets(0, 0, 0, 10);
-		pnlTop.add(pnlThoiGianWrapper, gbc); 
+		pnlTop.add(pnlThoiGianWrapper, gbc);
 
 		// 3. Tạo Panel Phải (Kết quả tóm tắt) (DÙNG BIẾN ..._Thang)
 		JPanel pnlTomTat = new JPanel(new GridLayout(1, 3, 20, 20));
-		pnlTomTat.setBackground(COLOR_SECONDARY); 
-		pnlTomTat.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10)); 
+		pnlTomTat.setBackground(COLOR_SECONDARY);
+		pnlTomTat.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
 
 		lblTongDoanhThu_Thang = createResultLabel("0 VNĐ", "Tổng Doanh thu");
 		lblTongSoHoaDon_Thang = createResultLabel("0", "Tổng số Hóa đơn");
@@ -436,11 +439,11 @@ public class FrmThongKe extends JPanel implements ActionListener {
 	}
 
 	// =================================================================================
-	// ===== BỔ SUNG: PHƯƠNG THỨC TẠO TAB THEO NĂM (TAB 4) - GIAO DIỆN MỚI =====
+	// =====PHƯƠNG THỨC TẠO TAB THEO NĂM (TAB 4)=====
 	// =================================================================================
 	private JPanel createTabThongKeTheoNam() {
 		JPanel pnlTab = new JPanel(new BorderLayout(20, 20));
-		pnlTab.setBackground(COLOR_PANEL_BG); // Nền trắng
+		pnlTab.setBackground(COLOR_PANEL_BG);
 		pnlTab.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
 		// 1. Tạo Panel Top (chứa cả 2 phần control và tóm tắt)
@@ -455,7 +458,7 @@ public class FrmThongKe extends JPanel implements ActionListener {
 		pnlThoiGianWrapper.setBackground(COLOR_SECONDARY); // Nền xám
 		
 		JPanel pnlHeaderThoiGian = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
-		pnlHeaderThoiGian.setBackground(COLOR_PRIMARY); 
+		pnlHeaderThoiGian.setBackground(COLOR_PRIMARY);
 		JLabel lblTitleThoiGian = new JLabel("Thời gian");
 		lblTitleThoiGian.setFont(FONT_TITLE);
 		lblTitleThoiGian.setForeground(Color.WHITE);
@@ -463,12 +466,12 @@ public class FrmThongKe extends JPanel implements ActionListener {
 		pnlThoiGianWrapper.add(pnlHeaderThoiGian, BorderLayout.NORTH);
 
 		JPanel pnlThoiGianContent = new JPanel(new GridLayout(1, 2, 30, 10));
-		pnlThoiGianContent.setBackground(COLOR_SECONDARY); 
+		pnlThoiGianContent.setBackground(COLOR_SECONDARY);
 		pnlThoiGianContent.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
 
 		// --- Cột 1: Chứa các JDateChooser (DÙNG BIẾN ...4) ---
 		JPanel pnlChonNgay = new JPanel(new GridLayout(2, 1, 10, 15));
-		pnlChonNgay.setOpaque(false); 
+		pnlChonNgay.setOpaque(false);
 
 		dateChooserBatDau4 = new JDateChooser();
 		dateChooserBatDau4.setPreferredSize(new Dimension(150, 30));
@@ -487,7 +490,7 @@ public class FrmThongKe extends JPanel implements ActionListener {
 
 		// --- Cột 2: Chứa các JButton (DÙNG BIẾN ...Nam và ...4) ---
 		JPanel pnlNutBam = new JPanel(new GridLayout(2, 1, 10, 10));
-		pnlNutBam.setOpaque(false); 
+		pnlNutBam.setOpaque(false);
 
 		btnXemNam = createStyledButton("Xem thống kê", "img/preview.png");
 		btnXemNam.addActionListener(this);
@@ -504,12 +507,12 @@ public class FrmThongKe extends JPanel implements ActionListener {
 		gbc.gridy = 0;
 		gbc.weightx = 2.0;
 		gbc.insets = new Insets(0, 0, 0, 10);
-		pnlTop.add(pnlThoiGianWrapper, gbc); 
+		pnlTop.add(pnlThoiGianWrapper, gbc);
 
 		// 3. Tạo Panel Phải (Kết quả tóm tắt) (DÙNG BIẾN ..._Nam)
 		JPanel pnlTomTat = new JPanel(new GridLayout(1, 3, 20, 20));
-		pnlTomTat.setBackground(COLOR_SECONDARY); 
-		pnlTomTat.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10)); 
+		pnlTomTat.setBackground(COLOR_SECONDARY);
+		pnlTomTat.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
 
 		lblTongDoanhThu_Nam = createResultLabel("0 VNĐ", "Tổng Doanh thu");
 		lblTongSoHoaDon_Nam = createResultLabel("0", "Tổng số Hóa đơn");
@@ -547,9 +550,8 @@ public class FrmThongKe extends JPanel implements ActionListener {
 		} else if (o.equals(btnXemMonAn)) {
 			handleThongKeMonAn();
 			
-		// ===== BẮT ĐẦU SỬA CODE (Xử lý IOException trong Lambda) =====
 		} else if (o.equals(btnXuatExcel1)) {
-			handleXuatExcel(duLieuThongKeTongQuan, "ThongKe_TongQuan", 
+			handleXuatExcel(duLieuThongKeTongQuan, "ThongKe_TongQuan",
 				file -> {
 					try {
 						xuatBaoCaoExcelTongQuan(duLieuThongKeTongQuan, file);
@@ -560,7 +562,7 @@ public class FrmThongKe extends JPanel implements ActionListener {
 				});
 				
 		} else if (o.equals(btnXuatExcel2)) {
-			handleXuatExcel(duLieuThongKeMonAn, "ThongKe_MonAn", 
+			handleXuatExcel(duLieuThongKeMonAn, "ThongKe_MonAn",
 				file -> {
 					try {
 						xuatBaoCaoExcelMonAn(duLieuThongKeMonAn, file);
@@ -577,7 +579,7 @@ public class FrmThongKe extends JPanel implements ActionListener {
 			handleThongKeTheoNam();
 			
 		} else if (o.equals(btnXuatExcel3)) {
-			handleXuatExcel(duLieuThongKeThang, "ThongKe_TheoThang", 
+			handleXuatExcel(duLieuThongKeThang, "ThongKe_TheoThang",
 				file -> {
 					try {
 						xuatBaoCaoExcelTheoThang(duLieuThongKeThang, file);
@@ -588,18 +590,18 @@ public class FrmThongKe extends JPanel implements ActionListener {
 				});
 				
 		} else if (o.equals(btnXuatExcel4)) {
-			// Dòng 548 của bạn là ở đây
-			handleXuatExcel(duLieuThongKeNam, "ThongKe_TheoNam", 
-				file -> { // Thêm {
+		
+			handleXuatExcel(duLieuThongKeNam, "ThongKe_TheoNam",
+				file -> {
 					try {
 						xuatBaoCaoExcelTheoNam(duLieuThongKeNam, file);
 					} catch (IOException e1) {
 						// Ném ra RuntimeException để hàm helper bắt
-						throw new RuntimeException("Lỗi khi xuất Excel theo năm", e1); 
+						throw new RuntimeException("Lỗi khi xuất Excel theo năm", e1);
 					}
-				}); // Thêm }
+				});
 		}
-		// ===== KẾT THÚC SỬA CODE =====
+		
 	}
 
 	// =================================================================================
@@ -666,7 +668,7 @@ public class FrmThongKe extends JPanel implements ActionListener {
 		veBieuDoMonAnBanChay(duLieuThongKeMonAn);
 	}
 
-	// ===== BỔ SUNG: XỬ LÝ THỐNG KÊ THEO THÁNG (TAB 3) =====
+	// =====XỬ LÝ THỐNG KÊ THEO THÁNG (TAB 3) =====
 	private void handleThongKeTheoThang() {
 		java.util.Date utilNgayBatDau = dateChooserBatDau3.getDate();
 		java.util.Date utilNgayKetThuc = dateChooserKetThuc3.getDate();
@@ -680,7 +682,6 @@ public class FrmThongKe extends JPanel implements ActionListener {
 		java.sql.Date sqlNgayBatDau = new java.sql.Date(utilNgayBatDau.getTime());
 		java.sql.Date sqlNgayKetThuc = new java.sql.Date(utilNgayKetThuc.getTime());
 
-		// Tái sử dụng phương thức DAO của Tab 1
 		duLieuThongKeThang = hoaDonDAO.getHoaDonTheoThoiGian(sqlNgayBatDau, sqlNgayKetThuc);
 
 		if (duLieuThongKeThang.isEmpty()) {
@@ -691,7 +692,7 @@ public class FrmThongKe extends JPanel implements ActionListener {
 			pnlBieuDoThang.revalidate();
 			pnlBieuDoThang.repaint();
 			
-			// ===== BỔ SUNG MỚI: Reset label tóm tắt =====
+			// =====Reset label tóm tắt =====
 			lblTongDoanhThu_Thang.setText("<html><div style='text-align: center;'><font size='6' color='#dd2c00'>0 VNĐ</font><br/>Tổng Doanh thu</div></html>");
 			lblTongSoHoaDon_Thang.setText("<html><div style='text-align: center;'><font size='6' color='#dd2c00'>0</font><br/>Tổng số Hóa đơn</div></html>");
 			lblDoanhThuTrungBinh_Thang.setText("<html><div style='text-align: center;'><font size='6' color='#dd2c00'>0 VNĐ</font><br/>Doanh thu TB/Hóa đơn</div></html>");
@@ -699,7 +700,7 @@ public class FrmThongKe extends JPanel implements ActionListener {
 			return;
 		}
 
-		// ===== BỔ SUNG MỚI: Cập nhật số liệu tóm tắt =====
+		// =====Cập nhật số liệu tóm tắt =====
 		capNhatSoLieuThang(duLieuThongKeThang);
 		// =============================================
 
@@ -707,7 +708,7 @@ public class FrmThongKe extends JPanel implements ActionListener {
 		veBieuDoDoanhThuTheoThang(duLieuThongKeThang);
 	}
 
-	// ===== BỔ SUNG: XỬ LÝ THỐNG KÊ THEO NĂM (TAB 4) =====
+	// ===== XỬ LÝ THỐNG KÊ THEO NĂM (TAB 4) =====
 	private void handleThongKeTheoNam() {
 		java.util.Date utilNgayBatDau = dateChooserBatDau4.getDate();
 		java.util.Date utilNgayKetThuc = dateChooserKetThuc4.getDate();
@@ -721,7 +722,6 @@ public class FrmThongKe extends JPanel implements ActionListener {
 		java.sql.Date sqlNgayBatDau = new java.sql.Date(utilNgayBatDau.getTime());
 		java.sql.Date sqlNgayKetThuc = new java.sql.Date(utilNgayKetThuc.getTime());
 
-		// Tái sử dụng phương thức DAO của Tab 1
 		duLieuThongKeNam = hoaDonDAO.getHoaDonTheoThoiGian(sqlNgayBatDau, sqlNgayKetThuc);
 
 		if (duLieuThongKeNam.isEmpty()) {
@@ -732,7 +732,7 @@ public class FrmThongKe extends JPanel implements ActionListener {
 			pnlBieuDoNam.revalidate();
 			pnlBieuDoNam.repaint();
 
-			// ===== BỔ SUNG MỚI: Reset label tóm tắt =====
+			// =====Reset label tóm tắt =====
 			lblTongDoanhThu_Nam.setText("<html><div style='text-align: center;'><font size='6' color='#dd2c00'>0 VNĐ</font><br/>Tổng Doanh thu</div></html>");
 			lblTongSoHoaDon_Nam.setText("<html><div style='text-align: center;'><font size='6' color='#dd2c00'>0</font><br/>Tổng số Hóa đơn</div></html>");
 			lblDoanhThuTrungBinh_Nam.setText("<html><div style='text-align: center;'><font size='6' color='#dd2c00'>0 VNĐ</font><br/>Doanh thu TB/Hóa đơn</div></html>");
@@ -740,7 +740,7 @@ public class FrmThongKe extends JPanel implements ActionListener {
 			return;
 		}
 
-		// ===== BỔ SUNG MỚI: Cập nhật số liệu tóm tắt =====
+		// =====Cập nhật số liệu tóm tắt =====
 		capNhatSoLieuNam(duLieuThongKeNam);
 		// =============================================
 
@@ -748,14 +748,9 @@ public class FrmThongKe extends JPanel implements ActionListener {
 		veBieuDoDoanhThuTheoNam(duLieuThongKeNam);
 	}
 	
-	// ===== BẮT ĐẦU SỬA CODE (Refactor: Thêm hàm helper chung cho logic JFileChooser) =====
+	// =====(Refactor: Thêm hàm helper chung cho logic JFileChooser) =====
 	/**
 	 * Xử lý logic chung cho việc xuất file Excel.
-	 * Bao gồm kiểm tra dữ liệu, hiển thị JFileChooser, và gọi hàm xuất cụ thể.
-	 *
-	 * @param data Dữ liệu cần kiểm tra (nếu rỗng sẽ báo lỗi)
-	 * @param defaultFileName Tên file gợi ý
-	 * @param exportFunction Hàm (lambda) sẽ được gọi để thực thi việc xuất file
 	 */
 	private void handleXuatExcel(List<Object[]> data, String defaultFileName, Consumer<File> exportFunction) {
 		if (data == null || data.isEmpty()) {
@@ -790,20 +785,8 @@ public class FrmThongKe extends JPanel implements ActionListener {
 			}
 		}
 	}
-	// ===== KẾT THÚC SỬA CODE =====
-
-	// ===== BẮT ĐẦU SỬA CODE (Xóa 4 hàm handleXuatBaoCao... bị trùng lặp) =====
-	/* private void handleXuatBaoCaoTongQuan() { ... }
-	private void handleXuatBaoCaoMonAn() { ... }
-	private void handleXuatBaoCaoTheoThang() { ... }
-	private void handleXuatBaoCaoTheoNam() { ... }
 	
-	Bốn hàm này đã được thay thế bằng hàm helper 'handleXuatExcel' ở trên
-	và gọi trực tiếp từ 'actionPerformed'.
-	*/
-	// ===== KẾT THÚC SỬA CODE =====
-
-
+	
 	private void xuatBaoCaoExcelTongQuan(List<Object[]> dsHD, File file) throws IOException {
 		try (XSSFWorkbook workbook = new XSSFWorkbook()) {
 			XSSFSheet summarySheet = workbook.createSheet("Tóm tắt");
@@ -820,7 +803,6 @@ public class FrmThongKe extends JPanel implements ActionListener {
 			Row row3 = summarySheet.createRow(2);
 			createStyledCell(row3, 0, "Doanh thu Trung bình", headerStyle);
 			row3.createCell(1).setCellValue(doanhThuTrungBinhTongQuan);
-			// ========================================================
 
 			summarySheet.autoSizeColumn(0);
 			summarySheet.autoSizeColumn(1);
@@ -855,8 +837,6 @@ public class FrmThongKe extends JPanel implements ActionListener {
 			try (FileOutputStream fos = new FileOutputStream(file)) {
 				workbook.write(fos);
 			}
-			// ===== SỬA CODE (Xóa JOPtionPane, đã chuyển ra hàm helper) =====
-			// JOptionPane.showMessageDialog(this, "Xuất báo cáo thành công!...", ...);
 
 		} catch (Exception e) {
 			// Ném lỗi ra để hàm helper 'handleXuatExcel' bắt
@@ -890,8 +870,6 @@ public class FrmThongKe extends JPanel implements ActionListener {
 			try (FileOutputStream fos = new FileOutputStream(file)) {
 				workbook.write(fos);
 			}
-			// ===== SỬA CODE (Xóa JOPtionPane, đã chuyển ra hàm helper) =====
-			// JOptionPane.showMessageDialog(this, "Xuất báo cáo thành công!...", ...);
 
 		} catch (Exception e) {
 			// Ném lỗi ra để hàm helper 'handleXuatExcel' bắt
@@ -899,12 +877,10 @@ public class FrmThongKe extends JPanel implements ActionListener {
 		}
 	}
 
-	// ===== BỔ SUNG: PHƯƠNG THỨC GHI EXCEL (THEO THÁNG) =====
+	// =====PHƯƠNG THỨC GHI EXCEL (THEO THÁNG) =====
 	private void xuatBaoCaoExcelTheoThang(List<Object[]> dsHD, File file) throws IOException {
-		// ===== BẮT ĐẦU SỬA CODE (Sử dụng hàm helper) =====
 		// 1. Nhóm dữ liệu
 		Map<String, Double> doanhThuTheoThang = aggregateDataByTime(dsHD, "MM/yyyy");
-		// ===== KẾT THÚC SỬA CODE =====
 
 		// 2. Ghi ra Excel (Giống logic xuất của Tab 2)
 		try (XSSFWorkbook workbook = new XSSFWorkbook()) {
@@ -931,8 +907,6 @@ public class FrmThongKe extends JPanel implements ActionListener {
 			try (FileOutputStream fos = new FileOutputStream(file)) {
 				workbook.write(fos);
 			}
-			// ===== SỬA CODE (Xóa JOPtionPane, đã chuyển ra hàm helper) =====
-			// JOptionPane.showMessageDialog(this, "Xuất báo cáo thành công!...", ...);
 
 		} catch (Exception e) {
 			// Ném lỗi ra để hàm helper 'handleXuatExcel' bắt
@@ -940,14 +914,12 @@ public class FrmThongKe extends JPanel implements ActionListener {
 		}
 	}
 
-	// ===== BỔ SUNG: PHƯƠNG THỨC GHI EXCEL (THEO NĂM) =====
+	// =====PHƯƠNG THỨC GHI EXCEL (THEO NĂM) =====
 	private void xuatBaoCaoExcelTheoNam(List<Object[]> dsHD, File file) throws IOException {
-		// ===== BẮT ĐẦU SỬA CODE (Sử dụng hàm helper) =====
 		// 1. Nhóm dữ liệu
 		Map<String, Double> doanhThuTheoNam = aggregateDataByTime(dsHD, "yyyy");
-		// ===== KẾT THÚC SỬA CODE =====
 
-		// 2. Ghi ra Excel (Giống logic xuất của Tab 2)
+		// 2. Ghi ra Excel
 		try (XSSFWorkbook workbook = new XSSFWorkbook()) {
 			XSSFSheet sheet = workbook.createSheet("Doanh thu Theo Năm");
 			CellStyle headerStyle = createHeaderStyle(workbook);
@@ -972,8 +944,6 @@ public class FrmThongKe extends JPanel implements ActionListener {
 			try (FileOutputStream fos = new FileOutputStream(file)) {
 				workbook.write(fos);
 			}
-			// ===== SỬA CODE (Xóa JOPtionPane, đã chuyển ra hàm helper) =====
-			// JOptionPane.showMessageDialog(this, "Xuất báo cáo thành công!...", ...);
 
 		} catch (Exception e) {
 			// Ném lỗi ra để hàm helper 'handleXuatExcel' bắt
@@ -1025,7 +995,7 @@ public class FrmThongKe extends JPanel implements ActionListener {
 				+ currencyFormat.format(doanhThuTrungBinhTongQuan) + "</font><br/>Doanh thu TB/Hóa đơn</div></html>");
 	}
 
-	// ===== PHƯƠNG THỨC MỚI: CẬP NHẬT SỐ LIỆU TÓM TẮT CHO TAB 3 =====
+	// =====CẬP NHẬT SỐ LIỆU TÓM TẮT CHO TAB 3 =====
 	private void capNhatSoLieuThang(List<Object[]> dsHD) {
 		// Tính toán cục bộ
 		double tongDoanhThu = 0;
@@ -1048,7 +1018,7 @@ public class FrmThongKe extends JPanel implements ActionListener {
 				+ currencyFormat.format(doanhThuTrungBinh) + "</font><br/>Doanh thu TB/Hóa đơn</div></html>");
 	}
 
-	// ===== PHƯƠNG THỨC MỚI: CẬP NHẬT SỐ LIỆU TÓM TẮT CHO TAB 4 =====
+	// =====CẬP NHẬT SỐ LIỆU TÓM TẮT CHO TAB 4 =====
 	private void capNhatSoLieuNam(List<Object[]> dsHD) {
 		// Tính toán cục bộ
 		double tongDoanhThu = 0;
@@ -1071,14 +1041,7 @@ public class FrmThongKe extends JPanel implements ActionListener {
 				+ currencyFormat.format(doanhThuTrungBinh) + "</font><br/>Doanh thu TB/Hóa đơn</div></html>");
 	}
 
-	// ===== BẮT ĐẦU SỬA CODE (Refactor: Thêm hàm helper chung cho logic nhóm dữ liệu) =====
-	/**
-	 * Hàm helper để nhóm dữ liệu doanh thu theo một định dạng thời gian (ngày, tháng, năm).
-	 *
-	 * @param dsHD Danh sách hóa đơn (dữ liệu thô)
-	 * @param format Chuỗi định dạng của SimpleDateFormat (ví dụ: "dd/MM", "MM/yyyy", "yyyy")
-	 * @return Một Map đã nhóm (key=chuỗi thời gian, value=tổng doanh thu)
-	 */
+	
 	private Map<String, Double> aggregateDataByTime(List<Object[]> dsHD, String format) {
 		Map<String, Double> aggregatedData = new LinkedHashMap<>();
 		SimpleDateFormat sdf = new SimpleDateFormat(format);
@@ -1091,15 +1054,12 @@ public class FrmThongKe extends JPanel implements ActionListener {
 		}
 		return aggregatedData;
 	}
-	// ===== KẾT THÚC SỬA CODE =====
 
 	private void veBieuDoDoanhThuTheoNgay(List<Object[]> dsHD) {
 		DefaultCategoryDataset dataset = new DefaultCategoryDataset();
 		
-		// ===== BẮT ĐẦU SỬA CODE (Sử dụng hàm helper) =====
 		Map<String, Double> doanhThuTheoNgay = aggregateDataByTime(dsHD, "dd/MM");
-		// ===== KẾT THÚC SỬA CODE =====
-
+		
 		for (Map.Entry<String, Double> entry : doanhThuTheoNgay.entrySet()) {
 			dataset.addValue(entry.getValue(), "Doanh thu", entry.getKey());
 		}
@@ -1118,7 +1078,6 @@ public class FrmThongKe extends JPanel implements ActionListener {
 		pnlBieuDoTongQuan.repaint();
 	}
 
-	// ===== BẮT ĐẦU SỬA CODE (Thay thế toàn bộ phương thức này) =====
 		private void veBieuDoMonAnBanChay(List<Object[]> topMonAn) {
 			
 			// ----------------------------------------------------
@@ -1127,23 +1086,20 @@ public class FrmThongKe extends JPanel implements ActionListener {
 			DefaultPieDataset dataset = new DefaultPieDataset();
 			for (Object[] row : topMonAn) {
 				String tenMon = (String) row[0];
-				Number soLuong = (Number) row[1]; 
+				Number soLuong = (Number) row[1];
 				dataset.setValue(tenMon, soLuong);
 			}
 
-			// ===== BẮT ĐẦU SỬA CODE (Bỏ tiêu đề) =====
 			JFreeChart pieChart = ChartFactory.createPieChart(
-					null, // Đã bỏ tiêu đề
+					null,
 					dataset,
 					true, // Hiển thị legend (chú thích)
 					true, // Hiển thị tooltips
 					false // Không dùng URLs
 			);
-			// ===== KẾT THÚC SỬA CODE =====
 
 			// Gọi style chung
-			stylePieChart(pieChart); 
-
+			stylePieChart(pieChart);
 
 			ChartPanel chartPanel = new ChartPanel(pieChart);
 			chartPanel.setBackground(COLOR_PANEL_BG);
@@ -1154,43 +1110,35 @@ public class FrmThongKe extends JPanel implements ActionListener {
 			
 			String[] columnNames = {"Tên Món Ăn", "Số Lượng Bán"};
 			DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0) {
-				// Ghi đè phương thức này để ngăn người dùng chỉnh sửa ô
+
 				@Override
 				public boolean isCellEditable(int row, int column) {
 					return false;
 				}
-			}; 
+			};
 			
-			// Thêm dữ liệu từ list vào table model
 			for (Object[] rowData : topMonAn) {
 				tableModel.addRow(rowData);
 			}
-			
-		// ===== BẮT ĐẦU THIẾT KẾ BẢNG HIỆN ĐẠI (THAY THẾ TOÀN BỘ) =====
 
 			// Tạo JTable với custom renderer
 			JTable table = new JTable(tableModel) {
-				// private final Color ZEBRA_COLOR_1 = COLOR_PANEL_BG; // White
-				// private final Color ZEBRA_COLOR_2 = COLOR_SECONDARY; // Light Gray
-				// (Không dùng Zebra Striping nữa)
 
 				@Override
 				public Component prepareRenderer(javax.swing.table.TableCellRenderer renderer, int row, int column) {
 					Component c = super.prepareRenderer(renderer, row, column);
-					
-					// 1. Luôn dùng nền trắng (bỏ zebra)
+
 					c.setBackground(COLOR_PANEL_BG);
 					c.setForeground(COLOR_TEXT);
 					
-					// ===== BẮT ĐẦU SỬA CODE (Tô đậm chữ trong bảng) =====
-					// Đặt font chữ in đậm cho nội dung ô
-					c.setFont(new Font("Segoe UI", Font.BOLD, 14));
+					// ===== BẮT ĐẦU SỬA CODE (4/7) - Font cho JTable Cell =====
+					c.setFont(FONT_BUTTON); // Dùng hằng số (Times New Roman, Bold, 14)
 					// ===== KẾT THÚC SỬA CODE =====
 					
-					// 2. Tùy chỉnh màu khi được chọn (hover/click)
+					// Tùy chỉnh màu khi được chọn (hover/click)
 					if (isRowSelected(row)) {
 						c.setBackground(COLOR_SECONDARY); // Nền xám nhạt khi chọn
-						c.setForeground(COLOR_PRIMARY);   // Chữ đỏ khi chọn
+						c.setForeground(COLOR_PRIMARY); // Chữ đỏ khi chọn
 					}
 					
 					return c;
@@ -1213,27 +1161,21 @@ public class FrmThongKe extends JPanel implements ActionListener {
 			table.getColumnModel().getColumn(1).setPreferredWidth(50);
 
 	// --- Tùy chỉnh Cell Renderer (Căn lề và Padding) ---
-			
-			// ===== BẮT ĐẦU SỬA CODE (Căn giữa cả 2 cột) =====
 
-			// 1. Tạo 1 Renderer căn GIỮA (dùng chung cho cả 2 cột)
 			javax.swing.table.DefaultTableCellRenderer centerRenderer = new javax.swing.table.DefaultTableCellRenderer();
 			centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
 			centerRenderer.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 15)); // 15px padding
 
-			// 2. Áp dụng cho cột Tên Món (cột 0)
 			table.getColumnModel().getColumn(0).setCellRenderer(centerRenderer);
 			
-			// 3. Áp dụng cho cột Số Lượng (cột 1)
 			table.getColumnModel().getColumn(1).setCellRenderer(centerRenderer);
 			
-			// ===== KẾT THÚC SỬA CODE =====
 			// --- Tùy chỉnh Header (Tiêu đề cột) ---
 			javax.swing.table.JTableHeader header = table.getTableHeader();
-			header.setOpaque(false); // Phải set false để renderer tùy chỉnh hoạt động
+			header.setOpaque(false);
 			header.setPreferredSize(new Dimension(100, 40)); // Tăng chiều cao header
-			header.setFont(FONT_BUTTON); // Font bold
-			header.setReorderingAllowed(false); // Không cho di chuyển cột
+			header.setFont(FONT_BUTTON);
+			header.setReorderingAllowed(false);
 
 			// Tạo Header Renderer tùy chỉnh
 			javax.swing.table.DefaultTableCellRenderer headerRenderer = new javax.swing.table.DefaultTableCellRenderer() {
@@ -1242,30 +1184,22 @@ public class FrmThongKe extends JPanel implements ActionListener {
 					// Lấy component gốc
 					Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 					
-					// Thiết lập giao diện hiện đại
-					c.setBackground(COLOR_PRIMARY); // Nền đỏ (giống tab)
-					c.setForeground(Color.WHITE);     // Chữ trắng
-					setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 15)); // Padding
-					setHorizontalAlignment(SwingConstants.CENTER); // Luôn căn giữa header
+					c.setBackground(COLOR_PRIMARY);
+					c.setForeground(Color.WHITE);
+					setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 15));
+					setHorizontalAlignment(SwingConstants.CENTER);
 					
 					return c;
 				}
 			};
-			// Áp dụng renderer mới cho TOÀN BỘ header
+
 			table.getTableHeader().setDefaultRenderer(headerRenderer);
 
-
-			// Đặt bảng vào JScrollPane
 			JScrollPane scrollPane = new JScrollPane(table);
 			scrollPane.getViewport().setBackground(COLOR_PANEL_BG);
 			scrollPane.setBackground(COLOR_PANEL_BG);
 			
-			// Bỏ viền của JScrollPane (chỉ giữ viền header)
-			scrollPane.setBorder(BorderFactory.createEmptyBorder()); 
-			
-			// (Xóa các dòng code cũ bị lỗi NPE và không cần thiết)
-			
-			// ===== KẾT THÚC THIẾT KẾ BẢNG HIỆN ĐẠI =====
+			scrollPane.setBorder(BorderFactory.createEmptyBorder());
 
 			// ----------------------------------------------------
 			// PHẦN 3: TẠO JSplitPane VÀ HIỂN THỊ
@@ -1275,31 +1209,25 @@ public class FrmThongKe extends JPanel implements ActionListener {
 			JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, chartPanel, scrollPane);
 			
 			// Thiết lập tỷ lệ ban đầu: 60% cho biểu đồ (bên trái), 40% cho bảng (bên phải)
-			splitPane.setResizeWeight(0.6); 
-			splitPane.setBorder(null); // Bỏ viền của split pane
+			splitPane.setResizeWeight(0.6);
+			splitPane.setBorder(null);
 			splitPane.setBackground(COLOR_PANEL_BG);
-			splitPane.setDividerSize(5); // Kích thước đường chia
+			splitPane.setDividerSize(5);
 
-			// Xóa nội dung cũ và thêm splitPane mới vào
 			pnlBieuDoMonAn.removeAll();
-			pnlBieuDoMonAn.add(splitPane, BorderLayout.CENTER); 
+			pnlBieuDoMonAn.add(splitPane, BorderLayout.CENTER);
 			pnlBieuDoMonAn.revalidate();
 			pnlBieuDoMonAn.repaint();
 		}
-	// ===== KẾT THÚC SỬA CODE =====
-
-
 
 	
-	
-	// ===== BỔ SUNG: PHƯƠNG THỨC VẼ BIỂU ĐỒ (THEO THÁNG) =====
+	// =====PHƯƠNG THỨC VẼ BIỂU ĐỒ (THEO THÁNG) =====
 	private void veBieuDoDoanhThuTheoThang(List<Object[]> dsHD) {
 		// 1. Nhóm dữ liệu
 		DefaultCategoryDataset dataset = new DefaultCategoryDataset();
 		
-		// ===== BẮT ĐẦU SỬA CODE (Sử dụng hàm helper) =====
+		// =====(Sử dụng hàm helper) =====
 		Map<String, Double> doanhThuTheoThang = aggregateDataByTime(dsHD, "MM/yyyy");
-		// ===== KẾT THÚC SỬA CODE =====
 
 		for (Map.Entry<String, Double> entry : doanhThuTheoThang.entrySet()) {
 			dataset.addValue(entry.getValue(), "Doanh thu", entry.getKey());
@@ -1307,12 +1235,12 @@ public class FrmThongKe extends JPanel implements ActionListener {
 
 		// 2. Tạo biểu đồ
 		JFreeChart barChart = ChartFactory.createBarChart(
-				"BIỂU ĐỒ DOANH THU THEO THÁNG", // Tiêu đề
+				"BIỂU ĐỒ DOANH THU THEO THÁNG",
 				"Tháng", // Label trục X
 				"Doanh thu (VND)", // Label trục Y
 				dataset, PlotOrientation.VERTICAL, false, true, false);
 
-		styleChart(barChart); // Áp dụng style cũ
+		styleChart(barChart);
 
 		// 3. Hiển thị lên panel
 		ChartPanel chartPanel = new ChartPanel(barChart);
@@ -1323,14 +1251,13 @@ public class FrmThongKe extends JPanel implements ActionListener {
 		pnlBieuDoThang.repaint();
 	}
 
-	// ===== BỔ SUNG: PHƯƠNG THỨC VẼ BIỂU ĐỒ (THEO NĂM) =====
+	// =====PHƯƠNG THỨC VẼ BIỂU ĐỒ (THEO NĂM) =====
 	private void veBieuDoDoanhThuTheoNam(List<Object[]> dsHD) {
 		// 1. Nhóm dữ liệu
 		DefaultCategoryDataset dataset = new DefaultCategoryDataset();
 		
-		// ===== BẮT ĐẦU SỬA CODE (Sử dụng hàm helper) =====
+		// =====(Sử dụng hàm helper) =====
 		Map<String, Double> doanhThuTheoNam = aggregateDataByTime(dsHD, "yyyy");
-		// ===== KẾT THÚC SỬA CODE =====
 
 		for (Map.Entry<String, Double> entry : doanhThuTheoNam.entrySet()) {
 			dataset.addValue(entry.getValue(), "Doanh thu", entry.getKey());
@@ -1338,7 +1265,7 @@ public class FrmThongKe extends JPanel implements ActionListener {
 
 		// 2. Tạo biểu đồ
 		JFreeChart barChart = ChartFactory.createBarChart(
-				"BIỂU ĐỒ DOANH THU THEO NĂM", // Tiêu đề
+				"BIỂU ĐỒ DOANH THU THEO NĂM",
 				"Năm", // Label trục X
 				"Doanh thu (VND)", // Label trục Y
 				dataset, PlotOrientation.VERTICAL, false, true, false);
@@ -1356,7 +1283,9 @@ public class FrmThongKe extends JPanel implements ActionListener {
 
 	private void styleChart(JFreeChart chart) {
 		chart.getTitle().setPaint(COLOR_PRIMARY);
-		chart.getTitle().setFont(new Font("Segoe UI", Font.BOLD, 18));
+		// ===== BẮT ĐẦU SỬA CODE (5/7) - Font cho JFreeChart Title =====
+		chart.getTitle().setFont(FONT_TITLE); // Dùng hằng số
+		// ===== KẾT THÚC SỬA CODE =====
 		chart.setBackgroundPaint(COLOR_PANEL_BG);
 
 		CategoryPlot plot = chart.getCategoryPlot();
@@ -1379,103 +1308,50 @@ public class FrmThongKe extends JPanel implements ActionListener {
 		return titledBorder;
 	}
 	
-	// ===== BẮT ĐẦU SỬA CODE (Thêm hàm style cho Pie Chart) =====
-	/**
-	 * Tùy chỉnh giao diện cho JFreeChart dạng Pie Chart.
-	 * @param chart Biểu đồ tròn cần tùy chỉnh
-	 */
-	// ===== BẮT ĐẦU SỬA CODE (Thêm hàm style cho Pie Chart) =====
-	/**
-	 * Tùy chỉnh giao diện cho JFreeChart dạng Pie Chart.
-	 * @param chart Biểu đồ tròn cần tùy chỉnh
-	 */
+	// =====(Thêm hàm style cho Pie Chart) =====
 	private void stylePieChart(JFreeChart chart) {
-		// Style tiêu đề và nền chung
-		
-		// ===== BẮT ĐẦU SỬA CODE (Gỡ bỏ định dạng tiêu đề) =====
-		// Đã gỡ bỏ khối "if (chart.getTitle() != null) { ... }"
-		// vì tiêu đề đã bị vô hiệu hóa (set null) ở nơi gọi.
-		// ===== KẾT THÚC SỬA CODE =====
-		
+
 		chart.setBackgroundPaint(COLOR_PANEL_BG);
 
 		// Style Legend (chú thích)
-		org.jfree.chart.title.LegendTitle legend = chart.getLegend(); // Lấy đối tượng LegendTitle
+		org.jfree.chart.title.LegendTitle legend = chart.getLegend();
 		if (legend != null) {
 			legend.setPosition(org.jfree.chart.ui.RectangleEdge.LEFT);
 			legend.setBackgroundPaint(Color.WHITE);
 			
-			// Tăng padding xung quanh legend
 			legend.setPadding(new org.jfree.chart.ui.RectangleInsets(10.0, 10.0, 10.0, 10.0)); // top, left, bottom, right
-			// Tăng font chữ cho các mục trong legend
-			legend.setItemFont(new Font("Segoe UI", Font.PLAIN, 14)); // Sử dụng font lớn hơn FONT_GENERAL nếu cần
-			
-			// ===== BẮT ĐẦU SỬA LỖI (Line 1404) =====
-			// Xóa dòng lỗi: legend.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
-			// Xóa dòng lỗi: legend.setFrame(new org.jfree.chart.block.LineBorder(Color.LIGHT_GRAY));
-			
-			// Thay bằng JFreeChart's frame (border) đúng cách:
-			// Sử dụng tên đầy đủ để tránh phải import thêm
-			
-			// ===== KẾT THÚC SỬA LỖI =====
+	
+			// ===== BẮT ĐẦU SỬA CODE (6/7) - Font cho JFreeChart Legend =====
+			legend.setItemFont(FONT_GENERAL); // Dùng hằng số
+			// ===== KẾT THÚC SỬA CODE =====
 
 		}
 
-		// Style phần Plot (vùng vẽ biểu đồ)
-		// Sử dụng org.jfree.chart.plot.PiePlot
 		org.jfree.chart.plot.PiePlot plot = (org.jfree.chart.plot.PiePlot) chart.getPlot();
 		plot.setBackgroundPaint(Color.WHITE);
-		plot.setOutlineVisible(false); // Bỏ viền ngoài của hình tròn
-		plot.setShadowPaint(null); // Bỏ bóng
+		plot.setOutlineVisible(false);
+		plot.setShadowPaint(null);
 		plot.setSectionOutlinesVisible(false);
 		plot.setSimpleLabels(true);
 
-		// ===== XÓA BẤT KỲ DÒNG NÀO GÂY LỖI TỪ TRƯỚC Ở ĐÂY =====
-		// ví dụ: plot.setSectionOutlinePaint(null); // XÓA
-		// ví dụ: plot.setBaseSectionOutlinePaint(...); // XÓA
-		// ví dụ: plot.setSectionOutlineVisible(false); // XÓA
-		// ======================================================
+	// ===== (Chỉ hiển thị % khi hover) =====
 
-	// ===== BẮT ĐẦU SỬA CODE (Chỉ hiển thị % khi hover) =====
-
-		// 1. Tắt nhãn cố định (đã làm)
 		plot.setLabelGenerator(null);
 
 		// 2. Định dạng nội dung cho Tooltip (chỉ hiển thị phần trăm)
-
 		// 2a. Tạo định dạng phần trăm (với 1 số lẻ)
 		NumberFormat percentFormat = NumberFormat.getPercentInstance(new Locale("vi", "VN"));
-		percentFormat.setMaximumFractionDigits(1); // Tương đương new DecimalFormat("0.0")
+		percentFormat.setMaximumFractionDigits(1);
 
-		// 2b. Gán Tooltip Generator
 		plot.setToolTipGenerator(new org.jfree.chart.labels.StandardPieToolTipGenerator(
-			"{2}", // SỬA: Chỉ hiển thị phần trăm
+			"{2}",
 			NumberFormat.getInstance(),
 			percentFormat
 		));
 
-		// ===== KẾT THÚC SỬA CODE =====
-
 		plot.setNoDataMessage("Không có dữ liệu để hiển thị");
 	}
 
-
-
-
-	
-	// ===== BẮT ĐẦU SỬA CODE (Xóa hàm bị trùng lặp, không dùng) =====
-	// Phương thức này dùng để tạo TitledBorder với màu sắc tùy chỉnh
-	/*
-	private TitledBorder createStyledTitleBorder(String title, Color titleColor) {
-		Border blackline = BorderFactory.createLineBorder(Color.lightGray);
-		TitledBorder titledBorder = BorderFactory.createTitledBorder(
-				blackline, title, TitledBorder.LEFT, TitledBorder.TOP);
-		titledBorder.setTitleFont(FONT_TITLE);
-		titledBorder.setTitleColor(titleColor); // Sử dụng màu được truyền vào
-		return titledBorder;
-	}
-	*/
-	// ===== KẾT THÚC SỬA CODE =====
 
 	private JButton createStyledButton(String text, String iconPath) {
 		JButton button = new JButton(text);
@@ -1491,18 +1367,13 @@ public class FrmThongKe extends JPanel implements ActionListener {
 
 		button.setFont(FONT_BUTTON);
 
-		// ===== BẮT ĐẦU SỬA CODE (ĐỔI NÚT SANG NỀN TRẮNG) =====
-
-		button.setBackground(COLOR_PANEL_BG); // (Màu Trắng)
-		button.setForeground(COLOR_TEXT);     // (Màu Chữ Đen/Xám)
+		button.setBackground(COLOR_PANEL_BG);
+		button.setForeground(COLOR_TEXT);
 		
-		// Thêm viền xám nhạt để nút nổi bật trên nền trắng
 		button.setBorder(BorderFactory.createCompoundBorder(
 				BorderFactory.createLineBorder(Color.LIGHT_GRAY), // Viền ngoài
-				BorderFactory.createEmptyBorder(10, 20, 10, 20)  // Viền trong (padding)
+				BorderFactory.createEmptyBorder(10, 20, 10, 20) // Viền trong (padding)
 		));
-		
-		// ===== KẾT THÚC SỬA CODE =====
 
 		button.setCursor(new Cursor(Cursor.HAND_CURSOR));
 		button.setFocusPainted(false);
@@ -1525,17 +1396,9 @@ public class FrmThongKe extends JPanel implements ActionListener {
 		return button;
 	}
 	
-// ===== BỔ SUNG: PHƯƠNG THỨC TẠO PLACEHOLDER CHO JDATECHOOSER =====
-	
-	/**
-	 * Đặt văn bản giữ chỗ (placeholder) cho một JDateChooser.
-	 * Văn bản này sẽ hiển thị khi JDateChooser không có ngày nào được chọn.
-	 *
-	 * @param dateChooser Component JDateChooser
-	 * @param placeholder Văn bản giữ chỗ (ví dụ: "Từ", "Đến")
-	 */
+// =====PHƯƠNG THỨC TẠO PLACEHOLDER CHO JDATECHOOSER =====
 	private void setPlaceholder(JDateChooser dateChooser, String placeholder) {
-		// Lấy trường văn bản bên trong JDateChooser
+
 		JFormattedTextField textField = (JFormattedTextField) dateChooser.getDateEditor().getUiComponent();
 
 		// 1. Đặt trạng thái ban đầu
@@ -1572,16 +1435,13 @@ public class FrmThongKe extends JPanel implements ActionListener {
 			@Override
 			public void propertyChange(java.beans.PropertyChangeEvent evt) {
 				if (evt.getNewValue() == null) {
-					// Nếu ngày bị xóa (ví dụ: người dùng xóa tay và Enter)
-					// (Đôi khi JDateChooser tự xử lý, nhưng để chắc chắn)
+					
 					if(textField.getText().isEmpty()) {
 						textField.setText(placeholder);
 						textField.setForeground(Color.GRAY);
 					}
 				} else {
-					// Nếu một ngày mới được chọn
 					textField.setForeground(Color.BLACK);
-					// JDateChooser sẽ tự động đặt text ngày, chúng ta chỉ cần đảm bảo màu sắc
 				}
 			}
 		});
@@ -1591,60 +1451,38 @@ public class FrmThongKe extends JPanel implements ActionListener {
 		String html = "<html><div style='text-align: center;'><font size='6' color='#dd2c00'>" + value
 				+ "</font><br/>" + title + "</div></html>";
 		JLabel label = new JLabel(html, SwingConstants.CENTER);
-		label.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+		// ===== BẮT ĐẦU SỬA CODE (7/7) - Font cho ResultLabel =====
+		label.setFont(new Font("Times New Roman", Font.PLAIN, 16));
+		// ===== KẾT THÚC SỬA CODE =====
 		label.setOpaque(true);
 		
-		// Đặt nền xám để khớp với pnlTomTat
-		label.setBackground(COLOR_SECONDARY); 
-		
-		// (Đã xóa viền đỏ theo yêu cầu)
+		label.setBackground(COLOR_SECONDARY);
 
 		label.setPreferredSize(new Dimension(200, 100));
 		return label;
 	}
 
-	// PHƯƠNG THỨC MAIN ĐÃ ĐƯỢC CẬP NHẬT
 	public static void main(String[] args) {
 		try {
-			// ===== BẮT ĐẦU SỬA LỖI =====
-			// Vô hiệu hóa dòng này, vì nó ngăn cản việc tùy chỉnh màu tab
-			// UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); 
-			// ===== KẾT THÚC SỬA LỖI =====
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
 		SwingUtilities.invokeLater(() -> {
-			// ----- PHẦN CODE ĐƯỢC SỬA LẠI -----
 
-			// 1. Thiết lập quyền (Giả sử là "QuanLy" để thấy menu Thống Kê)
 			ThanhTacVu.setPhanQuyen("QuanLy");
-
-			// 2. Lấy đối tượng JFrame chính (ThanhTacVu)
 			ThanhTacVu mainFrame = ThanhTacVu.getInstance();
-
-			// 3. Xóa panel cũ (nếu có) ở vị trí CENTER
-			// Lấy layout của content pane
 			BorderLayout layout = (BorderLayout) mainFrame.getContentPane().getLayout();
-			// Lấy component đang ở vị trí CENTER
 			Component oldCenter = layout.getLayoutComponent(BorderLayout.CENTER);
-
-			// Nếu có component cũ, thì xóa nó đi
 			if (oldCenter != null) {
 				mainFrame.getContentPane().remove(oldCenter);
 			}
 
-			// 4. Thêm panel FrmThongKe vào giữa JFrame chính
 			mainFrame.getContentPane().add(new FrmThongKe(), BorderLayout.CENTER);
-
-			// 5. Yêu cầu JFrame vẽ lại giao diện
 			mainFrame.revalidate();
 			mainFrame.repaint();
-
-			// 6. Hiển thị JFrame chính
 			mainFrame.setVisible(true);
 
-			// ----- KẾT THÚC PHẦN CODE SỬA LẠI -----
 		});
 	}
 }
