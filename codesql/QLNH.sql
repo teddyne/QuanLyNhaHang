@@ -268,3 +268,68 @@ select * from MonAn
 select * from TaiKhoan
 select * from LoaiKhuyenMai
 use QLNH
+ALTER TABLE HoaDon ALTER COLUMN maPhieu NVARCHAR(10) NULL;
+
+-- Nếu chưa có ràng buộc, tạo lại ràng buộc khóa ngoại
+ALTER TABLE HoaDon
+ADD CONSTRAINT FK_HoaDon_maPhieu FOREIGN KEY (maPhieu) REFERENCES PhieuDatBan(maPhieu);
+SELECT 
+    fk.name AS TenKhoaNgoai,
+    tp.name AS BangChinh,
+    cp.name AS CotChinh,
+    tr.name AS BangThamChieu,
+    cr.name AS CotThamChieu
+FROM sys.foreign_keys fk
+JOIN sys.foreign_key_columns fkc ON fkc.constraint_object_id = fk.object_id
+JOIN sys.tables tp ON fkc.parent_object_id = tp.object_id
+JOIN sys.columns cp ON fkc.parent_column_id = cp.column_id AND fkc.parent_object_id = cp.object_id
+JOIN sys.tables tr ON fkc.referenced_object_id = tr.object_id
+JOIN sys.columns cr ON fkc.referenced_column_id = cr.column_id AND fkc.referenced_object_id = cr.object_id
+WHERE fk.name = 'FK__HoaDon__maPhieu__4AB81AF0';
+-- Bảng lưu chi tiết món ăn khi đặt trước (trước khi phục vụ)
+CREATE TABLE ChiTietDatMon (
+    maPhieu NVARCHAR(10) NOT NULL,
+    maMon NVARCHAR(20) NOT NULL,
+    soLuong INT NOT NULL CHECK (soLuong > 0),
+    donGia DECIMAL(18,2) NOT NULL CHECK (donGia > 0),
+    ghiChu NVARCHAR(200) NULL,
+    CONSTRAINT PK_ChiTietDatMon PRIMARY KEY (maPhieu, maMon),
+    CONSTRAINT FK_ChiTietDatMon_Phieu FOREIGN KEY (maPhieu) 
+        REFERENCES PhieuDatBan(maPhieu) ON DELETE CASCADE,
+    CONSTRAINT FK_ChiTietDatMon_Mon FOREIGN KEY (maMon) 
+        REFERENCES MonAn(maMon)
+);
+EXEC sp_fkeys 'ChiTietDatMon';
+EXEC sp_fkeys 'HoaDon';
+ALTER TABLE HoaDon
+ADD CONSTRAINT FK_HoaDon_NhanVien
+FOREIGN KEY (maNhanVien)
+REFERENCES NhanVien(maNhanVien);
+
+SELECT maNhanVien
+FROM HoaDon
+WHERE maNhanVien NOT IN (SELECT maNhanVien FROM NhanVien)
+   OR maNhanVien IS NULL;
+   UPDATE HoaDon
+SET maNhanVien = 'NV0001'
+WHERE maNhanVien NOT IN (SELECT maNhanVien FROM NhanVien)
+   OR maNhanVien IS NULL;
+
+   ALTER TABLE HoaDon
+ADD CONSTRAINT FK_HoaDon_NhanVien
+FOREIGN KEY (maNhanVien)
+REFERENCES NhanVien(maNhanVien);
+
+-- 1. Cập nhật trạng thái
+UPDATE PhieuDatBan SET trangThai = N'Phục vụ' WHERE maPhieu = @maPhieu
+UPDATE Ban SET trangThai = N'Đang phục vụ' WHERE maBan = @maBan
+
+-- 2. Tạo HoaDon
+INSERT INTO HoaDon (maHD, maPhieu, maNhanVien, trangThai, ngayLap)
+VALUES (@maHD, @maPhieu, @maNhanVien, N'Chưa thanh toán', GETDATE())
+
+-- 3. Chuyển món từ ChiTietDatMon → ChiTietHoaDon
+INSERT INTO ChiTietHoaDon (maHD, maMon, soLuong, donGia, ghiChu)
+SELECT @maHD, maMon, soLuong, donGia, ghiChu
+FROM ChiTietDatMon 
+WHERE maPhieu = @maPhieu

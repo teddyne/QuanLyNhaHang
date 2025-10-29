@@ -38,7 +38,6 @@ import dao.ChiTietHoaDon_DAO;
 import dao.HoaDon_DAO;
 import dao.LoaiBan_DAO;
 import dao.MonAn_DAO;
-import dao.NhanVien_DAO;
 import dao.PhieuDatBan_DAO;
 import entity.Ban;
 import entity.ChiTietDatMon;
@@ -51,7 +50,6 @@ public class FrmPhucVu extends JFrame {
     private static final Color COLOR_RED_WINE = new Color(169, 55, 68);
     private Ban_DAO banDAO;
     private PhieuDatBan_DAO phieuDatBanDAO;
-    private LoaiBan_DAO loaiBanDAO;
     private Connection con = ConnectSQL.getConnection();
 
     private ChiTietDatMon_DAO chiTietDatMonDAO;
@@ -73,7 +71,6 @@ public class FrmPhucVu extends JFrame {
             this.maBan = maBan;
             this.banDAO = banDAO;
             this.phieuDatBanDAO = phieuDatBanDAO;
-            this.loaiBanDAO = loaiBanDAO;
             this.ban = banDAO.getBanByMa(maBan);
             this.phieuDatBan = phieuDatBan;
             this.chiTietDatMonDAO = new ChiTietDatMon_DAO(con);
@@ -622,30 +619,6 @@ public class FrmPhucVu extends JFrame {
 	    loadMonAnFromDB();
 	    revalidate();
 	    repaint();
-	}
-
-	private JLabel timJLabelTheoTen(String ten) {
-    for (Component c : getContentPane().getComponents()) {
-        if (c instanceof JPanel) {
-            for (Component sub : ((JPanel) c).getComponents()) {
-                if (sub instanceof JLabel && ten.equals(((JLabel) sub).getName())) {
-                    return (JLabel) sub;
-                }
-            }
-        }
-    }
-    return null;
-	}
-
-	private JButton timNutBanHienTai() {
-	    // Giả sử bạn có biến maBan hiện tại
-	    String ma = this.maBan; // hoặc biến toàn cục
-	    for (Component c : getContentPane().getComponents()) {
-	        if (c instanceof JButton && ((JButton) c).getText().startsWith(ma)) {
-	            return (JButton) c;
-	        }
-	    }
-	    return null;
 	}
 
 	public void chuyenSangPhucVu(String maNhanVien) {

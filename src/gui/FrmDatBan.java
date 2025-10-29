@@ -94,6 +94,7 @@ public class FrmDatBan extends JDialog {
             }
         }
     }
+    
     private void initComponents() throws SQLException {
         setSize(800, 700);
         setLayout(new BorderLayout(15, 15));
@@ -413,10 +414,12 @@ public class FrmDatBan extends JDialog {
         });
        btnHuy.addActionListener(e -> dispose());
     }
+    
     private void capNhatTienCoc() {
         double tienCoc = (tongTienMon > 0) ? tongTienMon : 200000;
         txtTienCoc.setText(String.valueOf(tienCoc));
     }
+    
     private boolean validateSDT(String sdt) {
         return Pattern.matches("0\\d{9}", sdt);
     }
@@ -478,7 +481,6 @@ class FrmThemKhachHang extends JDialog {
     private KhachHang_DAO khachHangDAO;
     private JTextField txtTen;
     private JTextField txtSDT;
-    private JTextField txtCCCD;
     private JTextField txtEmail;
     private JDateChooser dateChooserNgaySinh;
 
@@ -489,7 +491,7 @@ class FrmThemKhachHang extends JDialog {
     }
 
    private void initComponents(String sdt, String ten) {
-        setSize(450, 350);
+        setSize(550, 350);
         setLayout(new GridBagLayout());
         setLocationRelativeTo(getParent());
 

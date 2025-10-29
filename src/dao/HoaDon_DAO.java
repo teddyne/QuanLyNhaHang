@@ -22,7 +22,7 @@ public class HoaDon_DAO {
     }
 
 
-    public String taoHoaDonMoi(String maPhieu, String maNhanVien, String maKH, String maKM, double phuThu, String ghiChu) throws SQLException {
+    public static String taoHoaDonMoi(String maPhieu, String maNhanVien, String maKH, String maKM, double phuThu, String ghiChu) throws SQLException {
         String sql = "INSERT INTO HoaDon (maHD, maPhieu, maKH, maKM, maNhanVien, phuThu, ghiChu) " +
                      "VALUES (?, ?, ?, ?, ?, ?, ?)";
         String maHD = taoMaHoaDon(); // tự sinh mã HD
@@ -54,7 +54,7 @@ public class HoaDon_DAO {
     }
 
     // Tự sinh mã hóa đơn mới
-    private String taoMaHoaDon() throws SQLException {
+    private static String taoMaHoaDon() throws SQLException {
         String query = "SELECT MAX(maHD) AS maHD FROM HoaDon";
         try (Connection con = ConnectSQL.getConnection();
              PreparedStatement ps = con.prepareStatement(query);

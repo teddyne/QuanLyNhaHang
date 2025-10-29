@@ -17,7 +17,7 @@ public class ChiTietHoaDon_DAO {
 //        this.conn = conn;
 //    }
 
-    public boolean themChiTiet(ChiTietHoaDon ct) throws SQLException {
+    public static boolean themChiTiet(ChiTietHoaDon ct) throws SQLException {
         String sql = "INSERT INTO ChiTietHoaDon (maHD, maMon, soLuong, donGia, ghiChu) VALUES (?, ?, ?, ?, ?)";
         try (Connection con = ConnectSQL.getConnection();
         	PreparedStatement ps = con.prepareStatement(sql)) {
@@ -51,7 +51,7 @@ public class ChiTietHoaDon_DAO {
         return list;
     }
 
-    public boolean xoaChiTietTheoHoaDon(String maHoaDon) throws SQLException {
+    public static boolean xoaChiTietTheoHoaDon(String maHoaDon) throws SQLException {
         String sql = "DELETE FROM ChiTietHoaDon WHERE maHD = ?";
         try (Connection con = ConnectSQL.getConnection();
         	PreparedStatement ps = con.prepareStatement(sql)) {

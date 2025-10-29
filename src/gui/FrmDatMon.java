@@ -53,11 +53,6 @@ import javax.swing.table.DefaultTableModel;
 import com.toedter.calendar.JDateChooser;
 import java.awt.AlphaComposite;
 import connectSQL.ConnectSQL;
-import dao.Ban_DAO;
-import dao.KhachHang_DAO;
-import dao.KhuVuc_DAO;
-import dao.LoaiBan_DAO;
-import dao.PhieuDatBan_DAO;
 import entity.Ban;
 import entity.ChiTietDatMon;
 import entity.ChiTietHoaDon;
@@ -90,7 +85,6 @@ public class FrmDatMon extends JFrame {
     private static final Color MAU_DO_RUOU = new Color(169, 55, 68);
     private static final Color MAU_HONG_NHAT = new Color(255, 230, 230);
     private static final Color MAU_TRANG = Color.WHITE;
-    private static final Color MAU_HONG_CARD = new Color(240, 182, 182);
     // FONT TIMES NEW ROMAN
     private static final Font FONT_TIEU_DE = new Font("Times New Roman", Font.BOLD, 32);
     private static final Font FONT_TIEU_DE_NHO = new Font("Times New Roman", Font.BOLD, 26);
@@ -118,10 +112,11 @@ public class FrmDatMon extends JFrame {
     private String maKH;
     private String maKM;
     private String maNhanVien = "NV0001";
-    private String tenKhach = "Khách vãng lai";
-    private String tenNhanVien = "Nhân viên mặc định";
+    private String tenKhach = "Khách thành viên";
+    private String tenNhanVien = "Bùi Ngọc Hiền";
     private FrmPhucVu frmPhucVu;
     private PhieuDatBan_DAO phieuDatBanDAO;
+	private String maHoaDon;
     
     public FrmDatMon(Connection con, String maPhieu, String maBan) throws SQLException {
         super("ĐẶT MÓN");
@@ -417,11 +412,11 @@ public class FrmDatMon extends JFrame {
         buttons.setBackground(MAU_TRANG);
         JButton btnXoa = new JButton("XÓA");
         kieuNut(btnXoa, new Color(231, 76, 60));
-        btnXoa.setPreferredSize(new Dimension(120, 40));
+        btnXoa.setPreferredSize(new Dimension(100, 40));
         btnXoa.addActionListener(e -> xoaMonDat());
         JButton btnLuu = new JButton("LƯU");
         kieuNut(btnLuu, new Color(52, 152, 219));
-        btnLuu.setPreferredSize(new Dimension(120, 40));
+        btnLuu.setPreferredSize(new Dimension(100, 40));
         btnLuu.addActionListener(e -> luuDanhSachMon());
         JButton btnThanhToan = new JButton("THANH TOÁN");
         kieuNut(btnThanhToan, new Color(102, 210, 74));
@@ -520,12 +515,27 @@ public class FrmDatMon extends JFrame {
         }
     }
     
-	private void luuDanhSachMon() {
-        if (danhSachMonDat.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Chưa chọn món!");
-            return;
+    private void luuDanhSachMon() {
+        try {
+            if (danhSachMonDat.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Chưa chọn món!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            if (maHoaDon == null) {
+                maHoaDon = HoaDon_DAO.taoHoaDonMoi(maPhieu, maNhanVien, maKH, maKM, phuThu, ghiChu);
+            }
+
+            ChiTietHoaDon_DAO.xoaChiTietTheoHoaDon(maHoaDon);
+            for (MonDat item : danhSachMonDat) {
+                ChiTietHoaDon ct = new ChiTietHoaDon(maHoaDon, item.mon.getMaMon(), item.soLuong, item.mon.getDonGia(), item.getGhiChu());
+                ChiTietHoaDon_DAO.themChiTiet(ct);
+            }
+
+            JOptionPane.showMessageDialog(this, "Lưu thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Lỗi lưu: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
         }
-         JOptionPane.showMessageDialog(this, "Đặt món thành công");
     }
 	
     private void thanhToan() {

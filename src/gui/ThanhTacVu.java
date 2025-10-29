@@ -6,16 +6,21 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.table.DefaultTableModel;
+
 import connectSQL.ConnectSQL;
 import dao.Ban_DAO;
 import dao.KhachHang_DAO;
 import dao.KhuVuc_DAO;
 import dao.LoaiBan_DAO; // Added import for LoaiBan_DAO
 import dao.LoaiKhachHang_DAO;
+import dao.MonAn_DAO;
 import dao.PhieuDatBan_DAO;
 import dao.TaiKhoan_DAO;
 import entity.Ban;
 import entity.KhachHang; // Đã thêm import
+import entity.MonAn;
 import entity.PhieuDatBan;
 import entity.TaiKhoan;
 
@@ -180,6 +185,13 @@ public class ThanhTacVu extends JFrame {
         JMenuItem tmon = new JMenuItem("Món ăn");
         tmon.setFont(fontItem);
         tmon.setIcon(taoIcon("img/thucdon.png", 30, 30));
+        tmon.addActionListener(e -> {
+            try {
+                moFormTimMonAn();
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(this, "Lỗi khi mở form tìm món: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            }
+        });
         
         JMenuItem tkh = new JMenuItem("Khách Hàng");
         tkh.setFont(fontItem);
@@ -406,7 +418,112 @@ public class ThanhTacVu extends JFrame {
         });
     }
 
-    private void moFormNhapMaBan() throws SQLException {
+ // =============================================
+ // TÌM MÓN ĂN THEO TÊN (giống FrmDatMon)
+ // =============================================
+ private void moFormTimMonAn() throws SQLException {
+     JDialog dlg = new JDialog(this, "Tìm Món Ăn", true);
+     dlg.setLayout(new BorderLayout());
+     dlg.setSize(900, 600);
+     dlg.setLocationRelativeTo(this);
+     dlg.setResizable(false);
+
+     Connection conn = ConnectSQL.getConnection();
+     MonAn_DAO monAnDAO = new MonAn_DAO(conn);
+
+     // === HEADER: Tìm kiếm ===
+     JPanel pnlHeader = new JPanel(new BorderLayout());
+     pnlHeader.setBackground(new Color(169, 55, 68));
+     pnlHeader.setBorder(new EmptyBorder(15, 20, 15, 20));
+
+     JLabel lblTitle = new JLabel("TÌM KIẾM MÓN ĂN", SwingConstants.CENTER);
+     lblTitle.setFont(new Font("Times New Roman", Font.BOLD, 28));
+     lblTitle.setForeground(Color.WHITE);
+     pnlHeader.add(lblTitle, BorderLayout.CENTER);
+
+     JPanel pnlSearch = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+     pnlSearch.setBackground(new Color(169, 55, 68));
+     JLabel lblTim = new JLabel("Tên món:");
+     lblTim.setFont(new Font("Times New Roman", Font.BOLD, 20));
+     lblTim.setForeground(Color.WHITE);
+
+     JTextField txtTim = new JTextField(25);
+     txtTim.setFont(new Font("Times New Roman", Font.PLAIN, 20));
+
+     JButton btnTim = new JButton("Tìm");
+     kieuNut(btnTim, new Color(102, 210, 74));
+     btnTim.setPreferredSize(new Dimension(100, 40));
+
+     pnlSearch.add(lblTim);
+     pnlSearch.add(txtTim);
+     pnlSearch.add(btnTim);
+     pnlHeader.add(pnlSearch, BorderLayout.SOUTH);
+
+     dlg.add(pnlHeader, BorderLayout.NORTH);
+
+     // === BẢNG KẾT QUẢ ===
+     String[] cols = {"Mã món", "Tên món", "Loại món", "Giá", "Trạng thái"};
+     DefaultTableModel model = new DefaultTableModel(cols, 0);
+     JTable tblKetQua = new JTable(model);
+     tblKetQua.setRowHeight(40);
+     tblKetQua.setFont(new Font("Times New Roman", Font.PLAIN, 18));
+     tblKetQua.getTableHeader().setFont(new Font("Times New Roman", Font.BOLD, 18));
+     tblKetQua.getTableHeader().setBackground(new Color(169, 55, 68));
+
+     JScrollPane scroll = new JScrollPane(tblKetQua);
+     scroll.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+     dlg.add(scroll, BorderLayout.CENTER);
+
+     // === NÚT ĐÓNG ===
+     JPanel pnlBottom = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+     pnlBottom.setBackground(Color.WHITE);
+     JButton btnDong = new JButton("Đóng");
+     kieuNut(btnDong, new Color(231, 76, 60));
+     btnDong.setPreferredSize(new Dimension(120, 40));
+     btnDong.addActionListener(e -> dlg.dispose());
+     pnlBottom.add(btnDong);
+     dlg.add(pnlBottom, BorderLayout.SOUTH);
+
+     // === HÀNH ĐỘNG TÌM KIẾM ===
+     Runnable timKiem = () -> {
+         String keyword = txtTim.getText().trim().toLowerCase();
+         model.setRowCount(0);
+
+         List<MonAn> dsMon = monAnDAO.getAllMonAn();
+		 for (MonAn mon : dsMon) {
+		     if (keyword.isEmpty() || mon.getTenMon().toLowerCase().contains(keyword)) {
+		         String trangThai = mon.isTrangThai() ? "Còn món" : "Hết món";
+		         model.addRow(new Object[]{
+		             mon.getMaMon(),
+		             mon.getTenMon(),
+		             mon.getLoaiMon().getTenLoai(),
+		             String.format("%,.0f đ", mon.getDonGia()),
+		             trangThai
+		         });
+		     }
+		 }
+		 if (model.getRowCount() == 0) {
+		     JOptionPane.showMessageDialog(dlg, "Không tìm thấy món nào!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+		 }
+     };
+
+     btnTim.addActionListener(e -> timKiem.run());
+     txtTim.addKeyListener(new KeyAdapter() {
+         @Override
+         public void keyPressed(KeyEvent e) {
+             if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                 timKiem.run();
+             }
+         }
+     });
+
+     // Tải tất cả khi mở
+     timKiem.run();
+
+     dlg.setVisible(true);
+ }
+
+	private void moFormNhapMaBan() throws SQLException {
 	    JDialog dlg = new JDialog(this, "Nhập Mã Bàn", false);
 	    dlg.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 20));
 	    dlg.setSize(500, 120);
@@ -826,7 +943,6 @@ public class ThanhTacVu extends JFrame {
         dlg.setVisible(true);
     }
     
-
     private String layTrangThaiHienTai(String maBan, PhieuDatBan_DAO phieuDatBanDAO) {
         try {
             java.util.Date today = new java.util.Date();
@@ -852,6 +968,7 @@ public class ThanhTacVu extends JFrame {
         return menu;
     }
 
+    //Thanh dưới
     private JPanel taoBottomBar() {
         JPanel bottomBar = new JPanel(new BorderLayout());
         bottomBar.setBackground(new Color(245, 245, 245));
@@ -863,7 +980,7 @@ public class ThanhTacVu extends JFrame {
 
         ImageIcon iconAddress = new ImageIcon("img/diachi.png");
         Image imgAddr = iconAddress.getImage().getScaledInstance(25, 25, Image.SCALE_SMOOTH);
-        JLabel lblAddress = new JLabel("Đại học Công Nghiệp Tp HCM", new ImageIcon(imgAddr), JLabel.LEFT);
+        JLabel lblAddress = new JLabel("Nhà Hàng Vang_Gò Vấp_TP.HCM", new ImageIcon(imgAddr), JLabel.LEFT);
         lblAddress.setFont(new Font("Times New Roman", Font.BOLD, 20));
         lblAddress.setForeground(Color.DARK_GRAY);
 

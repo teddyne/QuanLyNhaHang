@@ -10,20 +10,16 @@ import dao.KhachHang_DAO;
 import dao.LoaiKhachHang_DAO;
 
 public class FrmTrangChu extends JFrame {
-    private JPanel pNor, pCen;
+    private JPanel pCen;
     private RoundedButton btnBan;
     private RoundedButton btnNhanVien;
     private RoundedButton btnThucDon;
     private RoundedButton btnKhuyenMai;
     private RoundedButton btnKhach;
-    private RoundedButton btnKho;
     private RoundedButton btnHoaDon;
     private RoundedButton btnThongKe;
     private RoundedButton btnTaiKhoan;
-    private JPanel pSou;
-    private JButton btnHome;
-    private JButton btnQuanLy;
-	private RoundedButton btnKhuVuc;
+    private RoundedButton btnKhuVuc;
     private static String phanQuyen = null;
 
     public static void setPhanQuyen(String quyen) {
@@ -220,37 +216,7 @@ public class FrmTrangChu extends JFrame {
             super.paintComponent(g);
         }
     }
-
-    class BottomButton extends JButton {
-        public BottomButton(String text, String iconPath) {
-            super(text);
-            setFont(new Font("Times New Roman", Font.BOLD, 18));
-            setFocusPainted(false);
-            setContentAreaFilled(false);
-            setOpaque(false);
-            setBorderPainted(false);
-            setHorizontalTextPosition(SwingConstants.RIGHT);
-            setVerticalTextPosition(SwingConstants.CENTER);
-            try {
-                ImageIcon icon = new ImageIcon(iconPath);
-                Image img = icon.getImage().getScaledInstance(30, 30, Image.SCALE_SMOOTH);
-                setIcon(new ImageIcon(img));
-            } catch (Exception e) {
-                System.out.println("Không tìm thấy icon: " + iconPath);
-            }
-
-            setBorder(BorderFactory.createEmptyBorder(8, 18, 8, 18));
-
-            addMouseListener(new java.awt.event.MouseAdapter() {
-                public void mouseEntered(java.awt.event.MouseEvent evt) {
-                    setForeground(new Color(200, 0, 0));
-                }
-                public void mouseExited(java.awt.event.MouseEvent evt) {
-                    setForeground(Color.BLACK);
-                }
-            });
-        }
-    }
+    
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new FrmTrangChu().setVisible(true));

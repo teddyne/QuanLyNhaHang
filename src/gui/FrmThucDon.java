@@ -25,7 +25,10 @@ public class FrmThucDon extends JFrame {
     // Màu sắc (đồng bộ với FrmDatMon)
     private static final Color MAU_DO_RUOU = new Color(169, 55, 68);
     private static final Color MAU_HONG = new Color(241, 200, 204);
-    private static final Color MAU_XANH_LA = new Color(102, 210, 74);
+    private static final Color MAU_XANH_LA = new Color(46, 204, 113);
+    private static final Color MAU_XANH_DUONG = new Color(52, 152, 219);
+    private static final Color MAU_DO = new Color(231, 76, 60);
+    private static final Color MAU_VANG = new Color(255, 200, 60);
     private static final Color MAU_XAM = Color.LIGHT_GRAY;
     private static final Color MAU_TRANG = Color.WHITE;
     private static final Font FONT_TXT = new Font("Times New Roman", Font.PLAIN, 14);
@@ -39,7 +42,8 @@ public class FrmThucDon extends JFrame {
 
     // Thành phần giao diện
     private List<MonAn> danhSachMon = new ArrayList<>();
-    private JPanel pnlLuoiMon, pnlLuoiMonChinh, pnlLuoiMonTrangMieng, pnlLuoiMonNuocUong;
+    private final Map<String, JPanel> panelByLoaiMa = new HashMap<>(); // key = maLoai
+    private JPanel pnlLuoiMon; // panel "Tất cả"
     private JTextField txtTimKiem;
     private JComboBox<String> cmbLocLoai;
     private JTabbedPane tabLoai;
@@ -47,6 +51,11 @@ public class FrmThucDon extends JFrame {
     private JPanel khungDangChon = null;
 
     public FrmThucDon() throws SQLException {
+    	// Menu
+    	setJMenuBar(ThanhTacVu.getInstance().getJMenuBar());
+        ThanhTacVu customMenu = ThanhTacVu.getInstance();
+        add(customMenu.getBottomBar(), BorderLayout.SOUTH);
+        
         monAnDAO = new MonAn_DAO(con);
         loaiMonDAO = new LoaiMon_DAO(con);
         setTitle("THỰC ĐƠN");
@@ -60,31 +69,30 @@ public class FrmThucDon extends JFrame {
         taoTieuDe();
         taoNoiDungChinh();
 
-        // Load dữ liệu
-        khoiTaoComboBoxLoai();
-        loadDataFromDB();
-        capNhatLuoiMon();
+        // Load dữ liệu và build tab + combo
+        refreshLoaiAndData();
 
         setVisible(true);
     }
 
-    // Thanh bên trái
+
+ // Thanh bên trái
     private void taoThanhBen() {
         JPanel pnlBenTrai = new JPanel(new BorderLayout());
         pnlBenTrai.setPreferredSize(new Dimension(220, 0));
         pnlBenTrai.setBackground(MAU_TRANG);
 
-        // Thời gian
+        // --- Thời gian ---
         JPanel pnlThoiGian = new JPanel(new GridLayout(2, 1));
         pnlThoiGian.setBackground(MAU_TRANG);
         pnlThoiGian.setBorder(new MatteBorder(0, 0, 1, 0, MAU_XAM));
 
         JLabel lblGio = new JLabel();
-        lblGio.setFont(new Font("Consolas", Font.BOLD, 24));
+        lblGio.setFont(new Font("Consolas", Font.BOLD, 22));
         lblGio.setHorizontalAlignment(SwingConstants.CENTER);
 
         JLabel lblNgay = new JLabel();
-        lblNgay.setFont(new Font("Times New Roman", Font.PLAIN, 18));
+        lblNgay.setFont(new Font("Times New Roman", Font.PLAIN, 16));
         lblNgay.setHorizontalAlignment(SwingConstants.CENTER);
 
         Timer dongHo = new Timer(1000, e -> {
@@ -98,26 +106,110 @@ public class FrmThucDon extends JFrame {
         pnlThoiGian.add(lblNgay);
         pnlBenTrai.add(pnlThoiGian, BorderLayout.NORTH);
 
-        // Danh mục
-        JPanel pnlDanhMuc = new JPanel(new GridLayout(5, 1, 0, 0));
-        pnlDanhMuc.setBackground(MAU_TRANG);
-        pnlDanhMuc.setBorder(new TitledBorder(null, "DANH MỤC", TitledBorder.CENTER,
-                TitledBorder.TOP, new Font("Times New Roman", Font.BOLD, 18), MAU_DO_RUOU));
+        // --- Các nút chức năng ---
+        JPanel pnlChucNang = new JPanel();
+        pnlChucNang.setLayout(new BoxLayout(pnlChucNang, BoxLayout.Y_AXIS));
+        pnlChucNang.setBackground(MAU_TRANG);
+        pnlChucNang.setBorder(new TitledBorder(null, "CHỨC NĂNG", TitledBorder.CENTER,
+                TitledBorder.TOP, new Font("Times New Roman", Font.BOLD, 17), MAU_DO_RUOU));
 
-        String[] mucs = {"Thực Đơn", "Hóa Đơn", "Nhân Viên", "Khách Hàng", "Khuyến Mãi"};
-        for (String muc : mucs) {
-            JButton btn = new JButton(muc);
-            btn.setFocusPainted(false);
-            btn.setFont(FONT_BUTTON);
-            btn.setBackground(muc.equals("Thực Đơn") ? MAU_DO_RUOU : MAU_TRANG);
-            btn.setForeground(muc.equals("Thực Đơn") ? MAU_TRANG : Color.BLACK);
-            btn.setBorder(BorderFactory.createLineBorder(MAU_XAM));
-            pnlDanhMuc.add(btn);
-        }
+        Dimension btnSize = new Dimension(160, 50);
 
-        pnlBenTrai.add(pnlDanhMuc, BorderLayout.CENTER);
+        JButton btnThem = taoNhoButton("Thêm món", MAU_XANH_LA, MAU_TRANG, btnSize);
+        btnThem.addActionListener(e -> new DialogThemMonAn(this).setVisible(true));
+
+        JButton btnCapNhat = taoNhoButton("Cập nhật", MAU_XANH_DUONG, MAU_TRANG, btnSize);
+        btnCapNhat.addActionListener(e -> {
+            if (monDangChon == null) {
+                JOptionPane.showMessageDialog(this, "Vui lòng chọn món để cập nhật!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            new DialogCapNhatMonAn(this, monDangChon).setVisible(true);
+        });
+
+        JButton btnXoa = taoNhoButton("Xóa món", MAU_DO, MAU_TRANG, btnSize);
+        btnXoa.addActionListener(e -> xoaMonAn());
+
+        JButton btnLoaiMon = taoNhoButton("Thêm loại món", MAU_VANG, Color.BLACK, btnSize);
+        btnLoaiMon.addActionListener(e -> {
+            FrmLoaiMon frm = null;
+			try {
+				frm = new FrmLoaiMon();
+			} catch (SQLException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+            frm.setVisible(true);
+        });
+
+        JButton btnLamMoi = taoNhoButton("Làm mới", MAU_XAM, Color.WHITE, btnSize);
+        btnLamMoi.addActionListener(e -> {
+            txtTimKiem.setText("");
+            if (cmbLocLoai.getItemCount() > 0)
+                cmbLocLoai.setSelectedIndex(0);
+            refreshLoaiAndData();
+        });
+
+        // Thêm các nút cách nhau một khoảng
+        pnlChucNang.add(Box.createVerticalStrut(30));
+        pnlChucNang.add(center(btnThem));
+        pnlChucNang.add(Box.createVerticalStrut(30));
+        pnlChucNang.add(center(btnCapNhat));
+        pnlChucNang.add(Box.createVerticalStrut(30));
+        pnlChucNang.add(center(btnXoa));
+        pnlChucNang.add(Box.createVerticalStrut(30));
+        pnlChucNang.add(center(btnLoaiMon));
+        pnlChucNang.add(Box.createVerticalStrut(30));
+        pnlChucNang.add(center(btnLamMoi));
+        pnlChucNang.add(Box.createVerticalGlue());
+
+        pnlBenTrai.add(pnlChucNang, BorderLayout.CENTER);
         add(pnlBenTrai, BorderLayout.WEST);
     }
+
+    private JButton taoNhoButton(String text, Color bg, Color fg, Dimension size) {
+        JButton btn = new JButton(text);
+        btn.setFont(new Font("Times New Roman", Font.BOLD, 20));
+        btn.setPreferredSize(size);
+        btn.setMaximumSize(size);
+        btn.setAlignmentX(Component.CENTER_ALIGNMENT);
+        btn.setFocusPainted(false);
+
+        // Thiết lập màu nền và chữ
+        btn.setBackground(bg);
+        btn.setForeground(fg);
+
+        // Bắt buộc hiển thị màu nền đúng
+        btn.setOpaque(true);
+        btn.setContentAreaFilled(true);
+        btn.setBorderPainted(false); // tắt viền mặc định, nhìn gọn hơn
+
+        // Hover effect
+        Color hover = bg.darker();
+        btn.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent e) {
+                btn.setBackground(hover);
+            }
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent e) {
+                btn.setBackground(bg);
+            }
+        });
+
+        return btn;
+    }
+
+    
+
+
+    // Căn giữa component trong BoxLayout
+    private Component center(JComponent comp) {
+        comp.setAlignmentX(Component.CENTER_ALIGNMENT);
+        return comp;
+    }
+
+
 
     // Tiêu đề
     private void taoTieuDe() {
@@ -134,6 +226,7 @@ public class FrmThucDon extends JFrame {
     }
 
     // Nội dung chính
+
     private void taoNoiDungChinh() {
         JPanel pnlChinh = new JPanel(new BorderLayout(12, 12));
         pnlChinh.setBorder(new EmptyBorder(12, 12, 12, 12));
@@ -164,6 +257,7 @@ public class FrmThucDon extends JFrame {
         pnlTimKiem.add(lblLoai);
         pnlTimKiem.add(cmbLocLoai);
 
+
         // Live search
         txtTimKiem.getDocument().addDocumentListener(new DocumentListener() {
             public void insertUpdate(DocumentEvent e) { capNhatLuoiMon(); }
@@ -191,109 +285,124 @@ public class FrmThucDon extends JFrame {
             }
         });
 
-        // Tạo panels
-        pnlLuoiMonChinh = taoPanelLuoiMon();
-        pnlLuoiMonTrangMieng = taoPanelLuoiMon();
-        pnlLuoiMonNuocUong = taoPanelLuoiMon();
-        pnlLuoiMon = taoPanelLuoiMon();
+        pnlChinh.add(tabLoai, BorderLayout.CENTER);
+        add(pnlChinh, BorderLayout.CENTER);
 
-        // Gói vào JScrollPane
-        JScrollPane scrChinh = taoScroll(pnlLuoiMonChinh);
-        JScrollPane scrTrang = taoScroll(pnlLuoiMonTrangMieng);
-        JScrollPane scrNuoc = taoScroll(pnlLuoiMonNuocUong);
-        JScrollPane scrAll = taoScroll(pnlLuoiMon);
+        refreshLoaiAndData();
+    }
 
-        tabLoai.addTab("Món chính", scrChinh);
-        tabLoai.addTab("Tráng miệng", scrTrang);
-        tabLoai.addTab("Nước uống", scrNuoc);
-        tabLoai.addTab("Tất cả", scrAll);
+    private void refreshLoaiAndData() {
+        // Xóa dữ liệu cũ
+        cmbLocLoai.removeAllItems();
+        tabLoai.removeAll();
 
-        // Tab ↔ ComboBox sync
-        tabLoai.addChangeListener(e -> {
-            int idx = tabLoai.getSelectedIndex();
-            switch (idx) {
-                case 0: cmbLocLoai.setSelectedItem("Món chính"); break;
-                case 1: cmbLocLoai.setSelectedItem("Tráng miệng"); break;
-                case 2: cmbLocLoai.setSelectedItem("Nước uống"); break;
-                default: cmbLocLoai.setSelectedItem("Tất cả"); break;
+        // Lấy danh sách loại món từ DB
+        List<LoaiMon> dsLoai = loaiMonDAO.getAllLoaiMon();
+
+        for (LoaiMon lm : dsLoai) {
+            cmbLocLoai.addItem(lm.getTenLoai());
+        }
+
+        // Build tabs theo loại món
+        buildTabs();
+
+        // Load dữ liệu món từ DB
+        loadDataFromDB();
+
+        // Chọn mặc định loại đầu tiên
+        if (cmbLocLoai.getItemCount() > 0)
+            cmbLocLoai.setSelectedIndex(0);
+
+        // Cập nhật món hiển thị
+        capNhatLuoiMon();
+    }
+
+
+
+    private void dongBoLoaiMon() {
+        // Khi chọn trong combobox → đổi tab
+        cmbLocLoai.addActionListener(e -> {
+            String selected = (String) cmbLocLoai.getSelectedItem();
+            for (int i = 0; i < tabLoai.getTabCount(); i++) {
+                if (tabLoai.getTitleAt(i).equals(selected)) {
+                    tabLoai.setSelectedIndex(i);
+                    break;
+                } else if ("Tất cả".equals(selected)) {
+                    tabLoai.setSelectedIndex(-1); // Không chọn tab cụ thể
+                }
             }
             capNhatLuoiMon();
         });
 
-        pnlChinh.add(tabLoai, BorderLayout.CENTER);
-        add(pnlChinh, BorderLayout.CENTER);
-
-        // Nút chức năng
-        taoNutChucNang();
-    }
-
-    // Nút chức năng
-    private void taoNutChucNang() {
-        JPanel pnlBottom = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
-        pnlBottom.setBackground(MAU_TRANG);
-
-        JButton btnThem = new JButton("Thêm");
-        btnThem.setFont(FONT_BUTTON);
-        btnThem.setBackground(MAU_XANH_LA);
-        btnThem.setForeground(MAU_TRANG);
-        btnThem.setPreferredSize(new Dimension(100, 35));
-        btnThem.setFocusPainted(false);
-
-        JButton btnCapNhat = new JButton("Cập nhật");
-        btnCapNhat.setFont(FONT_BUTTON);
-        btnCapNhat.setBackground(MAU_XANH_LA);
-        btnCapNhat.setForeground(MAU_TRANG);
-        btnCapNhat.setPreferredSize(new Dimension(100, 35));
-        btnCapNhat.setFocusPainted(false);
-
-        JButton btnXoa = new JButton("Xóa");
-        btnXoa.setFont(FONT_BUTTON);
-        btnXoa.setBackground(MAU_DO_RUOU);
-        btnXoa.setForeground(MAU_TRANG);
-        btnXoa.setPreferredSize(new Dimension(100, 35));
-        btnXoa.setFocusPainted(false);
-
-        btnThem.addActionListener(e -> new DialogThemMonAn(this).setVisible(true));
-        btnCapNhat.addActionListener(e -> {
-            if (monDangChon == null) {
-                JOptionPane.showMessageDialog(this, "Vui lòng chọn món để cập nhật!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
-                return;
+        // Khi đổi tab → đổi combobox
+        tabLoai.addChangeListener(e -> {
+            int index = tabLoai.getSelectedIndex();
+            if (index >= 0) {
+                String tenLoai = tabLoai.getTitleAt(index);
+                cmbLocLoai.setSelectedItem(tenLoai);
             }
-            new DialogCapNhatMonAn(this, monDangChon).setVisible(true);
         });
-        btnXoa.addActionListener(e -> xoaMonAn());
-
-        pnlBottom.add(btnThem);
-        pnlBottom.add(btnCapNhat);
-        pnlBottom.add(btnXoa);
-        add(pnlBottom, BorderLayout.SOUTH);
     }
 
-    // Load dữ liệu từ DB
+
+    // Build dynamic tabs from LoaiMon table (only trangThai=1)
+    private void buildTabs() {
+        tabLoai.removeAll();
+        panelByLoaiMa.clear();
+
+        List<LoaiMon> listLoai = loaiMonDAO.getAllLoaiMon();
+        for (LoaiMon lm : listLoai) {
+            JPanel pnl = taoPanelLuoiMon();
+            panelByLoaiMa.put(lm.getMaLoai(), pnl);
+            JScrollPane scr = taoScroll(pnl);
+            tabLoai.addTab(lm.getTenLoai(), scr);
+        }
+
+        // Khi đổi tab -> cập nhật combobox
+        tabLoai.addChangeListener(e -> {
+            int idx = tabLoai.getSelectedIndex();
+            if (idx >= 0) {
+                String title = tabLoai.getTitleAt(idx);
+                cmbLocLoai.setSelectedItem(title);
+                capNhatLuoiMon();
+            }
+        });
+    }
+
+    // Load dữ liệu món ăn từ DB
     private void loadDataFromDB() {
         danhSachMon = monAnDAO.getAllMonAn();
-		if (danhSachMon.isEmpty()) {
-		    JOptionPane.showMessageDialog(this, "Cơ sở dữ liệu rỗng! Vui lòng chạy script SQL.", "Lỗi", JOptionPane.ERROR_MESSAGE);
-		}
+        if (danhSachMon.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Cơ sở dữ liệu rỗng! Vui lòng chạy script SQL.", "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
+
+        // Lọc ra những món có loại món hợp lệ
+        Set<String> activeLoai = new HashSet<>();
+        for (LoaiMon lm : loaiMonDAO.getAllLoaiMon()) activeLoai.add(lm.getMaLoai());
+        List<MonAn> filtered = new ArrayList<>();
+        for (MonAn m : danhSachMon) {
+            if (m.getLoaiMon() != null && activeLoai.contains(m.getLoaiMon().getMaLoai()))
+                filtered.add(m);
+        }
+        danhSachMon = filtered;
     }
 
-    // Khởi tạo combobox loại món
+
+    // Khởi tạo combobox loại món (dynamic)
     private void khoiTaoComboBoxLoai() {
         List<LoaiMon> listLoai = loaiMonDAO.getAllLoaiMon();
-		DefaultComboBoxModel<String> model = new DefaultComboBoxModel<>();
-		model.addElement("Tất cả");
-		for (LoaiMon lm : listLoai) {
-		    model.addElement(lm.getTenLoai());
-		}
-		cmbLocLoai.setModel(model);
+        DefaultComboBoxModel<String> model = new DefaultComboBoxModel<>();
+        model.addElement("Tất cả");
+        for (LoaiMon lm : listLoai) {
+            model.addElement(lm.getTenLoai());
+        }
+        cmbLocLoai.setModel(model);
+        cmbLocLoai.setSelectedItem("Tất cả");
     }
 
-    // Cập nhật lưới món
+    // Cập nhật lưới món: đặt card vào panel tương ứng (dynamic)
     private void capNhatLuoiMon() {
-        pnlLuoiMon.removeAll();
-        pnlLuoiMonChinh.removeAll();
-        pnlLuoiMonTrangMieng.removeAll();
-        pnlLuoiMonNuocUong.removeAll();
+        for (JPanel p : panelByLoaiMa.values()) p.removeAll();
 
         String tuKhoa = txtTimKiem.getText().trim().toLowerCase();
         String loaiChon = (String) cmbLocLoai.getSelectedItem();
@@ -302,31 +411,34 @@ public class FrmThucDon extends JFrame {
             if (!mon.isTrangThai()) continue;
 
             boolean matchKeyword = tuKhoa.isEmpty() || mon.getTenMon().toLowerCase().contains(tuKhoa);
-            boolean matchLoai = "Tất cả".equals(loaiChon) || mon.getLoaiMon().getTenLoai().equals(loaiChon);
+            boolean matchLoai = mon.getLoaiMon() != null &&
+                    mon.getLoaiMon().getTenLoai().equalsIgnoreCase(loaiChon);
 
             if (matchKeyword && matchLoai) {
                 JPanel card = taoCardMon(mon);
-                pnlLuoiMon.add(card);
-                String tenLoai = mon.getLoaiMon().getTenLoai();
-                switch (tenLoai) {
-                    case "Món chính": pnlLuoiMonChinh.add(card); break;
-                    case "Tráng miệng": pnlLuoiMonTrangMieng.add(card); break;
-                    case "Nước uống": pnlLuoiMonNuocUong.add(card); break;
+                String maLoai = mon.getLoaiMon().getMaLoai();
+                if (panelByLoaiMa.containsKey(maLoai)) {
+                    panelByLoaiMa.get(maLoai).add(card);
                 }
             }
         }
 
-        pnlLuoiMon.revalidate();
-        pnlLuoiMon.repaint();
-        pnlLuoiMonChinh.revalidate();
-        pnlLuoiMonChinh.repaint();
-        pnlLuoiMonTrangMieng.revalidate();
-        pnlLuoiMonTrangMieng.repaint();
-        pnlLuoiMonNuocUong.revalidate();
-        pnlLuoiMonNuocUong.repaint();
+        for (JPanel p : panelByLoaiMa.values()) {
+            p.revalidate();
+            p.repaint();
+        }
+
+        // Đồng bộ Tab ↔ ComboBox
+        int idx = tabLoai.getSelectedIndex();
+        if (idx >= 0 && idx < tabLoai.getTabCount()) {
+            String tabName = tabLoai.getTitleAt(idx);
+            cmbLocLoai.setSelectedItem(tabName);
+        }
     }
 
-    // Tạo panel lưới món
+
+
+ // Tạo panel lưới món
     private JPanel taoPanelLuoiMon() {
         JPanel pnl = new JPanel(new GridLayout(0, 4, 15, 15));
         pnl.setBackground(MAU_TRANG);
@@ -340,7 +452,7 @@ public class FrmThucDon extends JFrame {
         scr.getViewport().setBackground(MAU_TRANG);
         return scr;
     }
-
+    
     // Tạo card món
     private JPanel taoCardMon(MonAn mon) {
         JPanel khung = new JPanel(new BorderLayout(5, 5));
@@ -352,7 +464,7 @@ public class FrmThucDon extends JFrame {
                 new LineBorder(MAU_DO_RUOU, 2, true),
                 new EmptyBorder(8, 8, 8, 8)));
 
-        // Hover effect
+        // Hover effect + select
         khung.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
@@ -453,14 +565,14 @@ public class FrmThucDon extends JFrame {
         return khung;
     }
 
-    // Xóa món ăn
+    // Xóa món ăn (thực chất ẩn)
     private void xoaMonAn() {
         if (monDangChon == null) {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn món để xóa!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
             return;
         }
         int ch = JOptionPane.showConfirmDialog(this,
-                String.format("Ẩn '%s' khỏi thực đơn?", monDangChon.getTenMon()),
+                String.format("Xóa '%s' khỏi thực đơn?", monDangChon.getTenMon()),
                 "Xác nhận", JOptionPane.YES_NO_OPTION);
         if (ch == JOptionPane.YES_OPTION) {
             try {
@@ -471,7 +583,7 @@ public class FrmThucDon extends JFrame {
                     monDangChon = null;
                     khungDangChon = null;
                 } else {
-                    JOptionPane.showMessageDialog(this, "Ẩn món thất bại!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "Xóa món thất bại!", "Lỗi", JOptionPane.ERROR_MESSAGE);
                 }
             } catch (SQLException e) {
                 JOptionPane.showMessageDialog(this, "Lỗi: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
@@ -596,23 +708,29 @@ public class FrmThucDon extends JFrame {
 
             add(form, BorderLayout.CENTER);
 
-            // Nút
+         // Nút
             JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 10));
             btnPanel.setBackground(MAU_TRANG);
 
+            // Nút Lưu (xanh lá, chữ trắng)
             JButton btnThem = new JButton("Lưu");
             btnThem.setFont(FONT_BUTTON);
-            btnThem.setBackground(MAU_XANH_LA);
+            btnThem.setBackground(MAU_XANH_LA); 
             btnThem.setForeground(MAU_TRANG);
             btnThem.setPreferredSize(new Dimension(100, 35));
             btnThem.setFocusPainted(false);
+            btnThem.setOpaque(true);          
+            btnThem.setBorderPainted(false);  // Không để viền nút che màu
 
+            // Nút Hủy (xám, chữ trắng)
             JButton btnHuy = new JButton("Hủy");
             btnHuy.setFont(FONT_BUTTON);
-            btnHuy.setBackground(MAU_XAM);
-            btnHuy.setForeground(MAU_TRANG);
+            btnHuy.setBackground(MAU_XAM); 
+            btnHuy.setForeground(Color.BLACK);
             btnHuy.setPreferredSize(new Dimension(100, 35));
             btnHuy.setFocusPainted(false);
+            btnHuy.setOpaque(true);
+            btnHuy.setBorderPainted(false);
 
             btnPanel.add(btnHuy);
             btnPanel.add(btnThem);
@@ -620,15 +738,16 @@ public class FrmThucDon extends JFrame {
 
             btnHuy.addActionListener(e -> dispose());
             btnThem.addActionListener(e -> luuMonAnVaoDB());
+
         }
 
         private void khoiTaoComboLoaiDialog(JComboBox<String> combo) {
             List<LoaiMon> listLoai = loaiMonDAO.getAllLoaiMon();
-			DefaultComboBoxModel<String> model = new DefaultComboBoxModel<>();
-			for (LoaiMon lm : listLoai) {
-			    model.addElement(lm.getTenLoai());
-			}
-			combo.setModel(model);
+            DefaultComboBoxModel<String> model = new DefaultComboBoxModel<>();
+            for (LoaiMon lm : listLoai) {
+                model.addElement(lm.getTenLoai());
+            }
+            combo.setModel(model);
         }
 
         private void luuMonAnVaoDB() {
@@ -816,23 +935,29 @@ public class FrmThucDon extends JFrame {
 
             add(form, BorderLayout.CENTER);
 
-            // Nút
+         // --- Nút ---
             JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 10));
             btnPanel.setBackground(MAU_TRANG);
 
+            // Nút cập nhật: xanh dương, chữ trắng
             JButton btnCapNhat = new JButton("Cập nhật");
             btnCapNhat.setFont(FONT_BUTTON);
-            btnCapNhat.setBackground(MAU_XANH_LA);
-            btnCapNhat.setForeground(MAU_TRANG);
+            btnCapNhat.setBackground(MAU_XANH_DUONG); 
+            btnCapNhat.setForeground(Color.WHITE);             
             btnCapNhat.setPreferredSize(new Dimension(100, 35));
             btnCapNhat.setFocusPainted(false);
+            btnCapNhat.setOpaque(true);          // bắt buộc để hiển thị màu
+            btnCapNhat.setBorderPainted(false);
 
+            // Nút hủy: xám nhạt, chữ đen
             JButton btnHuy = new JButton("Hủy");
             btnHuy.setFont(FONT_BUTTON);
-            btnHuy.setBackground(MAU_XAM);
-            btnHuy.setForeground(MAU_TRANG);
+            btnHuy.setBackground(MAU_XAM); 
+            btnHuy.setForeground(Color.BLACK);      
             btnHuy.setPreferredSize(new Dimension(100, 35));
             btnHuy.setFocusPainted(false);
+            btnHuy.setOpaque(true);              // bắt buộc để hiển thị màu
+            btnHuy.setBorderPainted(false);
 
             btnPanel.add(btnHuy);
             btnPanel.add(btnCapNhat);
@@ -840,15 +965,17 @@ public class FrmThucDon extends JFrame {
 
             btnHuy.addActionListener(e -> dispose());
             btnCapNhat.addActionListener(e -> capNhatMonVaoDB());
+
+
         }
 
         private void khoiTaoComboLoaiDialog(JComboBox<String> combo) {
             List<LoaiMon> listLoai = loaiMonDAO.getAllLoaiMon();
-			DefaultComboBoxModel<String> model = new DefaultComboBoxModel<>();
-			for (LoaiMon lm : listLoai) {
-			    model.addElement(lm.getTenLoai());
-			}
-			combo.setModel(model);
+            DefaultComboBoxModel<String> model = new DefaultComboBoxModel<>();
+            for (LoaiMon lm : listLoai) {
+                model.addElement(lm.getTenLoai());
+            }
+            combo.setModel(model);
         }
 
         private void capNhatMonVaoDB() {
@@ -932,11 +1059,22 @@ public class FrmThucDon extends JFrame {
     }
 
     public static void main(String[] args) {
+		try {
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException
+				| UnsupportedLookAndFeelException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
         SwingUtilities.invokeLater(() -> {
             try {
-                new FrmThucDon().setVisible(true);
-            } catch (SQLException e) {
+                FrmThucDon frame = new FrmThucDon();
+                frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+                frame.setVisible(true);
+            } catch (Exception e) {
                 e.printStackTrace();
+                JOptionPane.showMessageDialog(null, "Lỗi khởi tạo: " + e.getMessage());
             }
         });
     }

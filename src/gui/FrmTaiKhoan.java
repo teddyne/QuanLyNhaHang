@@ -317,7 +317,6 @@ public class FrmTaiKhoan extends ThanhTacVu {
         return btn;
     }
 
-
 	private void loadDanhSachTaiKhoan() {
         modelTaiKhoan.setRowCount(0);
         List<TaiKhoan> dsTaiKhoan = taiKhoanDAO.layDanhSachTaiKhoan();
