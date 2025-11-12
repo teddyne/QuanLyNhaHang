@@ -1,6 +1,9 @@
 package gui;
 
 import dao.KhuyenMai_DAO;
+import dialog.FrmLoaiKhuyenMai;
+import dialog.FrmSuaKhuyenMai;
+import dialog.FrmThemKhuyenMai;
 import entity.KhuyenMai;
 
 import javax.swing.*;

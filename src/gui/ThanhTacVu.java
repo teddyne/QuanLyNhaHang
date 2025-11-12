@@ -101,59 +101,44 @@ public class ThanhTacVu extends JFrame {
         JMenu danhMuc = createHoverableMenu("Danh Mục");
         danhMuc.setIcon(taoIcon("img/danhmuc.png", 30, 30));
         danhMuc.setFont(fontMenu);
-
-        JMenuItem monAn = new JMenuItem("Thực đơn");
-        monAn.setFont(fontItem);
-        monAn.setIcon(taoIcon("img/thucdon.png", 30, 30));
-
-        JMenuItem khuVuc = new JMenuItem("Khu Vực");
-        khuVuc.setFont(fontItem);
-        khuVuc.setIcon(taoIcon("img/khuvuc.png", 30, 30));
-        
-        JMenuItem ban = new JMenuItem("Bàn");
-        ban.setFont(fontItem);
-        ban.setIcon(taoIcon("img/ban.png", 30, 30));
-        
-        JMenuItem hoaDon = new JMenuItem("Hóa Đơn");
-        hoaDon.setFont(fontItem);
-        hoaDon.setIcon(taoIcon("img/hoadon.png", 30, 30));
-        
-        danhMuc.add(ban);
-        danhMuc.add(monAn);
-        danhMuc.add(hoaDon);
-        if ("QuanLy".equals(phanQuyen)) {
-            danhMuc.add(khuVuc);
-        }
-
-        menuBar.add(danhMuc);
-        menuBar.add(Box.createHorizontalStrut(30));
-        
-        // Cập nhật
-        JMenu capNhat = createHoverableMenu("Cập Nhật");
-        capNhat.setIcon(taoIcon("img/capnhat.png", 30, 30));
-        capNhat.setFont(fontMenu);
         
         JMenuItem khachHang = new JMenuItem("Khách Hàng");
         khachHang.setFont(fontItem);
         khachHang.setIcon(taoIcon("img/khachhang.png", 30, 30));
+
+        JMenuItem monAn = new JMenuItem("Thực đơn");
+        monAn.setFont(fontItem);
+        monAn.setIcon(taoIcon("img/thucdon.png", 30, 30));
         
         JMenuItem khuyenMai = new JMenuItem("Khuyến Mãi");
         khuyenMai.setFont(fontItem);
         khuyenMai.setIcon(taoIcon("img/khuyenmai.png", 30, 30));
+        
+        JMenuItem ban = new JMenuItem("Bàn");
+        ban.setFont(fontItem);
+        ban.setIcon(taoIcon("img/ban.png", 30, 30));   
+
+        JMenuItem khuVuc = new JMenuItem("Khu Vực");
+        khuVuc.setFont(fontItem);
+        khuVuc.setIcon(taoIcon("img/khuvuc.png", 30, 30));
 
         JMenuItem nhanVien = new JMenuItem("Nhân Viên");
         nhanVien.setFont(fontItem);
         nhanVien.setIcon(taoIcon("img/nhanvien.png", 30, 30));
         
-        capNhat.add(khachHang);
-        if ("QuanLy".equals(phanQuyen)) {
-            capNhat.add(khuyenMai);
-            capNhat.add(nhanVien);
-        }
-        
-        menuBar.add(capNhat);
-        menuBar.add(Box.createHorizontalStrut(30));
+        danhMuc.add(khachHang);
+        danhMuc.add(monAn);
+        danhMuc.add(ban);
 
+        if ("QuanLy".equals(phanQuyen)) {
+            danhMuc.add(khuyenMai);
+            danhMuc.add(khuVuc);
+            danhMuc.add(nhanVien);
+        }
+
+        menuBar.add(danhMuc);
+        menuBar.add(Box.createHorizontalStrut(30));        
+       
         // Xử Lý
         JMenu xuLy = createHoverableMenu("Xử Lý");
         xuLy.setIcon(taoIcon("img/xuly.png", 30, 30));
@@ -163,15 +148,15 @@ public class ThanhTacVu extends JFrame {
         dban.setFont(fontItem);
         dban.setIcon(taoIcon("img/ban.png", 30, 30));
 
-        JMenuItem thanhToan = new JMenuItem("Thanh Toán");
-        thanhToan.setFont(fontItem);
-        thanhToan.setIcon(taoIcon("img/hoadon.png", 30, 30));
+        JMenuItem hoaDon = new JMenuItem("Hóa Đơn");
+        hoaDon.setFont(fontItem);
+        hoaDon.setIcon(taoIcon("img/hoadon.png", 30, 30));
         
         xuLy.add(dban);
-        xuLy.add(thanhToan);
+        xuLy.add(hoaDon);
 
         menuBar.add(xuLy);
-        menuBar.add(Box.createHorizontalStrut(20));
+        menuBar.add(Box.createHorizontalStrut(30));
 
         // Tìm Kiếm
         JMenu timKiem = createHoverableMenu("Tìm Kiếm");
@@ -202,7 +187,7 @@ public class ThanhTacVu extends JFrame {
         timKiem.add(tkh);
         
         menuBar.add(timKiem);
-        menuBar.add(Box.createHorizontalStrut(20));
+        menuBar.add(Box.createHorizontalStrut(30));
 
         if ("QuanLy".equals(phanQuyen)) {
             JMenu thongKe = createHoverableMenu("Thống Kê");
@@ -587,7 +572,7 @@ public class ThanhTacVu extends JFrame {
         JDialog dlg = new JDialog(this, "Thông Tin Bàn", false);
         dlg.setLayout(new BorderLayout(10, 10));
         dlg.getContentPane().setBackground(Color.white);
-        dlg.setSize(600, 500);
+        dlg.setSize(500, 400);
         dlg.setLocationRelativeTo(this);
         dlg.setResizable(false);
 
@@ -654,94 +639,94 @@ public class ThanhTacVu extends JFrame {
         lblKhuVucValue.setFont(fontValue);
         pnlThongTin.add(lblKhuVucValue, gbc);
 
-        if (!trangThai.equals("Trống")) {
-            try {
-                java.util.Date today = new java.util.Date();
-                List<PhieuDatBan> list = phieuDatBanDAO.getDatBanByBanAndNgay(ban.getMaBan(), new java.sql.Date(today.getTime()));
-                if (!list.isEmpty()) {
-                    PhieuDatBan pdb = list.get(0);
-
-                    gbc.gridx = 0;
-                    gbc.gridy = 5;
-                    gbc.gridwidth = 2;
-                    JLabel lblDatBan = new JLabel("Thông tin đặt bàn:");
-                    lblDatBan.setFont(new Font("Times New Roman", Font.BOLD, 22));
-                    pnlThongTin.add(lblDatBan, gbc);
-
-                    gbc.gridwidth = 1;
-                    gbc.gridy = 6;
-                    JLabel lblTenKhachTitle = new JLabel("Tên khách:");
-                    lblTenKhachTitle.setFont(fontLabel);
-                    pnlThongTin.add(lblTenKhachTitle, gbc);
-                    gbc.gridx = 1;
-                    JLabel lblTenKhachValue = new JLabel(pdb.getTenKhach());
-                    lblTenKhachValue.setFont(fontValue);
-                    pnlThongTin.add(lblTenKhachValue, gbc);
-
-                    gbc.gridx = 0;
-                    gbc.gridy = 7;
-                    JLabel lblSoDienThoaiTitle = new JLabel("Số điện thoại:");
-                    lblSoDienThoaiTitle.setFont(fontLabel);
-                    pnlThongTin.add(lblSoDienThoaiTitle, gbc);
-                    gbc.gridx = 1;
-                    JLabel lblSoDienThoaiValue = new JLabel(pdb.getSoDienThoai() != null ? pdb.getSoDienThoai() : "Không có");
-                    lblSoDienThoaiValue.setFont(fontValue);
-                    pnlThongTin.add(lblSoDienThoaiValue, gbc);
-
-                    gbc.gridx = 0;
-                    gbc.gridy = 8;
-                    JLabel lblSoNguoiTitle = new JLabel("Số người:");
-                    lblSoNguoiTitle.setFont(fontLabel);
-                    pnlThongTin.add(lblSoNguoiTitle, gbc);
-                    gbc.gridx = 1;
-                    JLabel lblSoNguoiValue = new JLabel(String.valueOf(pdb.getSoNguoi()));
-                    lblSoNguoiValue.setFont(fontValue);
-                    pnlThongTin.add(lblSoNguoiValue, gbc);
-
-                    gbc.gridx = 0;
-                    gbc.gridy = 9;
-                    JLabel lblGioDenTitle = new JLabel("Giờ đến:");
-                    lblGioDenTitle.setFont(fontLabel);
-                    pnlThongTin.add(lblGioDenTitle, gbc);
-                    gbc.gridx = 1;
-                    JLabel lblGioDenValue = new JLabel(pdb.getGioDen().toString());
-                    lblGioDenValue.setFont(fontValue);
-                    pnlThongTin.add(lblGioDenValue, gbc);
-
-                    gbc.gridx = 0;
-                    gbc.gridy = 10;
-                    JLabel lblGhiChuTitle = new JLabel("Ghi chú:");
-                    lblGhiChuTitle.setFont(fontLabel);
-                    pnlThongTin.add(lblGhiChuTitle, gbc);
-                    gbc.gridx = 1;
-                    JLabel lblGhiChuValue = new JLabel(pdb.getGhiChu() != null ? pdb.getGhiChu() : "Không có");
-                    lblGhiChuValue.setFont(fontValue);
-                    pnlThongTin.add(lblGhiChuValue, gbc);
-
-                    gbc.gridx = 0;
-                    gbc.gridy = 11;
-                    JLabel lblTienCocTitle = new JLabel("Tiền cọc:");
-                    lblTienCocTitle.setFont(fontLabel);
-                    pnlThongTin.add(lblTienCocTitle, gbc);
-                    gbc.gridx = 1;
-                    JLabel lblTienCocValue = new JLabel(String.format("%,.0f VNĐ", pdb.getTienCoc()));
-                    lblTienCocValue.setFont(fontValue);
-                    pnlThongTin.add(lblTienCocValue, gbc);
-
-                    gbc.gridx = 0;
-                    gbc.gridy = 12;
-                    JLabel lblGhiChuCocTitle = new JLabel("Ghi chú cọc:");
-                    lblGhiChuCocTitle.setFont(fontLabel);
-                    pnlThongTin.add(lblGhiChuCocTitle, gbc);
-                    gbc.gridx = 1;
-                    JLabel lblGhiChuCocValue = new JLabel(pdb.getGhiChuCoc() != null ? pdb.getGhiChuCoc() : "Không có");
-                    lblGhiChuCocValue.setFont(fontValue);
-                    pnlThongTin.add(lblGhiChuCocValue, gbc);
-                }
-            } catch (SQLException ex) {
-                JOptionPane.showMessageDialog(dlg, "Lỗi khi lấy thông tin phiếu đặt bàn: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
-            }
-        }
+//        if (!trangThai.equals("Trống")){
+//            try {
+//                java.util.Date today = new java.util.Date();
+//                List<PhieuDatBan> list = phieuDatBanDAO.getDatBanByBanAndNgay(ban.getMaBan(), new java.sql.Date(today.getTime()));
+//                if (!list.isEmpty()) {
+//                    PhieuDatBan pdb = list.get(0);
+//
+//                    gbc.gridx = 0;
+//                    gbc.gridy = 5;
+//                    gbc.gridwidth = 2;
+//                    JLabel lblDatBan = new JLabel("Thông tin đặt bàn:");
+//                    lblDatBan.setFont(new Font("Times New Roman", Font.BOLD, 22));
+//                    pnlThongTin.add(lblDatBan, gbc);
+//
+//                    gbc.gridwidth = 1;
+//                    gbc.gridy = 6;
+//                    JLabel lblTenKhachTitle = new JLabel("Tên khách:");
+//                    lblTenKhachTitle.setFont(fontLabel);
+//                    pnlThongTin.add(lblTenKhachTitle, gbc);
+//                    gbc.gridx = 1;
+//                    JLabel lblTenKhachValue = new JLabel(pdb.getTenKhach());
+//                    lblTenKhachValue.setFont(fontValue);
+//                    pnlThongTin.add(lblTenKhachValue, gbc);
+//
+//                    gbc.gridx = 0;
+//                    gbc.gridy = 7;
+//                    JLabel lblSoDienThoaiTitle = new JLabel("Số điện thoại:");
+//                    lblSoDienThoaiTitle.setFont(fontLabel);
+//                    pnlThongTin.add(lblSoDienThoaiTitle, gbc);
+//                    gbc.gridx = 1;
+//                    JLabel lblSoDienThoaiValue = new JLabel(pdb.getSoDienThoai() != null ? pdb.getSoDienThoai() : "Không có");
+//                    lblSoDienThoaiValue.setFont(fontValue);
+//                    pnlThongTin.add(lblSoDienThoaiValue, gbc);
+//
+//                    gbc.gridx = 0;
+//                    gbc.gridy = 8;
+//                    JLabel lblSoNguoiTitle = new JLabel("Số người:");
+//                    lblSoNguoiTitle.setFont(fontLabel);
+//                    pnlThongTin.add(lblSoNguoiTitle, gbc);
+//                    gbc.gridx = 1;
+//                    JLabel lblSoNguoiValue = new JLabel(String.valueOf(pdb.getSoNguoi()));
+//                    lblSoNguoiValue.setFont(fontValue);
+//                    pnlThongTin.add(lblSoNguoiValue, gbc);
+//
+//                    gbc.gridx = 0;
+//                    gbc.gridy = 9;
+//                    JLabel lblGioDenTitle = new JLabel("Giờ đến:");
+//                    lblGioDenTitle.setFont(fontLabel);
+//                    pnlThongTin.add(lblGioDenTitle, gbc);
+//                    gbc.gridx = 1;
+//                    JLabel lblGioDenValue = new JLabel(pdb.getGioDen().toString());
+//                    lblGioDenValue.setFont(fontValue);
+//                    pnlThongTin.add(lblGioDenValue, gbc);
+//
+//                    gbc.gridx = 0;
+//                    gbc.gridy = 10;
+//                    JLabel lblGhiChuTitle = new JLabel("Ghi chú:");
+//                    lblGhiChuTitle.setFont(fontLabel);
+//                    pnlThongTin.add(lblGhiChuTitle, gbc);
+//                    gbc.gridx = 1;
+//                    JLabel lblGhiChuValue = new JLabel(pdb.getGhiChu() != null ? pdb.getGhiChu() : "Không có");
+//                    lblGhiChuValue.setFont(fontValue);
+//                    pnlThongTin.add(lblGhiChuValue, gbc);
+//
+//                    gbc.gridx = 0;
+//                    gbc.gridy = 11;
+//                    JLabel lblTienCocTitle = new JLabel("Tiền cọc:");
+//                    lblTienCocTitle.setFont(fontLabel);
+//                    pnlThongTin.add(lblTienCocTitle, gbc);
+//                    gbc.gridx = 1;
+//                    JLabel lblTienCocValue = new JLabel(String.format("%,.0f VNĐ", pdb.getTienCoc()));
+//                    lblTienCocValue.setFont(fontValue);
+//                    pnlThongTin.add(lblTienCocValue, gbc);
+//
+//                    gbc.gridx = 0;
+//                    gbc.gridy = 12;
+//                    JLabel lblGhiChuCocTitle = new JLabel("Ghi chú cọc:");
+//                    lblGhiChuCocTitle.setFont(fontLabel);
+//                    pnlThongTin.add(lblGhiChuCocTitle, gbc);
+//                    gbc.gridx = 1;
+//                    JLabel lblGhiChuCocValue = new JLabel(pdb.getGhiChuCoc() != null ? pdb.getGhiChuCoc() : "Không có");
+//                    lblGhiChuCocValue.setFont(fontValue);
+//                    pnlThongTin.add(lblGhiChuCocValue, gbc);
+//                }
+//            } catch (SQLException ex) {
+//                JOptionPane.showMessageDialog(dlg, "Lỗi khi lấy thông tin phiếu đặt bàn: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+//            }
+//        }
 
         JScrollPane scrollThongTin = new JScrollPane(pnlThongTin);
         scrollThongTin.setBorder(null);
@@ -846,7 +831,7 @@ public class ThanhTacVu extends JFrame {
         JDialog dlg = new JDialog(this, "Thông Tin Khách Hàng", false);
         dlg.setLayout(new BorderLayout(10, 10));
         dlg.getContentPane().setBackground(Color.white);
-        dlg.setSize(600, 350); // Kích thước nhỏ hơn vì ít thông tin hơn
+        dlg.setSize(600, 350);
         dlg.setLocationRelativeTo(this);
         dlg.setResizable(false);
 
@@ -947,10 +932,10 @@ public class ThanhTacVu extends JFrame {
         try {
             java.util.Date today = new java.util.Date();
             List<PhieuDatBan> list = phieuDatBanDAO.getDatBanByBanAndNgay(maBan, new java.sql.Date(today.getTime()));
-            boolean hasPhucVu = list.stream().anyMatch(d -> "Đang phục vụ".equals(d.getTrangThai()));
+            boolean hasPhucVu = list.stream().anyMatch(d -> "Phục vụ".equals(d.getTrangThai()));
             if (hasPhucVu) return "Đang phục vụ";
             boolean hasDat = list.stream().anyMatch(d -> "Đặt".equals(d.getTrangThai()));
-            if (hasDat) return "Đặt";
+            if (hasDat) return "Đã đặt";
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -1031,7 +1016,7 @@ public class ThanhTacVu extends JFrame {
     public JMenuBar getJMenuBar() {
         return menuBar;
     }
-    private void kieuNut(JButton button, Color baseColor) {
+    public static void kieuNut(JButton button, Color baseColor) {
         button.setFocusPainted(false);
         button.setBorderPainted(false);
         button.setContentAreaFilled(true);

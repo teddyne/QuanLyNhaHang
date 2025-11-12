@@ -2,6 +2,7 @@ package gui;
 
 import dao.KhachHang_DAO;
 import dao.LoaiKhachHang_DAO;
+import dialog.FrmLoaiKhachHang;
 import entity.KhachHang;
 import entity.LoaiKhachHang;
 import connectSQL.ConnectSQL;

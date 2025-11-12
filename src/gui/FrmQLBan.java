@@ -2,9 +2,11 @@ package gui;
 import dao.Ban_DAO;
 import dao.KhuVuc_DAO;
 import dao.LoaiBan_DAO;
+import dialog.FrmLoaiBan;
 import entity.Ban;
 import entity.KhuVuc;
 import entity.LoaiBan;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import connectSQL.ConnectSQL;
@@ -181,12 +183,12 @@ public class FrmQLBan extends ThanhTacVu {
         Font buttonFont = new Font("Times New Roman", Font.BOLD, 20);
 
         // === Khởi tạo nút ===
-        btnThem = taoNut("Thêm", new Color(46, 204, 113), buttonSize, buttonFont);       // xanh lá
-        btnSua = taoNut("Sửa", new Color(52, 152, 219), buttonSize, buttonFont);         // xanh dương
-        btnXoa = taoNut("Xóa", new Color(231, 76, 60), buttonSize, buttonFont);          // đỏ
-        btnLamMoi = taoNut("Làm mới", new Color(149, 165, 166), buttonSize, buttonFont); // xám nhạt
-        btnLoaiBan = taoNut("Loại Bàn", new Color(255, 193, 7), buttonSize, buttonFont); // vàng
-        btnTraCuu = taoNut("Tra cứu", new Color(121, 89, 229), buttonSize, buttonFont);  // tím
+        btnThem = FrmDangNhap.taoNut("Thêm", new Color(46, 204, 113), buttonSize, buttonFont);       // xanh lá
+        btnSua = FrmDangNhap.taoNut("Sửa", new Color(52, 152, 219), buttonSize, buttonFont);         // xanh dương
+        btnXoa = FrmDangNhap.taoNut("Xóa", new Color(231, 76, 60), buttonSize, buttonFont);          // đỏ
+        btnLamMoi = FrmDangNhap.taoNut("Làm mới", new Color(149, 165, 166), buttonSize, buttonFont); // xám nhạt
+        btnLoaiBan = FrmDangNhap.taoNut("Loại Bàn", new Color(255, 193, 7), buttonSize, buttonFont); // vàng
+        btnTraCuu = FrmDangNhap.taoNut("Tra cứu", new Color(121, 89, 229), buttonSize, buttonFont);  // tím
 
         buttonPanel.add(btnThem);
         buttonPanel.add(btnSua);
@@ -271,33 +273,6 @@ public class FrmQLBan extends ThanhTacVu {
 	    });
     }
 
-    private JButton taoNut(String text, Color baseColor, Dimension size, Font font) {
-	    JButton btn = new JButton(text);
-	    btn.setFont(font);
-	    btn.setPreferredSize(size);
-	    btn.setForeground(Color.WHITE);
-	    btn.setBackground(baseColor);
-	    btn.setFocusPainted(false);
-        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btn.setContentAreaFilled(false);
-        btn.setOpaque(true);
-        
-	    // Hiệu ứng hover
-	    btn.addMouseListener(new MouseAdapter() {
-	        @Override
-	        public void mouseEntered(MouseEvent e) {
-	            btn.setBackground(baseColor.darker());
-	        }
-	
-	        @Override
-	        public void mouseExited(MouseEvent e) {
-	            btn.setBackground(baseColor);
-	        }
-	    });
-	
-	    return btn;
-	}
-    
 	private void loadLoaiBan() {
 	    cbLoaiBan.removeAllItems();
 	    LoaiBan tatCa = new LoaiBan();

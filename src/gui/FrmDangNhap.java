@@ -301,7 +301,7 @@ public class FrmDangNhap extends JFrame implements ActionListener, MouseListener
         btnHuy.addActionListener(e -> dialog.dispose());
         dialog.setVisible(true);
     }
-    private JButton taoNut(String text, Color baseColor, Dimension size, Font font) {
+    public static JButton taoNut(String text, Color baseColor, Dimension size, Font font) {
 	    JButton btn = new JButton(text);
 	    btn.setFont(font);
 	    btn.setPreferredSize(size);

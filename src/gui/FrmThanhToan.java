@@ -1,6 +1,7 @@
 package gui;
 
 import dao.*;
+import dialog.FrmPhucVu;
 import entity.KhuyenMai;
 import entity.PhieuDatBan;
 import connectSQL.ConnectSQL;
@@ -46,6 +47,8 @@ public class FrmThanhToan extends JFrame implements ActionListener {
 
     private FrmHoaDon parent;
     private FrmPhucVu parentPhucVu;
+    private String tenKhachHang = "";  
+    private String soDienThoai = ""; 
 
     // CONSTRUCTOR MỚI: DÙNG KHI GỌI TỪ FrmBan
     public FrmThanhToan(String maHD, String banDangChon, Runnable onThanhToanThanhCong) {
@@ -58,7 +61,6 @@ public class FrmThanhToan extends JFrame implements ActionListener {
         loadKhuyenMaiTotNhat();
     }
 
-    // Các constructor cũ (giữ lại nếu cần)
     public FrmThanhToan(String maHD) {
         this(maHD, null, null);
     }
@@ -101,8 +103,8 @@ public class FrmThanhToan extends JFrame implements ActionListener {
 
         // === Hàng dưới: 2 cột (Thông tin và Tổng hóa đơn) ===
         JPanel pBottom = new JPanel(new GridLayout(1, 2, 10, 10));
-        lblDonViTien = new JLabel("VND");
-        lblDonVi = new JLabel("VND");
+        lblDonViTien = new JLabel("VNĐ");
+        lblDonVi = new JLabel("VNĐ");
 
         // === Cột trái: Thông tin hóa đơn ===
         JPanel pLeft = new JPanel();
@@ -643,55 +645,52 @@ public class FrmThanhToan extends JFrame implements ActionListener {
                 KhuyenMai selectedKM = (KhuyenMai) cmbKhuyenMai.getSelectedItem();
                 String maKM = (selectedKM == null || selectedKM.getMaKM() == null) ? null : selectedKM.getMaKM();
 
-                String tenKH = valKH.getText().trim();
-                String sdt = valSDT.getText().trim();
-                String maKH = hoaDonDAO.layMaKhachTuTen(tenKH, sdt);
-                if (maKH == null || maKH.isEmpty()) maKH = null;
+                // DỮ LIỆU TỪ BIẾN, KHÔNG TỪ JLabel
+                String tenKH = tenKhachHang;
+                String sdt = soDienThoai;
+                String maKH = null;
+
+                if (!tenKH.isEmpty() && !sdt.isEmpty()) {
+                    maKH = hoaDonDAO.layMaKhachTuTen(tenKH, sdt);
+                }
 
                 double phuThuValue = chkPhuThu.isSelected() && !txtPhuThu.getText().trim().isEmpty()
                         ? Double.parseDouble(txtPhuThu.getText().trim()) : 0;
-
                 String ghiChu = (maKM != null) ? "Áp dụng khuyến mãi: " + maKM : null;
 
                 boolean capNhatHD = hoaDonDAO.thanhToanHoaDon(
                         maHD, tienKhachDua, tienSauGiam, maKM, maKH, phuThuValue, ghiChu
                 );
-
                 boolean capNhatBan = capNhatPhieuDatBanSauThanhToan();
-
                 xuatHoaDonPDF(maHD);
 
                 if (capNhatHD && capNhatBan) {
                     JOptionPane.showMessageDialog(this, "Thanh toán thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
 
-                    // GỌI CALLBACK ĐỂ CẬP NHẬT GIAO DIỆN FrmBan
                     if (onThanhToanThanhCong != null) {
-                        onThanhToanThanhCong.run(); // ← Sẽ gọi taiLaiBangChinh()
+                        SwingUtilities.invokeLater(onThanhToanThanhCong);
                     }
 
                     if (parent != null) parent.capNhatDuLieu();
                     if (parentPhucVu != null) parentPhucVu.dispose();
-
                     dispose();
                 } else {
                     JOptionPane.showMessageDialog(this, "Thanh toán thất bại!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
                 }
-
             } catch (NumberFormatException ex) {
                 JOptionPane.showMessageDialog(this, "Vui lòng nhập số tiền hợp lệ!", "Lỗi", JOptionPane.ERROR_MESSAGE);
             } catch (Exception ex) {
                 ex.printStackTrace();
                 JOptionPane.showMessageDialog(this, "Lỗi hệ thống: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
             }
-        } else if (source == cmbKhuyenMai) {
+        }else if (source == cmbKhuyenMai) {
             KhuyenMai selectedKM = (KhuyenMai) cmbKhuyenMai.getSelectedItem();
             giamGia = tinhGiamGia(selectedKM);
             tinhTienThua();
         }
     }
 
-    // CẬP NHẬT PHIẾU ĐẶT BÀN SAU THANH TOÁN
-    private boolean capNhatPhieuDatBanSauThanhToan() {
+        private boolean capNhatPhieuDatBanSauThanhToan() {
         if (banDangChon == null || banDangChon.isEmpty()) return false;
 
         try {

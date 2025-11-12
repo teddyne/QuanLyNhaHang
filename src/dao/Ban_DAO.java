@@ -218,7 +218,7 @@ public class Ban_DAO {
     }
 
     public void chuyenBan(String maBanCu, String maBanMoi) throws SQLException {
-	    String sqlUpdate = "UPDATE PhieuDatBan SET maBan = ? WHERE maBan = ? AND trangThai IN ('Đặt', 'Phục vụ')";
+	    String sqlUpdate = "UPDATE PhieuDatBan SET maBan = ? WHERE maBan = ? AND trangThai IN ('Đặt', 'Phục vụ', 'Đang phục vụ')";
 	    PreparedStatement psUpdate = conn.prepareStatement(sqlUpdate);
 	    psUpdate.setString(1, maBanMoi);
 	    psUpdate.setString(2, maBanCu);

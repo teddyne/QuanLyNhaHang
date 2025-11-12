@@ -11,6 +11,7 @@ import java.sql.Statement;
 import java.sql.Date;
 import java.sql.Time;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 public class PhieuDatBan_DAO {
@@ -116,18 +117,20 @@ public class PhieuDatBan_DAO {
             stmt.setString(1, phieu.getMaPhieu());
             stmt.setString(2, phieu.getMaBan());
             stmt.setString(3, phieu.getTenKhach());
-            stmt.setString(4, phieu.getSoDienThoai());
+            
+            String sdt = phieu.getSoDienThoai();
+            stmt.setString(4, (sdt != null) ? sdt.trim() : null);
+            
             stmt.setInt(5, phieu.getSoNguoi());
             stmt.setDate(6, phieu.getNgayDen());
             stmt.setTime(7, phieu.getGioDen());
             stmt.setString(8, phieu.getGhiChu());
             stmt.setDouble(9, phieu.getTienCoc());
             stmt.setString(10, phieu.getGhiChuCoc());
-            stmt.setString(11, phieu.getTrangThai().trim()); // Trim trước khi lưu
+            stmt.setString(11, phieu.getTrangThai().trim());
             stmt.executeUpdate();
         }
     }
-
     public boolean update(PhieuDatBan phieu) throws SQLException {
         String sql = "UPDATE phieudatban SET MaBan = ?, NgayDen = ?, GioDen = ?, " +
                     "TenKhach = ?, SoDienThoai = ?, SoNguoi = ?, GhiChu = ?, " +
@@ -178,7 +181,7 @@ public class PhieuDatBan_DAO {
                 int num = Integer.parseInt(last.substring(3)) + 1;
                 return String.format("PDB%03d", num);
             }
-            return "PDB0001";
+            return "PDB001";
         }
     }
     
@@ -214,26 +217,57 @@ public class PhieuDatBan_DAO {
 	        }
 	        return null;
 	}
-
-	public boolean checkCachGio(String maBan, Date ngay, Time gio, int gioCach) throws SQLException {
-        String sql = "SELECT gioDen FROM PhieuDatBan WHERE maBan = ? AND ngayDen = ? AND trangThai NOT IN ('Hủy')";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, maBan);
-            ps.setDate(2, ngay);
-            try (ResultSet rs = ps.executeQuery()) {
-                long gioDatMillis = gio.getTime();
-                while (rs.next()) {
-                    long gioKhacMillis = rs.getTime("gioDen").getTime();
-                    long diff = Math.abs(gioDatMillis - gioKhacMillis);
-                    if (diff < gioCach * 3600000L) {
-                        return false;
-                    }
-                }
-            }
-        }
-        return true;
-    }
 	
+	public boolean checkCachGio(String maBan, Date ngay, Time gio, int gioCach, String maPhieuBoQua) throws SQLException {
+	    String sql = """
+	        SELECT ngayDen, gioDen 
+	        FROM PhieuDatBan 
+	        WHERE maBan = ? 
+	          AND ngayDen = ? 
+	          AND trangThai NOT IN ('Hủy')
+	        """;
+
+	    if (maPhieuBoQua != null && !maPhieuBoQua.trim().isEmpty()) {
+	        sql += " AND maPhieu != ?";
+	    }
+
+	    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+	        ps.setString(1, maBan);
+	        ps.setDate(2, ngay);
+	        if (maPhieuBoQua != null && !maPhieuBoQua.trim().isEmpty()) {
+	            ps.setString(3, maPhieuBoQua.trim());
+	        }
+
+	        Calendar calDat = Calendar.getInstance();
+	        calDat.setTime(ngay);
+	        calDat.set(Calendar.HOUR_OF_DAY, gio.toLocalTime().getHour());
+	        calDat.set(Calendar.MINUTE, gio.toLocalTime().getMinute());
+	        calDat.set(Calendar.SECOND, 0);
+	        calDat.set(Calendar.MILLISECOND, 0);
+	        long thoiGianDat = calDat.getTimeInMillis();
+
+	        try (ResultSet rs = ps.executeQuery()) {
+	            while (rs.next()) {
+	                Date ngayKhac = rs.getDate("ngayDen");
+	                Time gioKhac = rs.getTime("gioDen");
+
+	                Calendar calKhac = Calendar.getInstance();
+	                calKhac.setTime(ngayKhac);
+	                calKhac.set(Calendar.HOUR_OF_DAY, gioKhac.toLocalTime().getHour());
+	                calKhac.set(Calendar.MINUTE, gioKhac.toLocalTime().getMinute());
+	                calKhac.set(Calendar.SECOND, 0);
+	                calKhac.set(Calendar.MILLISECOND, 0);
+	                long thoiGianKhac = calKhac.getTimeInMillis();
+
+	                long diff = Math.abs(thoiGianDat - thoiGianKhac);
+	                if (diff < gioCach * 3600000L) {
+	                    return false;
+	                }
+	            }
+	        }
+	    }
+	    return true;
+	}
 	public PhieuDatBan getByMaBanAndTrangThai(String maBan, String trangThai) {
 	    String sql = "SELECT * FROM PhieuDatBan WHERE maBan = ? AND trangThai = ?";
 	    try {
@@ -294,19 +328,204 @@ public class PhieuDatBan_DAO {
         }
         return null;
     }
-	
-//	public void capNhatTrangThai(PhieuDatBan phieu) throws SQLException {
-//	    String sql = "UPDATE PhieuDatBan SET trangThai = ? WHERE maPhieu = ?";
-//	    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-//	        stmt.setString(1, phieu.getTrangThai());
-//	        stmt.setString(2, phieu.getMaPhieu());
-//	        stmt.executeUpdate();
-//	    }
-//	}
 
-
-	public String taoPhieuMoi(String maBan) {
-		// TODO Auto-generated method stub
-		return null;
+	public List<PhieuDatBan> getBySDTAndNgayDen(String sdt, java.sql.Date tuNgay) throws SQLException {
+	    List<PhieuDatBan> list = new ArrayList<>();
+	    String sql = """
+	        SELECT * FROM PhieuDatBan
+	        WHERE LTRIM(RTRIM(soDienThoai)) = ?
+	          AND ngayDen >= ?
+	        ORDER BY ngayDen, gioDen
+	        """;
+	    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+	        ps.setString(1, sdt.trim());
+	        ps.setDate(2, tuNgay);
+	        try (ResultSet rs = ps.executeQuery()) {
+	            while (rs.next()) {
+	                PhieuDatBan p = new PhieuDatBan();
+	                p.setMaPhieu(rs.getString("maPhieu"));
+	                p.setMaBan(rs.getString("maBan"));
+	                p.setTenKhach(rs.getString("tenKhach"));
+	                p.setSoDienThoai(rs.getString("soDienThoai"));
+	                p.setSoNguoi(rs.getInt("soNguoi"));
+	                p.setNgayDen(rs.getDate("ngayDen"));
+	                p.setGioDen(rs.getTime("gioDen"));
+	                p.setTrangThai(rs.getString("trangThai"));
+	                list.add(p);
+	            }
+	        }
+	    }
+	    return list;
 	}
+
+	public PhieuDatBan getPhieuGanNhatBySDT(String sdt, java.sql.Date tuNgay) throws SQLException {
+	    String sql = """
+	        SELECT TOP 1 * FROM PhieuDatBan
+	        WHERE LTRIM(RTRIM(soDienThoai)) = ?
+	          AND ngayDen >= ?
+	        ORDER BY ngayDen ASC, gioDen ASC
+	        """;
+	    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+	        ps.setString(1, sdt.trim());
+	        ps.setDate(2, tuNgay);
+	        try (ResultSet rs = ps.executeQuery()) {
+	            if (rs.next()) {
+	                PhieuDatBan p = new PhieuDatBan();
+	                p.setMaPhieu(rs.getString("maPhieu"));
+	                p.setMaBan(rs.getString("maBan"));
+	                p.setTenKhach(rs.getString("tenKhach"));
+	                p.setSoDienThoai(rs.getString("soDienThoai"));
+	                p.setSoNguoi(rs.getInt("soNguoi"));
+	                p.setNgayDen(rs.getDate("ngayDen"));
+	                p.setGioDen(rs.getTime("gioDen"));
+	                p.setTienCoc(rs.getDouble("tienCoc"));
+	                p.setTrangThai(rs.getString("trangThai"));
+	                return p;
+	            }
+	        }
+	    }
+	    return null;
+	}
+	public List<PhieuDatBan> getAll(java.sql.Date tuNgay) throws SQLException {
+	    List<PhieuDatBan> list = new ArrayList<>();
+	    String sql = """
+	        SELECT * FROM PhieuDatBan
+	        WHERE ngayDen >= ?
+	        ORDER BY ngayDen ASC, gioDen ASC
+	        """;
+	    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+	        ps.setDate(1, tuNgay);
+	        try (ResultSet rs = ps.executeQuery()) {
+	            while (rs.next()) {
+	                PhieuDatBan p = new PhieuDatBan();
+	                p.setMaPhieu(rs.getString("maPhieu"));
+	                p.setMaBan(rs.getString("maBan"));
+	                p.setTenKhach(rs.getString("tenKhach"));
+	                p.setSoDienThoai(rs.getString("soDienThoai"));
+	                p.setSoNguoi(rs.getInt("soNguoi"));
+	                p.setNgayDen(rs.getDate("ngayDen"));
+	                p.setGioDen(rs.getTime("gioDen"));
+	                p.setTienCoc(rs.getDouble("tienCoc"));
+	                p.setTrangThai(rs.getString("trangThai"));
+	                list.add(p);
+	            }
+	        }
+	    }
+	    return list;
+	}
+	private PhieuDatBan mapResultSetToPhieu(ResultSet rs) throws SQLException {
+	    PhieuDatBan phieu = new PhieuDatBan();
+
+	    phieu.setMaPhieu(rs.getString("MaPhieu"));
+	    phieu.setMaBan(rs.getString("MaBan"));
+	    
+	    java.sql.Date ngayDen = rs.getDate("NgayDen");
+	    phieu.setNgayDen(ngayDen != null ? new Date(ngayDen.getTime()) : null);
+
+	    java.sql.Time gioDen = rs.getTime("GioDen");
+	    phieu.setGioDen(gioDen != null ? new Time(gioDen.getTime()) : null);
+
+	    String tenKhach = rs.getString("TenKhach");
+	    phieu.setTenKhach(rs.wasNull() ? null : tenKhach);
+
+	    String soDienThoai = rs.getString("SoDienThoai");
+	    phieu.setSoDienThoai(rs.wasNull() ? null : soDienThoai);
+
+	    phieu.setSoNguoi(rs.getInt("SoNguoi"));
+
+	    phieu.setGhiChu(rs.getString("GhiChu"));
+	    phieu.setTienCoc(rs.getDouble("TienCoc"));
+	    phieu.setGhiChuCoc(rs.getString("GhiChuCoc"));
+	    phieu.setTrangThai(rs.getString("TrangThai"));
+
+	    return phieu;
+	}
+	public PhieuDatBan getPhieuDangDatByMaBan(String maBan) throws SQLException {
+	    String sql = "SELECT * FROM phieudatban WHERE MaBan = ? AND TrangThai = 'Đặt'";
+	    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+	        ps.setString(1, maBan);
+	        ResultSet rs = ps.executeQuery();
+	        if (rs.next()) {
+	            return mapResultSetToPhieu(rs);
+	        }
+	        return null;
+	    }
+	}
+
+	public boolean chen(PhieuDatBan phieu) throws SQLException {
+	    String sql = "INSERT INTO phieudatban (MaPhieu, MaBan, NgayDen, GioDen, TenKhach, SoDienThoai, SoNguoi, GhiChu, TienCoc, GhiChuCoc, TrangThai) " +
+	                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+	    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+	        ps.setString(1, phieu.getMaPhieu());
+	        ps.setString(2, phieu.getMaBan());
+	        ps.setDate(3, phieu.getNgayDen());
+	        ps.setTime(4, phieu.getGioDen());
+	        ps.setString(5, phieu.getTenKhach());     
+	        ps.setString(6, phieu.getSoDienThoai());  
+	        ps.setInt(7, phieu.getSoNguoi());
+	        ps.setString(8, phieu.getGhiChu());
+	        ps.setDouble(9, phieu.getTienCoc());
+	        ps.setString(10, phieu.getGhiChuCoc());
+	        ps.setString(11, phieu.getTrangThai());
+
+	        return ps.executeUpdate() > 0;
+	    }
+	}
+
+	public PhieuDatBan getLatestPhieuByMaBan(String maBan) throws SQLException {
+	    String sql = """
+	        SELECT TOP 1 * FROM PhieuDatBan 
+	        WHERE maBan = ? 
+	          AND CAST(ngayDen AS DATE) = CAST(GETDATE() AS DATE)
+	        ORDER BY ngayDen DESC, gioDen DESC
+	        """;
+	
+	    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+	        ps.setString(1, maBan);
+	        ResultSet rs = ps.executeQuery();
+	        if (rs.next()) {
+	            return mapResultSetToPhieu(rs);
+	        }
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	        throw e;
+	    }
+	    return null;
+	}
+
+	public PhieuDatBan layPhieuDangHoatDong(String maBan) throws SQLException {
+	    PhieuDatBan phieu = null;
+	    String sql = """
+	        SELECT TOP 1 * 
+	        FROM PhieuDatBan 
+	        WHERE maBan = ? 
+	          AND trangThai IN ('Đặt', 'Phục vụ', 'Đang phục vụ') 
+	          AND CAST(ngayDen AS DATE) = CAST(GETDATE() AS DATE)
+	        ORDER BY ngayDen DESC, gioDen DESC
+	        """;
+
+	    try (PreparedStatement pst = conn.prepareStatement(sql)) {
+	        pst.setString(1, maBan);
+	        try (ResultSet rs = pst.executeQuery()) {
+	            if (rs.next()) {
+	                phieu = new PhieuDatBan();
+	                phieu.setMaPhieu(rs.getString("maPhieu"));
+	                phieu.setMaBan(rs.getString("maBan"));
+	                phieu.setTenKhach(rs.getString("tenKhach"));
+	                phieu.setSoDienThoai(rs.getString("soDienThoai"));
+	                phieu.setSoNguoi(rs.getInt("soNguoi"));
+	                phieu.setNgayDen(rs.getDate("ngayDen"));
+	                phieu.setGioDen(rs.getTime("gioDen"));
+	                phieu.setGhiChu(rs.getString("ghiChu"));
+	                phieu.setTienCoc(rs.getDouble("tienCoc"));
+	                phieu.setGhiChuCoc(rs.getString("ghiChuCoc"));
+	                phieu.setTrangThai(rs.getString("trangThai"));
+	            }
+	        }
+	    }
+	    return phieu;
+	}
+
+	
 }

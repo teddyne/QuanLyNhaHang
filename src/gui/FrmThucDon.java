@@ -20,6 +20,7 @@ import entity.LoaiMon;
 import entity.MonAn;
 import dao.LoaiMon_DAO;
 import dao.MonAn_DAO;
+import dialog.FrmLoaiMon;
 
 public class FrmThucDon extends JFrame {
     // Màu sắc (đồng bộ với FrmDatMon)

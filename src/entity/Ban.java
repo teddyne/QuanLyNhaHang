@@ -9,6 +9,8 @@ public class Ban {
     private int soChoNgoi;
     private String trangThai;
     private String ghiChu;
+    private int sucChua;
+    private Integer soNguoiPackage;
     // Constructors
     public Ban() {}
 
@@ -85,5 +87,21 @@ public class Ban {
 	public void setGhiChu(String ghiChu) {
 		this.ghiChu = ghiChu;
 	}
-    
+
+	public int getSucChua() {
+        return sucChua;
+    }
+
+    public Integer getSoNguoiPackage() {
+        return soNguoiPackage;
+    }
+
+	public void setSucChua(int sucChua) {
+		this.sucChua = sucChua;
+	}
+
+	public void setSoNguoiPackage(Integer soNguoiPackage) {
+		this.soNguoiPackage = soNguoiPackage;
+	}
+
 }
