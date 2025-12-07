@@ -44,15 +44,17 @@ public class FrmThucDon extends JFrame {
     // Thành phần giao diện
     private List<MonAn> danhSachMon = new ArrayList<>();
     private final Map<String, JPanel> panelByLoaiMa = new HashMap<>(); // key = maLoai
-    private JPanel pnlLuoiMon; // panel "Tất cả"
     private JTextField txtTimKiem;
     private JComboBox<String> cmbLocLoai;
     private JTabbedPane tabLoai;
     private MonAn monDangChon = null;
     private JPanel khungDangChon = null;
+    private List<LoaiMon> dsLoaiMonHienTai = new ArrayList<>(); 
+    private static FrmThucDon instance; // Để dialog gọi lại
 
     public FrmThucDon() throws SQLException {
     	// Menu
+    	instance = this;
     	setJMenuBar(ThanhTacVu.getInstance().getJMenuBar());
         ThanhTacVu customMenu = ThanhTacVu.getInstance();
         add(customMenu.getBottomBar(), BorderLayout.SOUTH);
@@ -133,14 +135,26 @@ public class FrmThucDon extends JFrame {
 
         JButton btnLoaiMon = taoNhoButton("Thêm loại món", MAU_VANG, Color.BLACK, btnSize);
         btnLoaiMon.addActionListener(e -> {
-            FrmLoaiMon frm = null;
-			try {
-				frm = new FrmLoaiMon();
-			} catch (SQLException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-            frm.setVisible(true);
+            try {
+                FrmLoaiMon frm = new FrmLoaiMon();                    
+                frm.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+                frm.setLocationRelativeTo(this);                     
+
+                frm.addWindowListener(new WindowAdapter() {
+                    @Override
+                    public void windowClosed(WindowEvent e) {
+                        refreshLoaiAndData(); 
+                    }
+                });
+
+                frm.setVisible(true);
+
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this,
+                    "Không mở được form quản lý loại món!",
+                    "Lỗi", JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
+            }
         });
 
         JButton btnLamMoi = taoNhoButton("Làm mới", MAU_XAM, Color.WHITE, btnSize);
@@ -292,152 +306,135 @@ public class FrmThucDon extends JFrame {
         refreshLoaiAndData();
     }
 
-    private void refreshLoaiAndData() {
-        // Xóa dữ liệu cũ
-        cmbLocLoai.removeAllItems();
+    public void refreshLoaiAndData() {
+        // Xóa toàn bộ cũ
         tabLoai.removeAll();
+        panelByLoaiMa.clear();
+        cmbLocLoai.removeAllItems();
 
-        // Lấy danh sách loại món từ DB
+        // Lấy danh sách loại món
         List<LoaiMon> dsLoai = loaiMonDAO.getAllLoaiMon();
 
+        if (dsLoai.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                "Chưa có loại món nào! Vui lòng thêm loại món trước.",
+                "Thông báo", JOptionPane.WARNING_MESSAGE);
+
+            // Thêm một tab tạm để giao diện không lỗi
+            JLabel lbl = new JLabel("Không có loại món nào", SwingConstants.CENTER);
+            lbl.setFont(new Font("Times New Roman", Font.ITALIC, 20));
+            tabLoai.addTab("Trống", new JScrollPane(lbl));
+            capNhatLuoiMon();
+            return;
+        }
+
+        // Tạo tab + item combobox cho từng loại
         for (LoaiMon lm : dsLoai) {
+            JPanel pnl = taoPanelLuoiMon();
+            panelByLoaiMa.put(lm.getMaLoai(), pnl);
+            tabLoai.addTab(lm.getTenLoai(), taoScroll(pnl));
             cmbLocLoai.addItem(lm.getTenLoai());
         }
 
-        // Build tabs theo loại món
-        buildTabs();
-
-        // Load dữ liệu món từ DB
+        // Load món ăn
         loadDataFromDB();
 
-        // Chọn mặc định loại đầu tiên
-        if (cmbLocLoai.getItemCount() > 0)
-            cmbLocLoai.setSelectedIndex(0);
+        // Chọn tab đầu tiên
+        if (tabLoai.getTabCount() > 0) {
+            tabLoai.setSelectedIndex(0);   // listener sẽ tự cập nhật combobox
+        }
 
-        // Cập nhật món hiển thị
+        // Cache cho dialog thêm/sửa
+        dsLoaiMonHienTai = new ArrayList<>(dsLoai);
+
+        // Thiết lập đồng bộ (chỉ gọi 1 lần duy nhất)
+        thietLapDongBoTabVaComboBox();
+
+        // Cập nhật hiển thị món
         capNhatLuoiMon();
     }
 
+    /** Đồng bộ 2 chiều tab ↔ combobox */
+    private void thietLapDongBoTabVaComboBox() {
+        // Tab → ComboBox
+        tabLoai.addChangeListener(e -> {
+            int idx = tabLoai.getSelectedIndex();
+            if (idx >= 0) {
+                String tenLoai = tabLoai.getTitleAt(idx);
+                cmbLocLoai.setSelectedItem(tenLoai);
+                capNhatLuoiMon();
+            }
+        });
 
-
-    private void dongBoLoaiMon() {
-        // Khi chọn trong combobox → đổi tab
+        // ComboBox → Tab
         cmbLocLoai.addActionListener(e -> {
-            String selected = (String) cmbLocLoai.getSelectedItem();
+            Object selected = cmbLocLoai.getSelectedItem();
+            if (selected == null) return;
+
+            String tenLoai = (String) selected;
             for (int i = 0; i < tabLoai.getTabCount(); i++) {
-                if (tabLoai.getTitleAt(i).equals(selected)) {
+                if (tabLoai.getTitleAt(i).equals(tenLoai)) {
                     tabLoai.setSelectedIndex(i);
                     break;
-                } else if ("Tất cả".equals(selected)) {
-                    tabLoai.setSelectedIndex(-1); // Không chọn tab cụ thể
                 }
             }
             capNhatLuoiMon();
         });
-
-        // Khi đổi tab → đổi combobox
-        tabLoai.addChangeListener(e -> {
-            int index = tabLoai.getSelectedIndex();
-            if (index >= 0) {
-                String tenLoai = tabLoai.getTitleAt(index);
-                cmbLocLoai.setSelectedItem(tenLoai);
-            }
-        });
     }
 
-
-    // Build dynamic tabs from LoaiMon table (only trangThai=1)
-    private void buildTabs() {
-        tabLoai.removeAll();
-        panelByLoaiMa.clear();
-
-        List<LoaiMon> listLoai = loaiMonDAO.getAllLoaiMon();
-        for (LoaiMon lm : listLoai) {
-            JPanel pnl = taoPanelLuoiMon();
-            panelByLoaiMa.put(lm.getMaLoai(), pnl);
-            JScrollPane scr = taoScroll(pnl);
-            tabLoai.addTab(lm.getTenLoai(), scr);
-        }
-
-        // Khi đổi tab -> cập nhật combobox
-        tabLoai.addChangeListener(e -> {
-            int idx = tabLoai.getSelectedIndex();
-            if (idx >= 0) {
-                String title = tabLoai.getTitleAt(idx);
-                cmbLocLoai.setSelectedItem(title);
-                capNhatLuoiMon();
-            }
-        });
-    }
-
-    // Load dữ liệu món ăn từ DB
-    private void loadDataFromDB() {
-        danhSachMon = monAnDAO.getAllMonAn();
-        if (danhSachMon.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Cơ sở dữ liệu rỗng! Vui lòng chạy script SQL.", "Lỗi", JOptionPane.ERROR_MESSAGE);
-        }
-
-        // Lọc ra những món có loại món hợp lệ
-        Set<String> activeLoai = new HashSet<>();
-        for (LoaiMon lm : loaiMonDAO.getAllLoaiMon()) activeLoai.add(lm.getMaLoai());
-        List<MonAn> filtered = new ArrayList<>();
-        for (MonAn m : danhSachMon) {
-            if (m.getLoaiMon() != null && activeLoai.contains(m.getLoaiMon().getMaLoai()))
-                filtered.add(m);
-        }
-        danhSachMon = filtered;
-    }
-
-
-    // Khởi tạo combobox loại món (dynamic)
-    private void khoiTaoComboBoxLoai() {
-        List<LoaiMon> listLoai = loaiMonDAO.getAllLoaiMon();
-        DefaultComboBoxModel<String> model = new DefaultComboBoxModel<>();
-        model.addElement("Tất cả");
-        for (LoaiMon lm : listLoai) {
-            model.addElement(lm.getTenLoai());
-        }
-        cmbLocLoai.setModel(model);
-        cmbLocLoai.setSelectedItem("Tất cả");
-    }
-
-    // Cập nhật lưới món: đặt card vào panel tương ứng (dynamic)
+    /** Cập nhật lưới món – chỉ hiển thị món của loại đang chọn */
     private void capNhatLuoiMon() {
-        for (JPanel p : panelByLoaiMa.values()) p.removeAll();
+        // Xóa hết card cũ
+        for (JPanel p : panelByLoaiMa.values()) {
+            p.removeAll();
+        }
 
         String tuKhoa = txtTimKiem.getText().trim().toLowerCase();
-        String loaiChon = (String) cmbLocLoai.getSelectedItem();
+        String loaiDangChon = (String) cmbLocLoai.getSelectedItem();
+
+        // Nếu chưa có loại nào được chọn (trường hợp hiếm)
+        if (loaiDangChon == null) {
+            for (JPanel p : panelByLoaiMa.values()) {
+                p.revalidate();
+                p.repaint();
+            }
+            return;
+        }
 
         for (MonAn mon : danhSachMon) {
-            if (!mon.isTrangThai()) continue;
+            boolean matchTen = tuKhoa.isEmpty() ||
+                mon.getTenMon().toLowerCase().contains(tuKhoa);
 
-            boolean matchKeyword = tuKhoa.isEmpty() || mon.getTenMon().toLowerCase().contains(tuKhoa);
             boolean matchLoai = mon.getLoaiMon() != null &&
-                    mon.getLoaiMon().getTenLoai().equalsIgnoreCase(loaiChon);
+                mon.getLoaiMon().getTenLoai().equals(loaiDangChon);
 
-            if (matchKeyword && matchLoai) {
+            if (matchTen && matchLoai) {
                 JPanel card = taoCardMon(mon);
-                String maLoai = mon.getLoaiMon().getMaLoai();
-                if (panelByLoaiMa.containsKey(maLoai)) {
-                    panelByLoaiMa.get(maLoai).add(card);
+                JPanel panelLoai = panelByLoaiMa.get(mon.getLoaiMon().getMaLoai());
+                if (panelLoai != null) {
+                    panelLoai.add(card);
                 }
             }
         }
 
+        // Cập nhật giao diện
         for (JPanel p : panelByLoaiMa.values()) {
             p.revalidate();
             p.repaint();
         }
-
-        // Đồng bộ Tab ↔ ComboBox
-        int idx = tabLoai.getSelectedIndex();
-        if (idx >= 0 && idx < tabLoai.getTabCount()) {
-            String tabName = tabLoai.getTitleAt(idx);
-            cmbLocLoai.setSelectedItem(tabName);
-        }
     }
 
 
+    // Load dữ liệu món ăn từ DB
+    private void loadDataFromDB() {
+        danhSachMon = monAnDAO.getAllMonAn(); // ĐÃ CHỈ LẤY MÓN ĐANG BÁN + CÓ LOẠI HỢP LỆ
+        
+        if (danhSachMon.isEmpty()) {
+            JOptionPane.showMessageDialog(this, 
+                "Chưa có món ăn nào đang kinh doanh!", 
+                "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
 
  // Tạo panel lưới món
     private JPanel taoPanelLuoiMon() {
@@ -566,25 +563,27 @@ public class FrmThucDon extends JFrame {
         return khung;
     }
 
-    // Xóa món ăn (thực chất ẩn)
     private void xoaMonAn() {
         if (monDangChon == null) {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn món để xóa!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
             return;
         }
+
         int ch = JOptionPane.showConfirmDialog(this,
-                String.format("Xóa '%s' khỏi thực đơn?", monDangChon.getTenMon()),
-                "Xác nhận", JOptionPane.YES_NO_OPTION);
+            "Xóa món '" + monDangChon.getTenMon() + "' khỏi thực đơn?", 
+            "Xác nhận", JOptionPane.YES_NO_OPTION);
+
         if (ch == JOptionPane.YES_OPTION) {
             try {
                 if (monAnDAO.anMonAn(monDangChon.getMaMon())) {
-                    JOptionPane.showMessageDialog(this, "Ẩn món thành công!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "Đã xóa món thành công!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
+                    
+                    // Reload dữ liệu mới từ DB (DAO đã tự lọc món ẩn)
                     loadDataFromDB();
                     capNhatLuoiMon();
+                    
                     monDangChon = null;
                     khungDangChon = null;
-                } else {
-                    JOptionPane.showMessageDialog(this, "Xóa món thất bại!", "Lỗi", JOptionPane.ERROR_MESSAGE);
                 }
             } catch (SQLException e) {
                 JOptionPane.showMessageDialog(this, "Lỗi: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
@@ -599,14 +598,16 @@ public class FrmThucDon extends JFrame {
         private JComboBox<String> cmbLoai, cmbTrangThai;
         private JTextArea txtMoTa;
         private JLabel lblAnh;
-        private String imagePath = "img/placeholder.png";
+        private String imagePath = null; // để null → nếu không chọn thì lưu rỗng
 
         public DialogThemMonAn(JFrame parent) {
             super(parent, "Thêm món ăn", true);
-            initDialog();
+            setSize(450, 580);
+            setLocationRelativeTo(parent);
+            initComponents();
         }
 
-        private void initDialog() {
+        private void initComponents() {
             setSize(450, 580);
             setLocationRelativeTo(getParent());
             setLayout(new BorderLayout(10, 10));
@@ -738,68 +739,78 @@ public class FrmThucDon extends JFrame {
             add(btnPanel, BorderLayout.SOUTH);
 
             btnHuy.addActionListener(e -> dispose());
-            btnThem.addActionListener(e -> luuMonAnVaoDB());
+            btnThem.addActionListener(e -> {
+                if (luuMonAnVaoDB()) {
+                    // Gọi lại form chính để refresh
+                    if (getOwner() instanceof FrmThucDon) {
+                        ((FrmThucDon) getOwner()).refreshLoaiAndData();
+                    }
+                    dispose();
+                }
+            });
 
         }
 
         private void khoiTaoComboLoaiDialog(JComboBox<String> combo) {
-            List<LoaiMon> listLoai = loaiMonDAO.getAllLoaiMon();
             DefaultComboBoxModel<String> model = new DefaultComboBoxModel<>();
-            for (LoaiMon lm : listLoai) {
+            for (LoaiMon lm : FrmThucDon.instance.dsLoaiMonHienTai) {
                 model.addElement(lm.getTenLoai());
             }
             combo.setModel(model);
+            if (model.getSize() > 0) combo.setSelectedIndex(0);
         }
 
-        private void luuMonAnVaoDB() {
+        private boolean luuMonAnVaoDB() {
             try {
                 String ten = txtTen.getText().trim();
                 String giaStr = txtGia.getText().trim();
                 String moTa = txtMoTa.getText().trim();
                 String tenLoai = (String) cmbLoai.getSelectedItem();
 
-                // Validate
-                if (ten.isEmpty() || giaStr.isEmpty() || moTa.isEmpty() || tenLoai == null) {
-                    JOptionPane.showMessageDialog(this, "Vui lòng nhập đầy đủ các trường có dấu *!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
-                    return;
+                if (ten.isEmpty() || giaStr.isEmpty() || tenLoai == null) {
+                    JOptionPane.showMessageDialog(this, "Vui lòng điền đầy đủ thông tin bắt buộc!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+                    return false;
                 }
 
-                double donGia;
+                double donGia = 0;
                 try {
-                    donGia = Double.parseDouble(giaStr.replaceAll("[^0-9.]", ""));
-                    if (donGia <= 0) {
-                        JOptionPane.showMessageDialog(this, "Giá phải lớn hơn 0!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
-                        return;
-                    }
-                } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(this, "Giá phải là số hợp lệ!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
-                    return;
+                    donGia = Double.parseDouble(giaStr.replaceAll("[^0-9]", ""));
+                    if (donGia <= 0) throw new Exception();
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(this, "Giá phải là số dương!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                    return false;
                 }
 
-                LoaiMon loaiMon = null;
-                for (LoaiMon lm : loaiMonDAO.getAllLoaiMon()) {
-                    if (lm.getTenLoai().equals(tenLoai)) {
-                        loaiMon = lm;
-                        break;
-                    }
-                }
-                if (loaiMon == null) {
-                    JOptionPane.showMessageDialog(this, "Không tìm thấy loại món: " + tenLoai, "Lỗi", JOptionPane.ERROR_MESSAGE);
-                    return;
+                LoaiMon loai = FrmThucDon.instance.dsLoaiMonHienTai.stream()
+                    .filter(lm -> lm.getTenLoai().equals(tenLoai))
+                    .findFirst().orElse(null);
+
+                if (loai == null) {
+                    JOptionPane.showMessageDialog(this, "Loại món không hợp lệ!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                    return false;
                 }
 
-                MonAn mon = new MonAn(null, ten, imagePath, loaiMon, donGia, "Còn bán".equals(cmbTrangThai.getSelectedItem()), moTa);
+                MonAn mon = new MonAn(
+                    null,
+                    ten,
+                    imagePath != null ? imagePath : "",
+                    loai,
+                    donGia,
+                    "Còn bán".equals(cmbTrangThai.getSelectedItem()),
+                    moTa
+                );
+
                 if (monAnDAO.themMonAn(mon)) {
                     JOptionPane.showMessageDialog(this, "Thêm món thành công!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
-                    loadDataFromDB();
-                    capNhatLuoiMon();
-                    dispose();
+                    return true;
                 } else {
                     JOptionPane.showMessageDialog(this, "Thêm món thất bại!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                    return false;
                 }
             } catch (SQLException ex) {
-                JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Lỗi CSDL: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
                 ex.printStackTrace();
+                return false;
             }
         }
     }
@@ -817,10 +828,12 @@ public class FrmThucDon extends JFrame {
             super(parent, "Cập nhật món ăn", true);
             this.monHienTai = mon;
             this.imagePath = mon.getAnhMon();
-            initDialog();
+            setSize(450, 580);
+            setLocationRelativeTo(parent);
+            initComponents();
         }
 
-        private void initDialog() {
+        private void initComponents() {
             setSize(450, 580);
             setLocationRelativeTo(getParent());
             setLayout(new BorderLayout(10, 10));
@@ -965,21 +978,27 @@ public class FrmThucDon extends JFrame {
             add(btnPanel, BorderLayout.SOUTH);
 
             btnHuy.addActionListener(e -> dispose());
-            btnCapNhat.addActionListener(e -> capNhatMonVaoDB());
+            btnCapNhat.addActionListener(e -> {
+                if (capNhatMonVaoDB()) {
+                    if (getOwner() instanceof FrmThucDon) {
+                        ((FrmThucDon) getOwner()).refreshLoaiAndData();
+                    }
+                    dispose();
+                }
+            });
 
 
         }
 
         private void khoiTaoComboLoaiDialog(JComboBox<String> combo) {
-            List<LoaiMon> listLoai = loaiMonDAO.getAllLoaiMon();
             DefaultComboBoxModel<String> model = new DefaultComboBoxModel<>();
-            for (LoaiMon lm : listLoai) {
+            for (LoaiMon lm : FrmThucDon.instance.dsLoaiMonHienTai) {
                 model.addElement(lm.getTenLoai());
             }
             combo.setModel(model);
         }
 
-        private void capNhatMonVaoDB() {
+        private boolean capNhatMonVaoDB() {
             try {
                 String ten = txtTen.getText().trim();
                 String giaStr = txtGia.getText().trim();
@@ -987,53 +1006,67 @@ public class FrmThucDon extends JFrame {
                 String loaiTen = (String) cmbLoai.getSelectedItem();
                 String trangThaiStr = (String) cmbTrangThai.getSelectedItem();
 
-                if (ten.isEmpty() || giaStr.isEmpty() || moTa.isEmpty()) {
-                    JOptionPane.showMessageDialog(this, "Vui lòng nhập đầy đủ các trường có dấu *!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
-                    return;
+                // === Validate ===
+                if (ten.isEmpty() || giaStr.isEmpty() || moTa.isEmpty() || loaiTen == null) {
+                    JOptionPane.showMessageDialog(this, "Vui lòng nhập đầy đủ các trường có dấu *!", 
+                        "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+                    return false;
                 }
 
+                // Validate giá
                 double donGia;
                 try {
                     donGia = Double.parseDouble(giaStr.replaceAll("[^0-9.]", ""));
-                    if (donGia <= 0) {
-                        JOptionPane.showMessageDialog(this, "Giá phải lớn hơn 0!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
-                        return;
-                    }
-                } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(this, "Giá phải là số hợp lệ!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
-                    return;
+                    if (donGia <= 0) throw new Exception();
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(this, "Giá phải là số dương hợp lệ!", 
+                        "Lỗi nhập liệu", JOptionPane.WARNING_MESSAGE);
+                    return false;
                 }
 
-                LoaiMon loai = null;
-                for (LoaiMon lm : loaiMonDAO.getAllLoaiMon()) {
-                    if (lm.getTenLoai().equals(loaiTen)) {
-                        loai = lm;
-                        break;
-                    }
-                }
-                if (loai == null) {
-                    JOptionPane.showMessageDialog(this, "Không tìm thấy loại món!", "Lỗi", JOptionPane.ERROR_MESSAGE);
-                    return;
+                // Tìm loại món từ cache (nhanh + không query lại DB)
+                LoaiMon loaiMoi = FrmThucDon.instance.dsLoaiMonHienTai.stream()
+                        .filter(lm -> lm.getTenLoai().equals(loaiTen))
+                        .findFirst()
+                        .orElse(null);
+
+                if (loaiMoi == null) {
+                    JOptionPane.showMessageDialog(this, "Loại món không hợp lệ!", 
+                        "Lỗi", JOptionPane.ERROR_MESSAGE);
+                    return false;
                 }
 
+                // Cập nhật đối tượng món ăn hiện tại
                 monHienTai.setTenMon(ten);
-                monHienTai.setAnhMon(imagePath);
                 monHienTai.setDonGia(donGia);
-                monHienTai.setTrangThai("Còn bán".equals(trangThaiStr));
                 monHienTai.setMoTa(moTa);
-                monHienTai.setLoaiMon(loai);
+                monHienTai.setTrangThai("Còn bán".equals(trangThaiStr));
+                monHienTai.setLoaiMon(loaiMoi);
 
-                if (monAnDAO.capNhatMonAn(monHienTai)) {
-                    JOptionPane.showMessageDialog(this, "Cập nhật thành công!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
-                    loadDataFromDB();
-                    capNhatLuoiMon();
-                    dispose();
-                } else {
-                    JOptionPane.showMessageDialog(this, "Cập nhật thất bại!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                // Chỉ cập nhật ảnh nếu người dùng chọn ảnh mới
+                if (imagePath != null && !imagePath.equals(monHienTai.getAnhMon())) {
+                    monHienTai.setAnhMon(imagePath);
                 }
+                // Nếu không chọn ảnh mới → giữ nguyên ảnh cũ (rất quan trọng!)
+
+                // Lưu vào DB
+                boolean thanhCong = monAnDAO.capNhatMonAn(monHienTai);
+
+                if (thanhCong) {
+                    JOptionPane.showMessageDialog(this, "Cập nhật món ăn thành công!", 
+                        "Thành công", JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(this, "Cập nhật thất bại! Vui lòng thử lại.", 
+                        "Lỗi", JOptionPane.ERROR_MESSAGE);
+                }
+
+                return thanhCong;
+
             } catch (SQLException ex) {
-                JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Lỗi cơ sở dữ liệu: " + ex.getMessage(), 
+                    "Lỗi hệ thống", JOptionPane.ERROR_MESSAGE);
                 ex.printStackTrace();
+                return false;
             }
         }
     }

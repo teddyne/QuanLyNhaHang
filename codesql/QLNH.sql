@@ -352,6 +352,7 @@ select * from PhieuDatBan
 select * from HoaDon
 select * from ChiTietHoaDon
 select * from MonAn
+select * from LoaiMon
 select * from TaiKhoan
 select * from LoaiKhuyenMai
 select * from LoaiKhachHang

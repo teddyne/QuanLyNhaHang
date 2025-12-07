@@ -2,11 +2,15 @@ package gui;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.io.File;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
 
 import connectSQL.ConnectSQL;
@@ -172,7 +176,7 @@ public class ThanhTacVu extends JFrame {
         tmon.setIcon(taoIcon("img/thucdon.png", 30, 30));
         tmon.addActionListener(e -> {
             try {
-                moFormTimMonAn();
+                moFormGoiYTenMon();
             } catch (SQLException ex) {
                 JOptionPane.showMessageDialog(this, "Lỗi khi mở form tìm món: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
             }
@@ -406,107 +410,376 @@ public class ThanhTacVu extends JFrame {
  // =============================================
  // TÌM MÓN ĂN THEO TÊN (giống FrmDatMon)
  // =============================================
- private void moFormTimMonAn() throws SQLException {
-     JDialog dlg = new JDialog(this, "Tìm Món Ăn", true);
-     dlg.setLayout(new BorderLayout());
-     dlg.setSize(900, 600);
-     dlg.setLocationRelativeTo(this);
-     dlg.setResizable(false);
+// private void moFormTimMonAn() throws SQLException {
+//     JDialog dlg = new JDialog(this, "Tìm Món Ăn", true);
+//     dlg.setLayout(new BorderLayout());
+//     dlg.setSize(900, 600);
+//     dlg.setLocationRelativeTo(this);
+//     dlg.setResizable(false);
+//
+//     Connection conn = ConnectSQL.getConnection();
+//     MonAn_DAO monAnDAO = new MonAn_DAO(conn);
+//
+//     // === HEADER: Tìm kiếm ===
+//     JPanel pnlHeader = new JPanel(new BorderLayout());
+//     pnlHeader.setBackground(new Color(169, 55, 68));
+//     pnlHeader.setBorder(new EmptyBorder(15, 20, 15, 20));
+//
+//     JLabel lblTitle = new JLabel("TÌM KIẾM MÓN ĂN", SwingConstants.CENTER);
+//     lblTitle.setFont(new Font("Times New Roman", Font.BOLD, 28));
+//     lblTitle.setForeground(Color.WHITE);
+//     pnlHeader.add(lblTitle, BorderLayout.CENTER);
+//
+//     JPanel pnlSearch = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+//     pnlSearch.setBackground(new Color(169, 55, 68));
+//     JLabel lblTim = new JLabel("Tên món:");
+//     lblTim.setFont(new Font("Times New Roman", Font.BOLD, 20));
+//     lblTim.setForeground(Color.WHITE);
+//
+//     JTextField txtTim = new JTextField(25);
+//     txtTim.setFont(new Font("Times New Roman", Font.PLAIN, 20));
+//
+//     JButton btnTim = new JButton("Tìm");
+//     kieuNut(btnTim, new Color(102, 210, 74));
+//     btnTim.setPreferredSize(new Dimension(100, 40));
+//
+//     pnlSearch.add(lblTim);
+//     pnlSearch.add(txtTim);
+//     pnlSearch.add(btnTim);
+//     pnlHeader.add(pnlSearch, BorderLayout.SOUTH);
+//
+//     dlg.add(pnlHeader, BorderLayout.NORTH);
+//
+//     // === BẢNG KẾT QUẢ ===
+//     String[] cols = {"Mã món", "Tên món", "Loại món", "Giá", "Trạng thái"};
+//     DefaultTableModel model = new DefaultTableModel(cols, 0);
+//     JTable tblKetQua = new JTable(model);
+//     tblKetQua.setRowHeight(40);
+//     tblKetQua.setFont(new Font("Times New Roman", Font.PLAIN, 18));
+//     tblKetQua.getTableHeader().setFont(new Font("Times New Roman", Font.BOLD, 18));
+//     tblKetQua.getTableHeader().setBackground(new Color(169, 55, 68));
+//
+//     JScrollPane scroll = new JScrollPane(tblKetQua);
+//     scroll.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+//     dlg.add(scroll, BorderLayout.CENTER);
+//
+//     // === NÚT ĐÓNG ===
+//     JPanel pnlBottom = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+//     pnlBottom.setBackground(Color.WHITE);
+//     JButton btnDong = new JButton("Đóng");
+//     kieuNut(btnDong, new Color(231, 76, 60));
+//     btnDong.setPreferredSize(new Dimension(120, 40));
+//     btnDong.addActionListener(e -> dlg.dispose());
+//     pnlBottom.add(btnDong);
+//     dlg.add(pnlBottom, BorderLayout.SOUTH);
+//
+//     // === HÀNH ĐỘNG TÌM KIẾM ===
+//     Runnable timKiem = () -> {
+//         String keyword = txtTim.getText().trim().toLowerCase();
+//         model.setRowCount(0);
+//
+//         List<MonAn> dsMon = monAnDAO.getAllMonAn();
+//		 for (MonAn mon : dsMon) {
+//		     if (keyword.isEmpty() || mon.getTenMon().toLowerCase().contains(keyword)) {
+//		         String trangThai = mon.isTrangThai() ? "Còn món" : "Hết món";
+//		         model.addRow(new Object[]{
+//		             mon.getMaMon(),
+//		             mon.getTenMon(),
+//		             mon.getLoaiMon().getTenLoai(),
+//		             String.format("%,.0f đ", mon.getDonGia()),
+//		             trangThai
+//		         });
+//		     }
+//		 }
+//		 if (model.getRowCount() == 0) {
+//		     JOptionPane.showMessageDialog(dlg, "Không tìm thấy món nào!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+//		 }
+//     };
+//
+//     btnTim.addActionListener(e -> timKiem.run());
+//     txtTim.addKeyListener(new KeyAdapter() {
+//         @Override
+//         public void keyPressed(KeyEvent e) {
+//             if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+//                 timKiem.run();
+//             }
+//         }
+//     });
+//
+//     // Tải tất cả khi mở
+//     timKiem.run();
+//
+//     dlg.setVisible(true);
+// }
+    // TÌM MÓN ĂN THEO TÊN (giống FrmDatMon)
+    
+    private void moFormGoiYTenMon() throws SQLException {
+        JDialog dlg = new JDialog(this, "Tìm Món Ăn", true);
+        dlg.setSize(900, 650);
+        dlg.setLocationRelativeTo(this);
+        dlg.setResizable(false);
+        dlg.setLayout(new BorderLayout());
 
-     Connection conn = ConnectSQL.getConnection();
-     MonAn_DAO monAnDAO = new MonAn_DAO(conn);
+        // ===================== GIỮ NGUYÊN GIAO DIỆN ĐẸP CỦA BẠN =====================
+        JPanel pnlHeader = new JPanel(new BorderLayout());
+        pnlHeader.setBackground(new Color(169, 55, 68));
+        pnlHeader.setBorder(new EmptyBorder(20, 20, 20, 20));
 
-     // === HEADER: Tìm kiếm ===
-     JPanel pnlHeader = new JPanel(new BorderLayout());
-     pnlHeader.setBackground(new Color(169, 55, 68));
-     pnlHeader.setBorder(new EmptyBorder(15, 20, 15, 20));
+        JLabel lblTitle = new JLabel("TÌM KIẾM MÓN ĂN", SwingConstants.CENTER);
+        lblTitle.setFont(new Font("Times New Roman", Font.BOLD, 32));
+        lblTitle.setForeground(Color.WHITE);
+        pnlHeader.add(lblTitle, BorderLayout.CENTER);
 
-     JLabel lblTitle = new JLabel("TÌM KIẾM MÓN ĂN", SwingConstants.CENTER);
-     lblTitle.setFont(new Font("Times New Roman", Font.BOLD, 28));
-     lblTitle.setForeground(Color.WHITE);
-     pnlHeader.add(lblTitle, BorderLayout.CENTER);
+        JPanel pnlSearch = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 15));
+        pnlSearch.setBackground(new Color(169, 55, 68));
 
-     JPanel pnlSearch = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
-     pnlSearch.setBackground(new Color(169, 55, 68));
-     JLabel lblTim = new JLabel("Tên món:");
-     lblTim.setFont(new Font("Times New Roman", Font.BOLD, 20));
-     lblTim.setForeground(Color.WHITE);
+        JTextField txtTim = new JTextField(40);
+        txtTim.setFont(new Font("Times New Roman", Font.PLAIN, 22));
+        txtTim.setPreferredSize(new Dimension(550, 50));
 
-     JTextField txtTim = new JTextField(25);
-     txtTim.setFont(new Font("Times New Roman", Font.PLAIN, 20));
+        pnlSearch.add(new JLabel("Nhập tên món:", JLabel.RIGHT) {{
+            setFont(new Font("Times New Roman", Font.BOLD, 22));
+            setForeground(Color.WHITE);
+        }});
+        pnlSearch.add(txtTim);
+        pnlHeader.add(pnlSearch, BorderLayout.SOUTH);
+        dlg.add(pnlHeader, BorderLayout.NORTH);
 
-     JButton btnTim = new JButton("Tìm");
-     kieuNut(btnTim, new Color(102, 210, 74));
-     btnTim.setPreferredSize(new Dimension(100, 40));
+        // JList + Model
+        DefaultListModel<String> modelList = new DefaultListModel<>();
+        JList<String> listGoiY = new JList<>(modelList);
+        listGoiY.setFont(new Font("Times New Roman", Font.PLAIN, 22));
+        listGoiY.setFixedCellHeight(55);
+        listGoiY.setSelectionBackground(new Color(169, 55, 68));
+        listGoiY.setSelectionForeground(Color.WHITE);
 
-     pnlSearch.add(lblTim);
-     pnlSearch.add(txtTim);
-     pnlSearch.add(btnTim);
-     pnlHeader.add(pnlSearch, BorderLayout.SOUTH);
+        JScrollPane scroll = new JScrollPane(listGoiY);
+        scroll.setBorder(BorderFactory.createLineBorder(new Color(169, 55, 68), 4));
+        dlg.add(scroll, BorderLayout.CENTER);
 
-     dlg.add(pnlHeader, BorderLayout.NORTH);
+        // DAO – giữ nguyên như bạn
+        MonAn_DAO monAnDAO = new MonAn_DAO(ConnectSQL.getConnection());
+        List<MonAn> dsMonHienTai = new ArrayList<>(); // lưu món hiện tại
 
-     // === BẢNG KẾT QUẢ ===
-     String[] cols = {"Mã món", "Tên món", "Loại món", "Giá", "Trạng thái"};
-     DefaultTableModel model = new DefaultTableModel(cols, 0);
-     JTable tblKetQua = new JTable(model);
-     tblKetQua.setRowHeight(40);
-     tblKetQua.setFont(new Font("Times New Roman", Font.PLAIN, 18));
-     tblKetQua.getTableHeader().setFont(new Font("Times New Roman", Font.BOLD, 18));
-     tblKetQua.getTableHeader().setBackground(new Color(169, 55, 68));
+        // ===================== TỐI ƯU TÌM KIẾM NHƯ KIỂU NHỎ GỌN TRƯỚC ĐÓ =====================
+        Timer timer = new Timer(300, e -> {
+            String text = txtTim.getText().trim();
+            modelList.clear();
+            dsMonHienTai.clear();
 
-     JScrollPane scroll = new JScrollPane(tblKetQua);
-     scroll.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
-     dlg.add(scroll, BorderLayout.CENTER);
+            if (text.isEmpty()) {
+                modelList.addElement("← Nhập tên món để tìm kiếm...");
+                return;
+            }
 
-     // === NÚT ĐÓNG ===
-     JPanel pnlBottom = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-     pnlBottom.setBackground(Color.WHITE);
-     JButton btnDong = new JButton("Đóng");
-     kieuNut(btnDong, new Color(231, 76, 60));
-     btnDong.setPreferredSize(new Dimension(120, 40));
-     btnDong.addActionListener(e -> dlg.dispose());
-     pnlBottom.add(btnDong);
-     dlg.add(pnlBottom, BorderLayout.SOUTH);
+            new SwingWorker<List<MonAn>, Void>() {
+                @Override
+                protected List<MonAn> doInBackground() throws Exception {
+                    return monAnDAO.timKiemMonAn(text); // giữ nguyên hàm cũ của bạn
+                }
 
-     // === HÀNH ĐỘNG TÌM KIẾM ===
-     Runnable timKiem = () -> {
-         String keyword = txtTim.getText().trim().toLowerCase();
-         model.setRowCount(0);
+                @Override
+                protected void done() {
+                    try {
+                        List<MonAn> ds = get();
+                        if (ds.isEmpty()) {
+                            modelList.addElement("→ Không tìm thấy món nào");
+                        } else {
+                            dsMonHienTai.addAll(ds);
+                            for (MonAn mon : ds) {
+                                modelList.addElement(mon.getTenMon());
+                            }
+                        }
+                    } catch (Exception ex) {
+                        modelList.addElement("Lỗi kết nối CSDL");
+                    }
+                }
+            }.execute();
+        });
+        timer.setRepeats(false);
 
-         List<MonAn> dsMon = monAnDAO.getAllMonAn();
-		 for (MonAn mon : dsMon) {
-		     if (keyword.isEmpty() || mon.getTenMon().toLowerCase().contains(keyword)) {
-		         String trangThai = mon.isTrangThai() ? "Còn món" : "Hết món";
-		         model.addRow(new Object[]{
-		             mon.getMaMon(),
-		             mon.getTenMon(),
-		             mon.getLoaiMon().getTenLoai(),
-		             String.format("%,.0f đ", mon.getDonGia()),
-		             trangThai
-		         });
-		     }
-		 }
-		 if (model.getRowCount() == 0) {
-		     JOptionPane.showMessageDialog(dlg, "Không tìm thấy món nào!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
-		 }
-     };
+        txtTim.getDocument().addDocumentListener(new DocumentListener() {
+            public void insertUpdate(DocumentEvent e) { timer.restart(); }
+            public void removeUpdate(DocumentEvent e) { timer.restart(); }
+            public void changedUpdate(DocumentEvent e) { timer.restart(); }
+        });
 
-     btnTim.addActionListener(e -> timKiem.run());
-     txtTim.addKeyListener(new KeyAdapter() {
-         @Override
-         public void keyPressed(KeyEvent e) {
-             if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                 timKiem.run();
-             }
-         }
-     });
+        // Double click – lấy đúng món theo index (không sợ trùng tên)
+        listGoiY.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    int index = listGoiY.getSelectedIndex();
+                    if (index >= 0 && index < dsMonHienTai.size()) {
+                        MonAn mon = dsMonHienTai.get(index);
+                        moFormHienThiThongTinMon(mon);
+                        SwingUtilities.invokeLater(() -> dlg.dispose());
+                    }
+                }
+            }
+        });
 
-     // Tải tất cả khi mở
-     timKiem.run();
+        // Enter chọn món đầu
+        txtTim.addActionListener(e -> {
+            if (modelList.size() > 0 && !modelList.get(0).startsWith("→") && !modelList.get(0).startsWith("←")) {
+                listGoiY.setSelectedIndex(0);
+                listGoiY.dispatchEvent(new MouseEvent(listGoiY, MouseEvent.MOUSE_CLICKED,
+                    System.currentTimeMillis(), 0, 0, 0, 2, false));
+            }
+        });
 
-     dlg.setVisible(true);
- }
+        // Nút đóng
+        JPanel pnlBottom = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        pnlBottom.setBorder(new EmptyBorder(10, 20, 15, 20));
+        JButton btnDong = new JButton("Đóng");
+        kieuNut(btnDong, new Color(231, 76, 60));
+        btnDong.setPreferredSize(new Dimension(140, 45));
+        btnDong.addActionListener(e -> dlg.dispose());
+        pnlBottom.add(btnDong);
+        dlg.add(pnlBottom, BorderLayout.SOUTH);
+
+        // Khởi đầu
+        modelList.addElement("← Nhập tên món để tìm kiếm...");
+        dlg.setVisible(true);
+    }
+
+       private static final Color MAU_DO_RUOU = new Color(169, 55, 68);
+       private static final Color MAU_HONG = new Color(241, 200, 204);
+       
+       private void moFormHienThiThongTinMon(MonAn mon) {
+           if (mon == null) return;
+
+           // --- Dialog ---
+           JDialog dlg = new JDialog(this, "Thông tin món", true);
+           dlg.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+           dlg.getContentPane().setBackground(Color.WHITE);
+           dlg.setLayout(new BorderLayout(10, 10));
+
+           // --- Panel chính với border đỏ ---
+           JPanel pnlMain = new JPanel(new BorderLayout(10, 10));
+           pnlMain.setBackground(Color.WHITE);
+           pnlMain.setBorder(BorderFactory.createLineBorder(MAU_DO_RUOU, 3));
+
+           // --- Ảnh món ---
+           JLabel lblAnh = new JLabel();
+           lblAnh.setHorizontalAlignment(SwingConstants.CENTER);
+           lblAnh.setPreferredSize(new Dimension(180, 140));
+           String duongDan = mon.getAnhMon() != null && !mon.getAnhMon().isEmpty() ? mon.getAnhMon() : "img/placeholder.png";
+           datAnhChoLabel(lblAnh, duongDan, 180, 140);
+           lblAnh.setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
+           pnlMain.add(lblAnh, BorderLayout.NORTH);
+
+           // --- Thông tin món ---
+           JPanel pnlTT = new JPanel(new GridBagLayout());
+           pnlTT.setBackground(Color.WHITE);
+           GridBagConstraints gbc = new GridBagConstraints();
+           gbc.insets = new Insets(4, 6, 4, 6);
+           gbc.fill = GridBagConstraints.HORIZONTAL;
+
+           int row = 0;
+
+           // Mã món
+           gbc.gridx = 0; gbc.gridy = row; gbc.gridwidth = 2; gbc.anchor = GridBagConstraints.CENTER;
+           JLabel lblMa = new JLabel("<html><u>" + mon.getMaMon() + "</u></html>");
+           lblMa.setFont(new Font("Times New Roman", Font.BOLD, 16));
+           pnlTT.add(lblMa, gbc);
+
+           // Tên món
+           row++;
+           gbc.gridy = row;
+           JLabel lblTen = new JLabel(mon.getTenMon(), SwingConstants.CENTER);
+           lblTen.setFont(new Font("Times New Roman", Font.BOLD, 20));
+           pnlTT.add(lblTen, gbc);
+
+           // Loại món
+           row++;
+           gbc.gridy = row; gbc.gridx = 0; gbc.gridwidth = 1; gbc.anchor = GridBagConstraints.WEST;
+           JLabel lblLoaiLabel = new JLabel("Loại món:");
+           lblLoaiLabel.setFont(new Font("Times New Roman", Font.BOLD, 16));
+           pnlTT.add(lblLoaiLabel, gbc);
+           gbc.gridx = 1;
+           JLabel lblLoai = new JLabel(mon.getLoaiMon().getTenLoai());
+           lblLoai.setFont(new Font("Times New Roman", Font.PLAIN, 16));
+           pnlTT.add(lblLoai, gbc);
+
+           // Trạng thái
+           row++;
+           gbc.gridx = 0; gbc.gridy = row;
+           JLabel lblTrangThaiLabel = new JLabel("Trạng thái:");
+           lblTrangThaiLabel.setFont(new Font("Times New Roman", Font.BOLD, 16));
+           pnlTT.add(lblTrangThaiLabel, gbc);
+           gbc.gridx = 1;
+           JLabel lblTrangThai = new JLabel(mon.isTrangThai() ? "Còn món" : "Hết món");
+           lblTrangThai.setFont(new Font("Times New Roman", Font.PLAIN, 16));
+           lblTrangThai.setForeground(mon.isTrangThai() ? Color.GREEN.darker() : Color.RED);
+           pnlTT.add(lblTrangThai, gbc);
+
+           // Mô tả
+           row++;
+           gbc.gridx = 0; gbc.gridy = row;
+           JLabel lblMoTaLabel = new JLabel("Mô tả:");
+           lblMoTaLabel.setFont(new Font("Times New Roman", Font.BOLD, 16));
+           pnlTT.add(lblMoTaLabel, gbc);
+           gbc.gridx = 1;
+           JLabel lblMoTa = new JLabel("<html><i>" + (mon.getMoTa() != null ? mon.getMoTa() : "") + "</i></html>");
+           lblMoTa.setFont(new Font("Times New Roman", Font.PLAIN, 16));
+           pnlTT.add(lblMoTa, gbc);
+
+           // Giá bán
+           row++;
+           gbc.gridx = 1; gbc.gridy = row; gbc.anchor = GridBagConstraints.EAST;
+           JLabel lblGia = new JLabel(String.format("%,.0f đ", mon.getDonGia()));
+           lblGia.setFont(new Font("Times New Roman", Font.BOLD, 18));
+           lblGia.setForeground(Color.RED.darker());
+           pnlTT.add(lblGia, gbc);
+
+           // Cho pnlTT vào JScrollPane để scroll khi cần
+           JScrollPane scrollTT = new JScrollPane(pnlTT);
+           scrollTT.setBorder(null);
+           scrollTT.setBackground(Color.WHITE);
+           pnlMain.add(scrollTT, BorderLayout.CENTER);
+
+           dlg.add(pnlMain, BorderLayout.CENTER);
+
+           // --- Panel nút ---
+           JPanel pnlButtons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 20, 20));
+           pnlButtons.setBackground(Color.WHITE);
+
+           JButton btnDong = new JButton("Đóng");
+           kieuNut(btnDong, new Color(231, 76, 60));
+           btnDong.setPreferredSize(new Dimension(140, 45));
+           btnDong.setFont(new Font("Times New Roman", Font.BOLD, 18));
+           btnDong.addActionListener(e -> dlg.dispose());
+
+           pnlButtons.add(btnDong);
+           dlg.add(pnlButtons, BorderLayout.SOUTH);
+
+           dlg.setSize(300, 480);           
+           dlg.setLocationRelativeTo(this);
+           dlg.setVisible(true);
+       }
+
+
+
+       private void datAnhChoLabel(JLabel lbl, String path, int w, int h) {
+           try {
+               if (path != null && !path.isEmpty()) {
+                   File file = new File(path);
+                   if (file.exists()) {
+                       ImageIcon icon = new ImageIcon(new ImageIcon(path)
+                               .getImage().getScaledInstance(w, h, Image.SCALE_SMOOTH));
+                       lbl.setIcon(icon);
+                       return;
+                   }
+               }
+               lbl.setIcon(null);
+               lbl.setText("");
+               lbl.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 60));
+           } catch (Exception e) {
+               lbl.setText("");
+               lbl.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 60));
+           }
+       }
 
 	private void moFormNhapMaBan() throws SQLException {
 	    JDialog dlg = new JDialog(this, "Nhập Mã Bàn", false);

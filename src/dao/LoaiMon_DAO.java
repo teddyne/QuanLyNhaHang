@@ -53,11 +53,16 @@ public class LoaiMon_DAO {
 
     public List<LoaiMon> getAllLoaiMon() {
         List<LoaiMon> list = new ArrayList<>();
-        String sql = "SELECT * FROM LoaiMon";
+        String sql = "SELECT maLoai, tenLoai, trangThai FROM LoaiMon WHERE trangThai = 1"; // CHỈ LẤY LOẠI ĐANG HOẠT ĐỘNG
         try (PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
-                list.add(new LoaiMon(rs.getString("maLoai"), rs.getString("tenLoai")));
+                LoaiMon lm = new LoaiMon(
+                    rs.getString("maLoai"),
+                    rs.getString("tenLoai"),
+                    rs.getInt("trangThai")  // truyền cả trạng thái để entity biết
+                );
+                list.add(lm);
             }
         } catch (SQLException e) {
             e.printStackTrace();

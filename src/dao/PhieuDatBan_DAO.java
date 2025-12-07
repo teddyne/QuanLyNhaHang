@@ -441,7 +441,7 @@ public class PhieuDatBan_DAO {
 	    return phieu;
 	}
 	public PhieuDatBan getPhieuDangDatByMaBan(String maBan) throws SQLException {
-	    String sql = "SELECT * FROM phieudatban WHERE MaBan = ? AND TrangThai = 'Đặt'";
+	    String sql = "SELECT * FROM PhieuDatBan WHERE MaBan = ? AND TrangThai = 'Đặt'";
 	    try (PreparedStatement ps = conn.prepareStatement(sql)) {
 	        ps.setString(1, maBan);
 	        ResultSet rs = ps.executeQuery();
@@ -453,7 +453,7 @@ public class PhieuDatBan_DAO {
 	}
 
 	public boolean chen(PhieuDatBan phieu) throws SQLException {
-	    String sql = "INSERT INTO phieudatban (MaPhieu, MaBan, NgayDen, GioDen, TenKhach, SoDienThoai, SoNguoi, GhiChu, TienCoc, GhiChuCoc, TrangThai) " +
+	    String sql = "INSERT INTO PhieuDatBan (MaPhieu, MaBan, NgayDen, GioDen, TenKhach, SoDienThoai, SoNguoi, GhiChu, TienCoc, GhiChuCoc, TrangThai) " +
 	                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 	    try (PreparedStatement ps = conn.prepareStatement(sql)) {

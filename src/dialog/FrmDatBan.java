@@ -374,13 +374,13 @@ public class FrmDatBan extends JDialog {
 
                 java.sql.Time gio = new java.sql.Time(cal.getTimeInMillis());
 
-                String maPhieuHienTai = (editD != null) ? editD.getMaPhieu() : null;
+                String maPhieuHienTai = txtMaPhieu.getText().trim();
                 if (!phieuDatBanDAO.checkCachGio(maBan, ngay, gio, 1, maPhieuHienTai)) {
                     JOptionPane.showMessageDialog(this, "Lịch đặt phải cách ít nhất 1 tiếng với lịch khác cùng ngày!");
                     return;
                 }
                 PhieuDatBan dNew = editD != null ? editD : new PhieuDatBan();
-                dNew.setMaPhieu(txtMaPhieu.getText().trim());
+                dNew.setMaPhieu(maPhieuHienTai); 
                 dNew.setMaBan(maBan);
                 dNew.setTenKhach(txtTen.getText().trim());
                 dNew.setSoDienThoai(sdt);
@@ -395,15 +395,14 @@ public class FrmDatBan extends JDialog {
                 if (editD != null) {
                     phieuDAO.update(dNew);
                 } else {
-                    phieuDAO.add(dNew);
+                    phieuDAO.add(dNew); 
                 }
                 if (!danhSachMonDat.isEmpty()) {
                     ChiTietDatMon_DAO chiTietDAO = new ChiTietDatMon_DAO(conn);
-                    chiTietDAO.xoaTheoPhieu(dNew.getMaPhieu());
-
+                    chiTietDAO.xoaTheoPhieu(maPhieuHienTai);
                     for (MonDat item : danhSachMonDat) {
                         ChiTietDatMon ct = new ChiTietDatMon(
-                            dNew.getMaPhieu(),
+                            maPhieuHienTai, 
                             item.getMon().getMaMon(),
                             item.getSoLuong(),
                             item.getMon().getDonGia(),
