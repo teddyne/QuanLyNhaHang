@@ -4,40 +4,34 @@ import java.sql.Date;
 
 public class KhuyenMai {
 
-	private String maKM;
+    private String maKM;
     private String tenKM;
     private String maLoai;
     private double giaTri;
+    private double donHangTu;
+    private double giamToiDa;
     private Date ngayBatDau;
     private Date ngayKetThuc;
     private String trangThai;
     private String doiTuongApDung;
-    private double donHangTu;
-    private String mon1;
-    private String mon2;
-    private String monTang;
     private String ghiChu;
     
-	public KhuyenMai(String maKM, String tenKM, String maLoai, double giaTri, Date ngayBatDau, Date ngayKetThuc,
-			String trangThai, String doiTuongApDung, double donHangTu, String mon1, String mon2, String monTang,
-			String ghiChu) {
+	public KhuyenMai(String maKM, String tenKM, String maLoai, double giaTri, double donHangTu, double giamToiDa,
+			Date ngayBatDau, Date ngayKetThuc, String trangThai, String doiTuongApDung, String ghiChu) {
 		super();
 		this.maKM = maKM;
 		this.tenKM = tenKM;
 		this.maLoai = maLoai;
 		this.giaTri = giaTri;
+		this.donHangTu = donHangTu;
+		this.giamToiDa = giamToiDa;
 		this.ngayBatDau = ngayBatDau;
 		this.ngayKetThuc = ngayKetThuc;
 		this.trangThai = trangThai;
 		this.doiTuongApDung = doiTuongApDung;
-		this.donHangTu = donHangTu;
-		this.mon1 = mon1;
-		this.mon2 = mon2;
-		this.monTang = monTang;
 		this.ghiChu = ghiChu;
 	}
 
-	
 	public KhuyenMai() {
 		super();
 	}
@@ -74,6 +68,22 @@ public class KhuyenMai {
 		this.giaTri = giaTri;
 	}
 
+	public double getDonHangTu() {
+		return donHangTu;
+	}
+
+	public void setDonHangTu(double donHangTu) {
+		this.donHangTu = donHangTu;
+	}
+
+	public double getGiamToiDa() {
+		return giamToiDa;
+	}
+
+	public void setGiamToiDa(double giamToiDa) {
+		this.giamToiDa = giamToiDa;
+	}
+
 	public Date getNgayBatDau() {
 		return ngayBatDau;
 	}
@@ -106,38 +116,6 @@ public class KhuyenMai {
 		this.doiTuongApDung = doiTuongApDung;
 	}
 
-	public double getDonHangTu() {
-		return donHangTu;
-	}
-
-	public void setDonHangTu(double donHangTu) {
-		this.donHangTu = donHangTu;
-	}
-
-	public String getMon1() {
-		return mon1;
-	}
-
-	public void setMon1(String mon1) {
-		this.mon1 = mon1;
-	}
-
-	public String getMon2() {
-		return mon2;
-	}
-
-	public void setMon2(String mon2) {
-		this.mon2 = mon2;
-	}
-
-	public String getMonTang() {
-		return monTang;
-	}
-
-	public void setMonTang(String monTang) {
-		this.monTang = monTang;
-	}
-
 	public String getGhiChu() {
 		return ghiChu;
 	}
@@ -146,13 +124,6 @@ public class KhuyenMai {
 		this.ghiChu = ghiChu;
 	}
 
-//	@Override
-//	public String toString() {
-//		return "KhuyenMai [maKM=" + maKM + ", tenKM=" + tenKM + ", maLoai=" + maLoai + ", giaTri=" + giaTri
-//				+ ", ngayBatDau=" + ngayBatDau + ", ngayKetThuc=" + ngayKetThuc + ", trangThai=" + trangThai
-//				+ ", doiTuongApDung=" + doiTuongApDung + ", donHangTu=" + donHangTu + ", mon1=" + mon1 + ", mon2="
-//				+ mon2 + ", monTang=" + monTang + ", ghiChu=" + ghiChu + "]";
-//	}
 	@Override
 	public String toString() {
 	    return tenKM;

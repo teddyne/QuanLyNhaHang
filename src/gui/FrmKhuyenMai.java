@@ -32,20 +32,21 @@ public class FrmKhuyenMai extends JFrame implements ActionListener, MouseListene
     private final JButton btnLamMoi;
 
     // Các field dùng cho form và lọc
-    private JTextField txtMaKM, txtTenKM, txtMon, txtGiaTri, txtDonHangTu, txtMon1, txtMon2, txtMonTang, txtGhiChu;
+    private JTextField txtMaKM, txtTenKM, txtGiaTri, txtDonHangTu, txtGhiChu;
     private JComboBox<String> cmbLoaiKM, cmbTrangThai, cmbDoiTuongApDung;
     private JSpinner spTuNgay, spDenNgay;
     private JCheckBox chkTuNgay, chkDenNgay;
 	private JPanel pNorth;
 	private JLabel lblTieuDe;
 	private JLabel lblMa;
-	private JLabel lblMon;
 	private JLabel lblLoai;
 	private JLabel lblTrangThai;
 	private JPanel pMain;
 	private JTextField txtTrangThai;
 	private JButton btnThemLoai;
     private Connection con = ConnectSQL.getConnection();
+	private JLabel lblDoiTuong;
+	private JTextField txtDoiTuong;
 
 
     public FrmKhuyenMai() {
@@ -81,15 +82,15 @@ public class FrmKhuyenMai extends JFrame implements ActionListener, MouseListene
         // ======== Dòng 1: Mã KM + Món ========
         JPanel p1 = new JPanel(new FlowLayout(FlowLayout.LEFT));
         txtMaKM = new JTextField(20);
-        txtMon = new JTextField(20);
+        txtDoiTuong = new JTextField(20);
         p1.add(Box.createHorizontalStrut(25));
 
         p1.add(lblMa = new JLabel("Mã khuyến mãi:   "));
         p1.add(txtMaKM);
         p1.add(Box.createHorizontalStrut(100));
 
-        p1.add(lblMon = new JLabel("Món ăn:       "));
-        p1.add(txtMon);
+        p1.add(lblDoiTuong = new JLabel("Đối tượng:   "));
+        p1.add(txtDoiTuong);
 
         
         // Loại KM + Trạng thái
@@ -128,8 +129,8 @@ public class FrmKhuyenMai extends JFrame implements ActionListener, MouseListene
 
 		txtMaKM.setFont(foTxt); 
 		lblMa.setFont(foBoLoc); 
-		lblMon.setFont(foBoLoc); 
-		txtMon.setFont(foTxt);
+		lblDoiTuong.setFont(foBoLoc); 
+		txtDoiTuong.setFont(foTxt);
 		lblLoai.setFont(foBoLoc); 
 		lblTrangThai.setFont(foBoLoc); 
 		cmbLoaiKM.setFont(foTxt);
@@ -167,7 +168,6 @@ public class FrmKhuyenMai extends JFrame implements ActionListener, MouseListene
         btnLamMoi = taoNut("Làm mới", new Color(255, 193, 7), btnSize, btnFont);
         btnThemLoai = taoNut("Thêm loại", new Color(149, 165, 166), btnSize, btnFont);
 
-
         // Cột 1
         col1.add(btnThem);
         col1.add(Box.createVerticalStrut(10));
@@ -181,7 +181,6 @@ public class FrmKhuyenMai extends JFrame implements ActionListener, MouseListene
         col2.add(btnTatCa);
         col2.add(Box.createVerticalStrut(10));
         col2.add(btnThemLoai);
-        
         
         col1.setAlignmentY(Component.TOP_ALIGNMENT);
         col2.setAlignmentY(Component.TOP_ALIGNMENT);
@@ -206,9 +205,24 @@ public class FrmKhuyenMai extends JFrame implements ActionListener, MouseListene
         
         
         // ======== Bảng dữ liệu ========
-        String[] columns = {"Mã khuyến mãi", "Tên khuyến mãi", "Loại", "Giá trị", "Ngày bắt đầu", "Ngày kết thúc",
-                "Trạng thái", "Đối tượng", "Đơn hàng từ", "Món 1", "Món 2", "Món tặng", "Ghi chú"};
-        modelKhuyenMai = new DefaultTableModel(columns, 0);
+        String[] columns = {
+        	    "Mã KM",
+        	    "Tên khuyến mãi",
+        	    "Loại",
+        	    "Ngày bắt đầu",
+        	    "Ngày kết thúc",
+        	    "Trạng thái",
+        	    "Đối tượng áp dụng",
+        	    "Ghi chú"
+        	};
+        
+        modelKhuyenMai = new DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false; // KHÔNG cho sửa
+            }
+        };
+
         tblKhuyenMai = new JTable(modelKhuyenMai);
         tblKhuyenMai.setFont(new Font("Times New Roman", Font.PLAIN, 16));
         tblKhuyenMai.setRowHeight(30);
@@ -240,30 +254,26 @@ public class FrmKhuyenMai extends JFrame implements ActionListener, MouseListene
        
         loadDanhSachKhuyenMai();
     }
-
+    
     private void loadDanhSachKhuyenMai() {
         modelKhuyenMai.setRowCount(0);
         List<KhuyenMai> list = kmDAO.layDanhSachKhuyenMai();
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
 
         for (KhuyenMai km : list) {
             modelKhuyenMai.addRow(new Object[]{
-                    km.getMaKM(),
-                    km.getTenKM(),
-                    km.getMaLoai(),
-                    km.getGiaTri(),
-                    km.getNgayBatDau() != null ? sdf.format(km.getNgayBatDau()) : "",
-                    km.getNgayKetThuc() != null ? sdf.format(km.getNgayKetThuc()) : "",
-                    km.getTrangThai(),
-                    km.getDoiTuongApDung(),
-                    km.getDonHangTu(),
-                    km.getMon1(),
-                    km.getMon2(),
-                    km.getMonTang(),
-                    km.getGhiChu()
+                km.getMaKM(),
+                km.getTenKM(),
+                km.getMaLoai(),
+                km.getNgayBatDau() != null ? sdf.format(km.getNgayBatDau()) : "",
+                km.getNgayKetThuc() != null ? sdf.format(km.getNgayKetThuc()) : "",
+                km.getTrangThai(),
+                km.getDoiTuongApDung(),
+                km.getGhiChu()
             });
         }
     }
+
 
     private boolean kiemTraNgay(Date bd, Date kt) {
         if (kt.before(bd)) {
@@ -272,14 +282,18 @@ public class FrmKhuyenMai extends JFrame implements ActionListener, MouseListene
         }
         return true;
     }
+    
+    
 
     @Override
     public void actionPerformed(ActionEvent e) {
         Object src = e.getSource();
         if(src == btnThem) {
-            new FrmThemKhuyenMai();
+            FrmThemKhuyenMai frm = new FrmThemKhuyenMai();
+//            frm.setVisible(true);       // <---- QUAN TRỌNG
             loadDanhSachKhuyenMai();
         }
+
         if(src == btnSua) {
             int row = tblKhuyenMai.getSelectedRow();
             if(row < 0){
@@ -287,29 +301,42 @@ public class FrmKhuyenMai extends JFrame implements ActionListener, MouseListene
                 return;
             }
             String maKM = modelKhuyenMai.getValueAt(row,0).toString();
-            KhuyenMai km = kmDAO.layKhuyenMaiTheoMa(maKM); // DAO trả về 1 KhuyenMai
-            new FrmSuaKhuyenMai(km);
+            KhuyenMai km = kmDAO.layKhuyenMaiTheoMa(maKM);
+            new FrmSuaKhuyenMai(km).setVisible(true);
             loadDanhSachKhuyenMai();
         }
+        
         if (src == btnTraCuu) 
         	traCuuKhuyenMai();
         if (src == btnTatCa) 
-        	xemTatCaKhuyenMai();
+        	loadDanhSachKhuyenMai();
         if (src == btnLamMoi) {
         	lamMoi();
-        	loadDanhSachKhuyenMai();
+        	//loadDanhSachKhuyenMai();
         }
+        
         if (src == btnThemLoai) {
             FrmLoaiKhuyenMai frm = new FrmLoaiKhuyenMai();
             frm.addWindowListener(new WindowAdapter() {
                 @Override
                 public void windowClosed(WindowEvent e) {
-                    loadLoaiKhuyenMai(); // không cần try-catch nữa
+                    loadLoaiKhuyenMai();
                 }
             });
             frm.setVisible(true);
         }
-
+        
+//        if (src == btnChiTiet) {
+//            int row = tblKhuyenMai.getSelectedRow();
+//            if (row < 0) {
+//                JOptionPane.showMessageDialog(this, "Vui lòng chọn khuyến mãi!");
+//                return;
+//            }
+//            String maKM = modelKhuyenMai.getValueAt(row, 0).toString();
+//            KhuyenMai km = kmDAO.layKhuyenMaiTheoMa(maKM);
+//        	new FrmSuaKhuyenMai(km, true).setVisible(true);
+//            
+//        }
 
     }
 
@@ -318,26 +345,21 @@ public class FrmKhuyenMai extends JFrame implements ActionListener, MouseListene
         try {
             cmbLoaiKM.removeAllItems();
             cmbLoaiKM.addItem("Tất cả");
-
+            
             dao.LoaiKhuyenMai_DAO loaiDAO = new dao.LoaiKhuyenMai_DAO();
             List<entity.LoaiKhuyenMai> list = loaiDAO.getAllLoaiKhuyenMai();
-
             for (entity.LoaiKhuyenMai loai : list) {
                 cmbLoaiKM.addItem(loai.getTenLoai());
             }
-
         } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, "Lỗi khi tải danh sách loại khuyến mãi!", 
-                                          "Lỗi", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Lỗi khi tải danh sách loại khuyến mãi!", "Lỗi", JOptionPane.ERROR_MESSAGE);
             ex.printStackTrace();
         }
     }
-
-
     
 	private void lamMoi() {
     	txtMaKM.setText("");
-        txtMon.setText("");
+        txtDoiTuong.setText("");
         txtTrangThai.setText("");
         // ComboBox về "Tất cả"
         cmbLoaiKM.setSelectedIndex(0);
@@ -348,33 +370,28 @@ public class FrmKhuyenMai extends JFrame implements ActionListener, MouseListene
 
     private void traCuuKhuyenMai() {
         String ma = txtMaKM.getText().trim();
-        String mon = txtMon.getText().trim();
+        String doiTuong = txtDoiTuong.getText().trim();
         String trangThai = txtTrangThai.getText().trim();
-
         String loai = cmbLoaiKM.getSelectedItem().toString();
         if (loai.equals("Tất cả")) loai = null;
-
         Date tuNgayVal = chkTuNgay.isSelected() ? new Date(((java.util.Date) spTuNgay.getValue()).getTime()) : null;
         Date denNgayVal = chkDenNgay.isSelected() ? new Date(((java.util.Date) spDenNgay.getValue()).getTime()) : null;
 
-        List<KhuyenMai> list = kmDAO.traCuuKhuyenMai(ma, mon, loai, trangThai, tuNgayVal, denNgayVal);
+        List<KhuyenMai> list = kmDAO.traCuuKhuyenMai(ma, doiTuong, loai, trangThai, tuNgayVal, denNgayVal);
         modelKhuyenMai.setRowCount(0);
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
         for (KhuyenMai km : list) {
             modelKhuyenMai.addRow(new Object[]{
-                km.getMaKM(), km.getTenKM(), km.getMaLoai(), km.getGiaTri(),
-                km.getNgayBatDau()!=null ? sdf.format(km.getNgayBatDau()) : "",
-                km.getNgayKetThuc()!=null ? sdf.format(km.getNgayKetThuc()) : "",
-                km.getTrangThai(), km.getDoiTuongApDung(), km.getDonHangTu(),
-                km.getMon1(), km.getMon2(), km.getMonTang(), km.getGhiChu()
+            		km.getMaKM(),
+    	            km.getTenKM(),
+    	            km.getMaLoai(),
+    	            km.getNgayBatDau() != null ? sdf.format(km.getNgayBatDau()) : "",
+    	            km.getNgayKetThuc() != null ? sdf.format(km.getNgayKetThuc()) : "",
+    	            km.getTrangThai(),
+    	            km.getDoiTuongApDung(),
+    	            km.getGhiChu()
             });
         }
-    }
- 
-
-
-    private void xemTatCaKhuyenMai() {
-        loadDanhSachKhuyenMai();
     }
 
     private JButton taoNut(String text, Color baseColor, Dimension size, Font font) {
@@ -403,28 +420,42 @@ public class FrmKhuyenMai extends JFrame implements ActionListener, MouseListene
         return btn;
     }
 
-
     @Override
     public void mouseClicked(MouseEvent e) {
         int row = tblKhuyenMai.getSelectedRow();
-        if (row >= 0) {
+        if (row < 0) return;
+        
+        if (e.getClickCount() == 2) {
+            String maKM = modelKhuyenMai.getValueAt(row, 0).toString();
+        	KhuyenMai km = kmDAO.layKhuyenMaiTheoMa(maKM);
+        	new FrmSuaKhuyenMai(km, true).setVisible(true);
+            return;
+        }
+        
+        try {
             txtMaKM.setText(modelKhuyenMai.getValueAt(row, 0).toString());
-//            txtTenKM.setText(modelKhuyenMai.getValueAt(row, 1).toString());
-            cmbLoaiKM.setSelectedItem(modelKhuyenMai.getValueAt(row, 2));
-//            txtGiaTri.setText(modelKhuyenMai.getValueAt(row, 3).toString());
+            cmbLoaiKM.setSelectedItem(modelKhuyenMai.getValueAt(row, 2).toString());
+            txtTrangThai.setText(modelKhuyenMai.getValueAt(row, 5).toString());
+            txtDoiTuong.setText(modelKhuyenMai.getValueAt(row, 6).toString());
 
-            String ngayBD = modelKhuyenMai.getValueAt(row, 4).toString();
-            String ngayKT = modelKhuyenMai.getValueAt(row, 5).toString();
-            spTuNgay.setValue(!ngayBD.isEmpty() ? java.sql.Date.valueOf(ngayBD) : new java.util.Date());
-            spDenNgay.setValue(!ngayKT.isEmpty() ? java.sql.Date.valueOf(ngayKT) : new java.util.Date());
+            SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
+            String ngayBDStr = modelKhuyenMai.getValueAt(row, 3).toString();
+            String ngayKTStr = modelKhuyenMai.getValueAt(row, 4).toString();
 
-            txtTrangThai.setText(modelKhuyenMai.getValueAt(row, 6).toString());
-//            cmbDoiTuongApDung.setSelectedItem(modelKhuyenMai.getValueAt(row, 7));
-//            txtDonHangTu.setText(modelKhuyenMai.getValueAt(row, 8).toString());
-//            txtMon1.setText(modelKhuyenMai.getValueAt(row, 9).toString());
-//            txtMon2.setText(modelKhuyenMai.getValueAt(row, 10).toString());
-//            txtMonTang.setText(modelKhuyenMai.getValueAt(row, 11).toString());
-//            txtGhiChu.setText(modelKhuyenMai.getValueAt(row, 12).toString());
+            if (!ngayBDStr.isEmpty()) {
+                java.util.Date d1 = sdf.parse(ngayBDStr);
+                spTuNgay.setValue(d1);
+                chkTuNgay.setSelected(true);
+            }
+
+            if (!ngayKTStr.isEmpty()) {
+                java.util.Date d2 = sdf.parse(ngayKTStr);
+                spDenNgay.setValue(d2);
+                chkDenNgay.setSelected(true);
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Lỗi hiển thị ngày khuyến mãi!");
         }
     }
 
@@ -447,9 +478,10 @@ public class FrmKhuyenMai extends JFrame implements ActionListener, MouseListene
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
             e.printStackTrace();
         }
-
-        FrmThemKhuyenMai frm = new FrmThemKhuyenMai();
-        frm.setVisible(true); // <--- THÊM DÒNG NÀY ĐỂ MỞ GIAO DIỆN
+        
+        SwingUtilities.invokeLater(() -> {
+            new FrmKhuyenMai().setVisible(true);
+        });
     }
 
 }

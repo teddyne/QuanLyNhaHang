@@ -165,20 +165,37 @@ public class LoaiKhuyenMai_DAO {
         return null;
     }
     
-    public String getTenLoaiByMaLoai(String maLoai) throws SQLException {
-        String tenLoai = null;
+//    public String getTenLoaiByMaLoai(String maLoai) throws SQLException {
+//        String tenLoai = null;
+//        String sql = "SELECT tenLoai FROM LoaiKhuyenMai WHERE maLoai = ?";
+//        
+//        try (Connection con = ConnectSQL.getInstance().getConnection();
+//             PreparedStatement ps = con.prepareStatement(sql)) {
+//            ps.setString(1, maLoai);
+//            try (ResultSet rs = ps.executeQuery()) {
+//                if (rs.next()) {
+//                    tenLoai = rs.getString("tenLoai");
+//                }
+//            }
+//        }
+//        return tenLoai != null ? tenLoai : maLoai; // Trả về maLoai nếu không tìm thấy tenLoai
+//    }
+    
+    public String getTenLoaiByMaLoai(String maLoai) {
         String sql = "SELECT tenLoai FROM LoaiKhuyenMai WHERE maLoai = ?";
-        
         try (Connection con = ConnectSQL.getInstance().getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, maLoai);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    tenLoai = rs.getString("tenLoai");
+                    return rs.getString("tenLoai");
                 }
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-        return tenLoai != null ? tenLoai : maLoai; // Trả về maLoai nếu không tìm thấy tenLoai
+        return maLoai;
     }
+
 
 }
