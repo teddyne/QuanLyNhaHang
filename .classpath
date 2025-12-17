@@ -13,17 +13,16 @@
 			<attribute name="module" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="C:/Users/DELL/Documents/Phat Trien Ung Dung/QuanLyNhaHang/lib/commons-collections4-4.4.jar"/>
-	<classpathentry kind="lib" path="C:/Users/DELL/Documents/Phat Trien Ung Dung/QuanLyNhaHang/lib/commons-compress-1.21.jar"/>
-	<classpathentry kind="lib" path="C:/Users/DELL/Documents/Phat Trien Ung Dung/QuanLyNhaHang/lib/itextpdf-5.5.13.4.jar"/>
-	<classpathentry kind="lib" path="C:/Users/DELL/Documents/Phat Trien Ung Dung/QuanLyNhaHang/lib/jcalendar-1.4.jar"/>
-	<classpathentry kind="lib" path="C:/Users/DELL/Documents/Phat Trien Ung Dung/QuanLyNhaHang/lib/jcommon-1.0.24.jar"/>
-	<classpathentry kind="lib" path="C:/Users/DELL/Documents/Phat Trien Ung Dung/QuanLyNhaHang/lib/jfreechart-1.5.4.jar"/>
-	<classpathentry kind="lib" path="C:/Users/DELL/Documents/Phat Trien Ung Dung/QuanLyNhaHang/lib/log4j-api-2.18.0.jar"/>
-	<classpathentry kind="lib" path="C:/Users/DELL/Documents/Phat Trien Ung Dung/QuanLyNhaHang/lib/mssql-jdbc-12.10.0.jre11.jar"/>
-	<classpathentry kind="lib" path="C:/Users/DELL/Documents/Phat Trien Ung Dung/QuanLyNhaHang/lib/poi-5.2.3.jar"/>
-	<classpathentry kind="lib" path="C:/Users/DELL/Documents/Phat Trien Ung Dung/QuanLyNhaHang/lib/poi-ooxml-5.2.3.jar"/>
-	<classpathentry kind="lib" path="C:/Users/DELL/Documents/Phat Trien Ung Dung/QuanLyNhaHang/lib/poi-ooxml-full-5.2.3.jar"/>
-	<classpathentry kind="lib" path="C:/Users/DELL/Documents/Phat Trien Ung Dung/QuanLyNhaHang/lib/xmlbeans-5.1.1.jar"/>
+	<classpathentry kind="lib" path="D:/QuanLyRapPhim_java/jdbc/mssql-jdbc-12.10.0.jre11.jar"/>
+	<classpathentry kind="lib" path="lib/commons-collections4-4.4.jar"/>
+	<classpathentry kind="lib" path="lib/commons-compress-1.21.jar"/>
+	<classpathentry kind="lib" path="lib/itextpdf-5.5.13.4.jar"/>
+	<classpathentry kind="lib" path="lib/jcalendar-1.4.jar"/>
+	<classpathentry kind="lib" path="lib/jcommon-1.0.24.jar"/>
+	<classpathentry kind="lib" path="lib/jfreechart-1.5.4.jar"/>
+	<classpathentry kind="lib" path="lib/log4j-api-2.18.0.jar"/>
+	<classpathentry kind="lib" path="lib/poi-5.2.3.jar"/>
+	<classpathentry kind="lib" path="lib/xmlbeans-5.1.1.jar"/>
+	<classpathentry kind="lib" path="lib/poi-ooxml-5.2.3.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

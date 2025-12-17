@@ -290,7 +290,7 @@ public class FrmPhucVu extends JFrame {
             lblTienCocLabel.setFont(new Font("Times New Roman", Font.BOLD, 20));
             pnlKhachHang.add(lblTienCocLabel, khGbc);
             khGbc.gridx = 1;
-            JLabel lblCoc = new JLabel(String.format("%,.3f VNĐ", phieuHienTai.getTienCoc()));
+            JLabel lblCoc = new JLabel(String.format("%,.0f VNĐ", phieuHienTai.getTienCoc()));
             lblCoc.setFont(new Font("Times New Roman", Font.PLAIN, 20));
             lblCoc.setForeground(Color.BLUE);
             pnlKhachHang.add(lblCoc, khGbc);

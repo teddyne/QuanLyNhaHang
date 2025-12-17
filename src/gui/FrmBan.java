@@ -796,7 +796,7 @@ public class FrmBan extends JFrame {
         List<PhieuDatBan> listDatBan = phieuDatBanDAO.getDatBanByBan(maBan);
         for (PhieuDatBan d : listDatBan) {
         	String tienCocStr = d.getTienCoc() > 0 
-        	    ? String.format("%,.3f VNĐ", d.getTienCoc()) 
+        	    ? String.format("%,.0f VNĐ", d.getTienCoc()) 
         	    : "0 VNĐ";
 
         	model.addRow(new Object[]{

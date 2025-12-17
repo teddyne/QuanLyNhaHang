@@ -620,4 +620,9 @@ public class KhuyenMai_DAO {
         ps.setString(10, km.getDoiTuongApDung());
         ps.setString(11, km.getGhiChu());
     }
+
+	public List<KhuyenMai> getDanhSachKhuyenMaiHopLe(String maHD, double tongCong) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

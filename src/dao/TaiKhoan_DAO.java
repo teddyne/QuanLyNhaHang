@@ -17,6 +17,34 @@ public class TaiKhoan_DAO {
     public TaiKhoan_DAO(Connection conn) {
         this.conn = conn;
     }
+    public List<TaiKhoan> traCuuTaiKhoan(String keyword) {
+        List<TaiKhoan> danhSach = new ArrayList<>();
+        String sql = "SELECT t.*, n.hoTen " +
+                     "FROM TaiKhoan t " +
+                     "INNER JOIN NhanVien n ON t.maNhanVien = n.maNhanVien " +
+                     "WHERE t.trangThai = 1 " +
+                     "AND (t.soDienThoai LIKE ? OR t.maNhanVien LIKE ?)";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            String searchPattern = "%" + keyword + "%";
+            ps.setString(1, searchPattern);
+            ps.setString(2, searchPattern);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    TaiKhoan tk = new TaiKhoan();
+                    tk.setMaTaiKhoan(rs.getString("maTaiKhoan"));
+                    tk.setSoDienThoai(rs.getString("soDienThoai"));
+                    tk.setMatKhau(rs.getString("matKhau"));
+                    tk.setMaNhanVien(rs.getString("maNhanVien"));
+                    tk.setPhanQuyen(rs.getString("phanQuyen"));
+                    tk.setHoTen(rs.getString("hoTen"));
+                    danhSach.add(tk);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return danhSach;
+    }
 
     public boolean kiemTraDangNhap(String user, String pass) {
         String sql = "SELECT t.maTaiKhoan, t.soDienThoai, t.matKhau, t.maNhanVien, t.phanQuyen, n.hoTen " +

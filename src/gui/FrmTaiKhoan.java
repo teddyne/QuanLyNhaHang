@@ -25,12 +25,8 @@ public class FrmTaiKhoan extends ThanhTacVu {
     private final JTextField txtMaNhanVien;
     private final JComboBox<String> cmbPhanQuyen;
     private final JTextField txtHoTen;
-    private final JButton btnThem;
-    private final JButton btnSua;
-    private final JButton btnXoa;
-    private final JButton btnLamMoi;
-	private AbstractButton chkGanNhat;
-	private AbstractButton chkNhieuNhat;
+    private final JButton btnLuu, btnXoa, btnTraCuu, btnLamMoi;
+    private final JCheckBox chkGanNhat, chkNhieuNhat;
 
     public FrmTaiKhoan() throws SQLException {
         super();
@@ -47,13 +43,11 @@ public class FrmTaiKhoan extends ThanhTacVu {
         // Panel tiêu đề
         JPanel topPanel = new JPanel(new BorderLayout());
         topPanel.setBackground(Color.WHITE);
-        
         JPanel titlePanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        
+        titlePanel.setBackground(new Color(169, 55, 68));
         JLabel lblTieuDe = new JLabel("QUẢN LÝ TÀI KHOẢN");
         lblTieuDe.setFont(new Font("Times New Roman", Font.BOLD, 28));
-        titlePanel.setBackground(new Color(169, 55, 68));        
-        lblTieuDe.setForeground(Color.white);
+        lblTieuDe.setForeground(Color.WHITE);
         titlePanel.add(lblTieuDe);
         topPanel.add(titlePanel, BorderLayout.NORTH);
 
@@ -77,9 +71,7 @@ public class FrmTaiKhoan extends ThanhTacVu {
         Font fieldFont = new Font("Times New Roman", Font.PLAIN, 18);
 
         // Cột 1
-        // Mã tài khoản
-        gbc.gridx = 0;
-        gbc.gridy = 0;
+        gbc.gridx = 0; gbc.gridy = 0;
         JLabel lblMaTaiKhoan = new JLabel("Mã tài khoản");
         lblMaTaiKhoan.setFont(labelFont);
         fieldsPanel.add(lblMaTaiKhoan, gbc);
@@ -90,9 +82,7 @@ public class FrmTaiKhoan extends ThanhTacVu {
         gbc.gridx = 1;
         fieldsPanel.add(txtMaTaiKhoan, gbc);
 
-        // Số điện thoại
-        gbc.gridx = 0;
-        gbc.gridy = 1;
+        gbc.gridx = 0; gbc.gridy = 1;
         JLabel lblSoDienThoai = new JLabel("Số điện thoại");
         lblSoDienThoai.setFont(labelFont);
         fieldsPanel.add(lblSoDienThoai, gbc);
@@ -101,9 +91,7 @@ public class FrmTaiKhoan extends ThanhTacVu {
         gbc.gridx = 1;
         fieldsPanel.add(txtSoDienThoai, gbc);
 
-        // Mật khẩu
-        gbc.gridx = 0;
-        gbc.gridy = 2;
+        gbc.gridx = 0; gbc.gridy = 2;
         JLabel lblMatKhau = new JLabel("Mật khẩu");
         lblMatKhau.setFont(labelFont);
         fieldsPanel.add(lblMatKhau, gbc);
@@ -112,19 +100,16 @@ public class FrmTaiKhoan extends ThanhTacVu {
         gbc.gridx = 1;
         fieldsPanel.add(txtMatKhau, gbc);
 
-        // Spacer giữa cột
+        // Spacer
         gbc.weightx = 0.5;
         for (int y = 0; y <= 2; y++) {
-            gbc.gridx = 2;
-            gbc.gridy = y;
+            gbc.gridx = 2; gbc.gridy = y;
             fieldsPanel.add(Box.createHorizontalStrut(50), gbc);
         }
         gbc.weightx = 1.0;
 
         // Cột 2
-        // Mã nhân viên
-        gbc.gridx = 3;
-        gbc.gridy = 0;
+        gbc.gridx = 3; gbc.gridy = 0;
         JLabel lblMaNhanVien = new JLabel("Mã nhân viên");
         lblMaNhanVien.setFont(labelFont);
         fieldsPanel.add(lblMaNhanVien, gbc);
@@ -133,9 +118,7 @@ public class FrmTaiKhoan extends ThanhTacVu {
         gbc.gridx = 4;
         fieldsPanel.add(txtMaNhanVien, gbc);
 
-        // Phân quyền
-        gbc.gridx = 3;
-        gbc.gridy = 1;
+        gbc.gridx = 3; gbc.gridy = 1;
         JLabel lblPhanQuyen = new JLabel("Phân quyền");
         lblPhanQuyen.setFont(labelFont);
         fieldsPanel.add(lblPhanQuyen, gbc);
@@ -144,9 +127,7 @@ public class FrmTaiKhoan extends ThanhTacVu {
         gbc.gridx = 4;
         fieldsPanel.add(cmbPhanQuyen, gbc);
 
-        // Họ tên
-        gbc.gridx = 3;
-        gbc.gridy = 2;
+        gbc.gridx = 3; gbc.gridy = 2;
         JLabel lblHoTen = new JLabel("Họ tên");
         lblHoTen.setFont(labelFont);
         fieldsPanel.add(lblHoTen, gbc);
@@ -156,55 +137,52 @@ public class FrmTaiKhoan extends ThanhTacVu {
         gbc.gridx = 4;
         fieldsPanel.add(txtHoTen, gbc);
 
-        // Panel nút thao tác
-        JPanel buttonPanel = new JPanel(new GridLayout(2, 2, 10, 10));
+        // Panel nút thao tác - 4 nút
+        JPanel buttonPanel = new JPanel(new GridLayout(2, 2, 15, 15));
         buttonPanel.setBackground(Color.WHITE);
-        buttonPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        buttonPanel.setBorder(BorderFactory.createEmptyBorder(20, 40, 10, 40));
 
-        // Tạo các nút
-        btnThem = taoNut("Thêm", new Color(46, 204, 113));      // xanh lá
-        btnSua = taoNut("Sửa", new Color(52, 152, 219));        // xanh dương
-        btnXoa = taoNut("Xóa", new Color(231, 76, 60));         // đỏ
-        btnLamMoi = taoNut("Làm mới", new Color(149, 165, 166)); // xám
+        Dimension buttonSize = new Dimension(160, 50);
+        Font buttonFont = new Font("Times New Roman", Font.BOLD, 20);
 
-        buttonPanel.add(btnThem);
-        buttonPanel.add(btnSua);
+        btnLuu = taoNut("Lưu", new Color(46, 204, 113), buttonSize, buttonFont);         // xanh lá
+        btnXoa = taoNut("Xóa", new Color(231, 76, 60), buttonSize, buttonFont);         // đỏ
+        btnTraCuu = taoNut("Tra cứu", new Color(121, 89, 229), buttonSize, buttonFont); // tím
+        btnLamMoi = taoNut("Làm mới", new Color(149, 165, 166), buttonSize, buttonFont); // xám
+
+        buttonPanel.add(btnLuu);
         buttonPanel.add(btnXoa);
+        buttonPanel.add(btnTraCuu);
         buttonPanel.add(btnLamMoi);
-        // ===== Panel lọc =====
-        JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 0));
+
+        // Panel lọc
+        JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 30, 5));
         filterPanel.setBackground(Color.WHITE);
-
-        JLabel lblLoc = new JLabel("Lọc");
+        JLabel lblLoc = new JLabel("  Lọc");
         lblLoc.setFont(new Font("Times New Roman", Font.BOLD, 22));
-
         chkGanNhat = new JCheckBox("Gần nhất");
         chkGanNhat.setBackground(Color.WHITE);
         chkGanNhat.setFont(new Font("Times New Roman", Font.PLAIN, 20));
         chkGanNhat.setFocusPainted(false);
         chkGanNhat.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
         chkNhieuNhat = new JCheckBox("Nhiều nhất");
         chkNhieuNhat.setBackground(Color.WHITE);
         chkNhieuNhat.setFont(new Font("Times New Roman", Font.PLAIN, 20));
         chkNhieuNhat.setFocusPainted(false);
         chkNhieuNhat.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        // Thêm vào panel lọc
         filterPanel.add(lblLoc);
         filterPanel.add(chkGanNhat);
         filterPanel.add(chkNhieuNhat);
 
-        // ===== Gộp nút + lọc =====
+        // Gộp nút + lọc
         JPanel rightPanel = new JPanel(new BorderLayout());
         rightPanel.setBackground(Color.WHITE);
         rightPanel.add(buttonPanel, BorderLayout.CENTER);
         rightPanel.add(filterPanel, BorderLayout.SOUTH);
 
-        // Thêm vào inputPanel
         inputPanel.add(fieldsPanel, BorderLayout.CENTER);
         inputPanel.add(rightPanel, BorderLayout.EAST);
-
 
         // Bảng tài khoản
         JPanel tablePanel = new JPanel(new BorderLayout());
@@ -212,13 +190,13 @@ public class FrmTaiKhoan extends ThanhTacVu {
                 BorderFactory.createLineBorder(new Color(165, 42, 42), 2),
                 "Danh Sách Tài Khoản", 0, 0, new Font("Times New Roman", Font.BOLD, 24)));
         tablePanel.setBackground(Color.WHITE);
+
         String[] taiKhoanColumns = {"Mã tài khoản", "Số điện thoại", "Mật khẩu", "Mã nhân viên", "Phân quyền", "Họ tên"};
         modelTaiKhoan = new DefaultTableModel(taiKhoanColumns, 0);
         tblTaiKhoan = new JTable(modelTaiKhoan);
         tblTaiKhoan.setFont(new Font("Times New Roman", Font.PLAIN, 16));
         tblTaiKhoan.setRowHeight(30);
-        JScrollPane scrollTaiKhoan = new JScrollPane(tblTaiKhoan);
-        tablePanel.add(scrollTaiKhoan, BorderLayout.CENTER);
+        tablePanel.add(new JScrollPane(tblTaiKhoan), BorderLayout.CENTER);
 
         // Bảng lịch sử đăng nhập
         JPanel historyPanel = new JPanel(new BorderLayout());
@@ -226,35 +204,38 @@ public class FrmTaiKhoan extends ThanhTacVu {
                 BorderFactory.createLineBorder(new Color(165, 42, 42), 2),
                 "Lịch Sử Đăng Nhập", 0, 0, new Font("Times New Roman", Font.BOLD, 24)));
         historyPanel.setBackground(Color.WHITE);
+
         String[] lichSuColumns = {"Mã lịch sử", "Mã tài khoản", "Thời gian đăng nhập", "Trạng thái"};
         modelLichSuDangNhap = new DefaultTableModel(lichSuColumns, 0);
         tblLichSuDangNhap = new JTable(modelLichSuDangNhap);
         tblLichSuDangNhap.setFont(new Font("Times New Roman", Font.PLAIN, 16));
         tblLichSuDangNhap.setRowHeight(30);
-        JScrollPane scrollLichSu = new JScrollPane(tblLichSuDangNhap);
-        historyPanel.add(scrollLichSu, BorderLayout.CENTER);
+        historyPanel.add(new JScrollPane(tblLichSuDangNhap), BorderLayout.CENTER);
 
         JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, tablePanel, historyPanel);
         splitPane.setResizeWeight(0.5);
         splitPane.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
-        
+
         topPanel.add(inputPanel, BorderLayout.CENTER);
         mainPanel.add(topPanel, BorderLayout.NORTH);
         mainPanel.add(splitPane, BorderLayout.CENTER);
 
+        // Load dữ liệu
         loadDanhSachTaiKhoan();
 
-        btnThem.addActionListener(e -> themTaiKhoan());
-        btnSua.addActionListener(e -> suaTaiKhoan());
+        // Sự kiện
+        btnLuu.addActionListener(e -> luuTaiKhoan());
         btnXoa.addActionListener(e -> xoaTaiKhoan());
+        btnTraCuu.addActionListener(e -> traCuuTaiKhoan());
         btnLamMoi.addActionListener(e -> lamMoiForm());
 
         chkGanNhat.addActionListener(e -> {
+            chkNhieuNhat.setSelected(false); // không cho chọn cả 2
             if (chkGanNhat.isSelected()) {
                 try {
                     locDangNhapGanNhat();
                 } catch (SQLException ex) {
-                    JOptionPane.showMessageDialog(FrmTaiKhoan.this, "Lỗi: " + ex.getMessage());
+                    JOptionPane.showMessageDialog(this, "Lỗi lọc gần nhất!");
                 }
             } else {
                 loadDanhSachTaiKhoan();
@@ -262,6 +243,7 @@ public class FrmTaiKhoan extends ThanhTacVu {
         });
 
         chkNhieuNhat.addActionListener(e -> {
+            chkGanNhat.setSelected(false);
             if (chkNhieuNhat.isSelected()) {
                 locDangNhapNhieuNhat();
             } else {
@@ -281,43 +263,39 @@ public class FrmTaiKhoan extends ThanhTacVu {
                     cmbPhanQuyen.setSelectedItem(modelTaiKhoan.getValueAt(row, 4).toString());
                     txtHoTen.setText(modelTaiKhoan.getValueAt(row, 5).toString());
                     try {
-						loadLichSuDangNhap(modelTaiKhoan.getValueAt(row, 0).toString());
-					} catch (SQLException e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
-					}
+                        loadLichSuDangNhap(modelTaiKhoan.getValueAt(row, 0).toString());
+                    } catch (SQLException ex) {
+                        ex.printStackTrace();
+                    }
                 }
             }
         });
     }
 
-    private JButton taoNut(String text, Color baseColor) {
+    private JButton taoNut(String text, Color baseColor, Dimension size, Font font) {
         JButton btn = new JButton(text);
-        btn.setBackground(baseColor);
+        btn.setFont(font);
+        btn.setPreferredSize(size);
         btn.setForeground(Color.WHITE);
-        btn.setFont(new Font("Times New Roman", Font.BOLD, 20));
+        btn.setBackground(baseColor);
         btn.setFocusPainted(false);
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btn.setContentAreaFilled(false);
         btn.setOpaque(true);
-
-
-        // Hiệu ứng hover
-        btn.addMouseListener(new java.awt.event.MouseAdapter() {
+        btn.addMouseListener(new MouseAdapter() {
             @Override
-            public void mouseEntered(java.awt.event.MouseEvent e) {
+            public void mouseEntered(MouseEvent e) {
                 btn.setBackground(baseColor.darker());
             }
-
             @Override
-            public void mouseExited(java.awt.event.MouseEvent e) {
+            public void mouseExited(MouseEvent e) {
                 btn.setBackground(baseColor);
             }
         });
         return btn;
     }
 
-	private void loadDanhSachTaiKhoan() {
+    private void loadDanhSachTaiKhoan() {
         modelTaiKhoan.setRowCount(0);
         List<TaiKhoan> dsTaiKhoan = taiKhoanDAO.layDanhSachTaiKhoan();
         for (TaiKhoan tk : dsTaiKhoan) {
@@ -346,71 +324,82 @@ public class FrmTaiKhoan extends ThanhTacVu {
         }
     }
 
-    private void themTaiKhoan() {
+    private void luuTaiKhoan() {
         try {
             TaiKhoan tk = new TaiKhoan();
-            tk.setMaTaiKhoan(txtMaTaiKhoan.getText());
-            tk.setSoDienThoai(txtSoDienThoai.getText());
+            tk.setMaTaiKhoan(txtMaTaiKhoan.getText().trim());
+            tk.setSoDienThoai(txtSoDienThoai.getText().trim());
             tk.setMatKhau(new String(txtMatKhau.getPassword()));
-            tk.setMaNhanVien(txtMaNhanVien.getText());
+            tk.setMaNhanVien(txtMaNhanVien.getText().trim());
             tk.setPhanQuyen(cmbPhanQuyen.getSelectedItem().toString());
-            tk.setHoTen(txtHoTen.getText());
+            tk.setHoTen(txtHoTen.getText().trim());
 
-            if (taiKhoanDAO.themTaiKhoan(tk)) {
-                JOptionPane.showMessageDialog(this, "Thêm tài khoản thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
-                loadDanhSachTaiKhoan();
-                lamMoiForm();
+            int selectedRow = tblTaiKhoan.getSelectedRow();
+            if (selectedRow >= 0) {
+                // Cập nhật
+                if (taiKhoanDAO.suaTaiKhoan(tk)) {
+                    JOptionPane.showMessageDialog(this, "Sửa tài khoản thành công!");
+                } else {
+                    JOptionPane.showMessageDialog(this, "Sửa tài khoản thất bại!");
+                    return;
+                }
             } else {
-                JOptionPane.showMessageDialog(this, "Thêm tài khoản thất bại!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                // Thêm mới
+                if (taiKhoanDAO.themTaiKhoan(tk)) {
+                    JOptionPane.showMessageDialog(this, "Thêm tài khoản thành công!");
+                } else {
+                    JOptionPane.showMessageDialog(this, "Thêm tài khoản thất bại!");
+                    return;
+                }
             }
+            loadDanhSachTaiKhoan();
+            lamMoiForm();
         } catch (IllegalArgumentException e) {
-            JOptionPane.showMessageDialog(this, e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    private void suaTaiKhoan() {
-        try {
-            TaiKhoan tk = new TaiKhoan();
-            tk.setMaTaiKhoan(txtMaTaiKhoan.getText());
-            tk.setSoDienThoai(txtSoDienThoai.getText());
-            tk.setMatKhau(new String(txtMatKhau.getPassword()));
-            tk.setMaNhanVien(txtMaNhanVien.getText());
-            tk.setPhanQuyen(cmbPhanQuyen.getSelectedItem().toString());
-            tk.setHoTen(txtHoTen.getText());
-
-            if (taiKhoanDAO.suaTaiKhoan(tk)) {
-                JOptionPane.showMessageDialog(this, "Sửa tài khoản thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
-                loadDanhSachTaiKhoan();
-                lamMoiForm();
-            } else {
-                JOptionPane.showMessageDialog(this, "Sửa tài khoản thất bại!", "Lỗi", JOptionPane.ERROR_MESSAGE);
-            }
-        } catch (IllegalArgumentException e) {
-            JOptionPane.showMessageDialog(this, e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, e.getMessage());
         }
     }
 
     private void xoaTaiKhoan() {
-        String maTaiKhoan = txtMaTaiKhoan.getText();
+        String maTaiKhoan = txtMaTaiKhoan.getText().trim();
         if (maTaiKhoan.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn tài khoản để xóa!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn tài khoản để xóa!");
             return;
         }
-        
-        int confirm = JOptionPane.showConfirmDialog(this, 
-            "Bạn có chắc muốn xóa tài khoản " + maTaiKhoan + "?", "Xác nhận xóa", JOptionPane.YES_NO_OPTION);
-        
+        int confirm = JOptionPane.showConfirmDialog(this,
+                "Bạn có chắc muốn xóa tài khoản " + maTaiKhoan + "?", "Xác nhận", JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {
-            // Gọi method ẩn tài khoản thay vì xóa
             if (taiKhoanDAO.xoaTaiKhoan(maTaiKhoan)) {
-                JOptionPane.showMessageDialog(this, "Xóa tài khoản thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
-                loadDanhSachTaiKhoan(); 
+                JOptionPane.showMessageDialog(this, "Xóa tài khoản thành công!");
+                loadDanhSachTaiKhoan();
                 lamMoiForm();
             } else {
-                JOptionPane.showMessageDialog(this, 
-                    "Xóa tài khoản thất bại!", 
-                    "Lỗi", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Xóa tài khoản thất bại!");
             }
+        }
+    }
+
+    private void traCuuTaiKhoan() {
+        String keyword = JOptionPane.showInputDialog(this, 
+            "Nhập số điện thoại hoặc mã nhân viên để tra cứu:", 
+            "Tra cứu tài khoản", JOptionPane.QUESTION_MESSAGE);
+        if (keyword == null || keyword.trim().isEmpty()) return;
+
+        modelTaiKhoan.setRowCount(0);
+        List<TaiKhoan> ketQua = taiKhoanDAO.traCuuTaiKhoan(keyword.trim());
+        if (ketQua.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Không tìm thấy tài khoản nào phù hợp!");
+        } else {
+            for (TaiKhoan tk : ketQua) {
+                modelTaiKhoan.addRow(new Object[]{
+                    tk.getMaTaiKhoan(),
+                    tk.getSoDienThoai(),
+                    tk.getMatKhau(),
+                    tk.getMaNhanVien(),
+                    tk.getPhanQuyen(),
+                    tk.getHoTen()
+                });
+            }
+            JOptionPane.showMessageDialog(this, "Tìm thấy " + ketQua.size() + " tài khoản phù hợp!");
         }
     }
 
@@ -440,9 +429,9 @@ public class FrmTaiKhoan extends ThanhTacVu {
                     tk.getPhanQuyen(),
                     tk.getHoTen()
             });
-            JOptionPane.showMessageDialog(this, "Đã lọc tài khoản đăng nhập gần nhất: " + tk.getHoTen(), "Thông báo", JOptionPane.INFORMATION_MESSAGE);
         } else {
-            JOptionPane.showMessageDialog(this, "Không có dữ liệu đăng nhập nào!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Không có dữ liệu đăng nhập nào!");
+            modelTaiKhoan.setRowCount(0);
         }
     }
 
@@ -458,21 +447,19 @@ public class FrmTaiKhoan extends ThanhTacVu {
                     tk.getPhanQuyen(),
                     tk.getHoTen()
             });
-            JOptionPane.showMessageDialog(this, "Đã lọc tài khoản đăng nhập nhiều nhất: " + tk.getHoTen(), "Thông báo", JOptionPane.INFORMATION_MESSAGE);
         } else {
-            JOptionPane.showMessageDialog(this, "Không có dữ liệu đăng nhập nào!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Không có dữ liệu đăng nhập nào!");
+            modelTaiKhoan.setRowCount(0);
         }
     }
 
     public static void main(String[] args) {
-       try {
-    	   UIManager.put("TableHeader.font", new Font("Times New Roman", Font.BOLD, 20));
-			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException
-			 | UnsupportedLookAndFeelException e) {
-				// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+        try {
+            UIManager.put("TableHeader.font", new Font("Times New Roman", Font.BOLD, 20));
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         SwingUtilities.invokeLater(() -> {
             try {
                 new FrmTaiKhoan().setVisible(true);
@@ -481,5 +468,4 @@ public class FrmTaiKhoan extends ThanhTacVu {
             }
         });
     }
-
 }

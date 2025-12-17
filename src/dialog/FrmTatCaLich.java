@@ -147,8 +147,6 @@ public class FrmTatCaLich extends JFrame {
         List<PhieuDatBan> list = phieuDAO.getAll(today);
         model.setRowCount(0);
 
-        NumberFormat vnd = NumberFormat.getInstance(new Locale("vi", "VN"));
-
         for (PhieuDatBan p : list) {
             if (!"Đặt".equals(p.getTrangThai())) continue;
 
@@ -156,15 +154,18 @@ public class FrmTatCaLich extends JFrame {
             String tenBan = b != null ? b.getMaBan() + " (" + b.getTenKhuVuc() + ")" : p.getMaBan();
 
             model.addRow(new Object[]{
-                p.getMaPhieu(),
-                tenBan,
-                p.getTenKhach() != null ? p.getTenKhach() : "Không có",
-                p.getSoDienThoai() != null ? p.getSoDienThoai() : "Không có",
-                p.getSoNguoi(),
-                new SimpleDateFormat("dd/MM/yyyy").format(p.getNgayDen()),
-                p.getGioDen().toString().substring(0, 5),
-                vnd.format(p.getTienCoc()) + ".000 VNĐ"  
-            });
+            	    p.getMaPhieu(),
+            	    tenBan,
+            	    p.getTenKhach() != null ? p.getTenKhach() : "Không có",
+            	    p.getSoDienThoai() != null ? p.getSoDienThoai() : "Không có",
+            	    p.getSoNguoi(),
+            	    new SimpleDateFormat("dd/MM/yyyy").format(p.getNgayDen()),
+            	    p.getGioDen().toString().substring(0, 5),
+            	    p.getTienCoc() > 0
+            	        ? String.format("%,.0f VNĐ", p.getTienCoc())
+            	        : "0 VNĐ"
+            	});
+
         }
     } catch (SQLException e) {
         e.printStackTrace();

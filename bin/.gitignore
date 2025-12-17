@@ -1,4 +1,5 @@
-/dialog/
 /gui/
-/dao/
 /starting/
+/dao/
+/dialog/
+/entity/

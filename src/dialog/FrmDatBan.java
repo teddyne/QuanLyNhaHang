@@ -142,7 +142,7 @@ public class FrmDatBan extends JDialog {
         JTextArea txtGhiChu = new JTextArea(editD != null ? editD.getGhiChu() : "", 3, 20);
         txtGhiChu.setFont(fontBig);
 
-        txtTienCoc = new JTextField(editD != null ? String.valueOf(editD.getTienCoc()) : "200.000", 10); // Mặc định 200.000
+        txtTienCoc = new JTextField(editD != null ? String.valueOf(editD.getTienCoc()) : "200,000", 10); // Mặc định 200.000
         txtTienCoc.setFont(fontBig);
         JCheckBox chkCK = new JCheckBox("Chuyển khoản");
         chkCK.setFont(fontBig);
@@ -340,7 +340,7 @@ public class FrmDatBan extends JDialog {
                 double tienCoc;
                 try {
                     String str = txtTienCoc.getText().trim();
-                    tienCoc = str.isEmpty() ? 200.000 : Double.parseDouble(str);
+                    tienCoc = str.isEmpty() ? 200000 : Double.parseDouble(str);
                     if (tienCoc < 0) throw new Exception();
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(this, "Tiền cọc không hợp lệ!");
