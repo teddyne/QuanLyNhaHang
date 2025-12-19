@@ -54,11 +54,10 @@ import com.toedter.calendar.JDateChooser;
 import java.awt.AlphaComposite;
 import connectSQL.ConnectSQL;
 import entity.Ban;
-import entity.ChiTietDatMon;
+import entity.ChiTietPhieuDatBan;
 import entity.ChiTietHoaDon;
 import entity.KhuVuc;
 import entity.PhieuDatBan;
-import connectSQL.ConnectSQL;
 import dao.*;
 import dialog.FrmPhucVu;
 import entity.*;
@@ -69,22 +68,16 @@ import javax.swing.border.LineBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
-
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.net.URL;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.*;
-import java.util.List;
 
-public class FrmDatMon extends JFrame {
+
+public class FrmDatMon extends JDialog {
     // TONE CHỦ ĐẠO + FONT GIỮ NGUYÊN 100%
     private static final Color MAU_DO_RUOU = new Color(169, 55, 68);
     private static final Color MAU_HONG_NHAT = new Color(255, 230, 230);
@@ -121,44 +114,33 @@ public class FrmDatMon extends JFrame {
     private PhieuDatBan_DAO phieuDatBanDAO;
     private JPanel khungDangChon = null;    
     private MonAn monDangChon = null;
-    private static final Map<String, List<MonDat>> TEMP_ORDERS = new HashMap<>();
     
-    public FrmDatMon(Connection con, String maPhieu, String maBan) throws SQLException {
-        super("ĐẶT MÓN - Bàn " + maBan);
+    public FrmDatMon(Window parent, Connection con, String maPhieu, String maBan) throws SQLException {
+        super(parent, "ĐẶT MÓN - Bàn " + maBan, ModalityType.APPLICATION_MODAL);
         this.con = con;
-        this.maPhieu = maPhieu;  // có thể null
+        this.maPhieu = maPhieu;  
         this.maBan = maBan;
-        
-        // QUAN TRỌNG: Nếu chưa có phiếu → lấy món từ bộ nhớ tạm
-        if (maPhieu == null || maPhieu.trim().isEmpty()) {
-            danhSachMonDat = TEMP_ORDERS.getOrDefault(maBan, new ArrayList<>());
-        }
 
         initComponents();
         hienThiDanhSachMonDaDat();
-        setExtendedState(JFrame.MAXIMIZED_BOTH);
+        setSize(1500, 800);
+        setLocationRelativeTo(parent);
         setLocationRelativeTo(null);
-        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-        addWindowListener(new java.awt.event.WindowAdapter() {
-            @Override
-            public void windowClosing(java.awt.event.WindowEvent e) {
-                // Khi đóng form → lưu tạm lại vào static map (nếu chưa có phiếu)
-                if (maPhieu == null || maPhieu.trim().isEmpty()) {
-                    TEMP_ORDERS.put(maBan, new ArrayList<>(danhSachMonDat));
-                }
-                quayLaiPhucVu();
-            }
-        });
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); 
+//        addWindowListener(new java.awt.event.WindowAdapter() {
+//            @Override
+//            public void windowClosing(java.awt.event.WindowEvent e) {
+//                quayLaiPhucVu();
+//            }
+//        });
     }
 
     private void initComponents() throws SQLException {
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        addWindowStateListener(e -> quayLaiPhucVu());
         khoiTaoDAO();
+        taiDuLieuTuBan();
         khoiTaoBang();
         khoiTaoComboBoxLoai();
-        taoGiaoDien();           // ĐÃ SỬA Ở ĐÂY
-        taiDuLieuTuBan();
+        taoGiaoDien(); 
         taiDuLieuTuDB();
         capNhatLuoiMon();
         hienThiDanhSachMonDaDat();
@@ -182,12 +164,11 @@ public class FrmDatMon extends JFrame {
         tblMonDat.setRowHeight(56);
 
         JTableHeader header = tblMonDat.getTableHeader();
-        header.setBackground(MAU_DO_RUOU);  // đỏ rượu
+        header.setBackground(MAU_DO_RUOU);  
         header.setForeground(Color.WHITE);
         header.setFont(new Font("Times New Roman", Font.BOLD, 20));
         header.setReorderingAllowed(false);
 
-        // QUAN TRỌNG NHẤT: ÉP DÙNG RENDERER CỦA CHÚNG TA
         header.setDefaultRenderer(new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value,
@@ -198,7 +179,7 @@ public class FrmDatMon extends JFrame {
                 label.setForeground(Color.WHITE);
                 label.setFont(new Font("Times New Roman", Font.BOLD, 20));
                 label.setHorizontalAlignment(SwingConstants.CENTER);
-                label.setBorder(BorderFactory.createEmptyBorder(8, 0, 8, 0)); // cho đẹp
+                label.setBorder(BorderFactory.createEmptyBorder(8, 0, 8, 0)); 
                 return label;
             }
         });
@@ -211,52 +192,58 @@ public class FrmDatMon extends JFrame {
     }
     
     private void taiDuLieuTuDB() {
-    try {
-        danhSachMon = monAnDAO.getAllMonAn();
-        if (danhSachMon.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Không có món ăn nào!");
-            return;
-        }
+        try {
+            danhSachMon = monAnDAO.getAllMonAn();
+            if (danhSachMon.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Không có món ăn nào!");
+                return;
+            }
 
-        if (maPhieu != null && !maPhieu.isEmpty()) {
-            ChiTietDatMon_DAO chiTietDAO = new ChiTietDatMon_DAO(con);
-            List<ChiTietDatMon> chiTietList = chiTietDAO.layTheoPhieu(maPhieu);
-            for (ChiTietDatMon ct : chiTietList) {
-                MonAn mon = monAnDAO.layMonAnTheoMa(ct.getMaMon());
-                if (mon != null) {
-                    MonDat item = new MonDat(mon, ct.getSoLuong());
-                    item.setGhiChu(ct.getGhiChu());
-                    danhSachMonDat.add(item);
+            if (maPhieu != null && !maPhieu.isEmpty()) {
+
+                ChiTietPhieuDatBan_DAO chiTietDAO = new ChiTietPhieuDatBan_DAO();
+                List<ChiTietPhieuDatBan> chiTietList = chiTietDAO.layTheoMaPhieu(maPhieu);
+
+                for (ChiTietPhieuDatBan ct : chiTietList) {
+                    MonAn mon = monAnDAO.layMonAnTheoMa(ct.getMaMon());
+                    if (mon != null) {
+                        MonDat item = new MonDat(mon, ct.getSoLuong());
+                        item.setGhiChu(ct.getGhiChu());
+                        danhSachMonDat.add(item);
+                    }
                 }
             }
+            capNhatBang();
+            capNhatTongTien();
+            capNhatLuoiMon();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Lỗi tải dữ liệu món: " + e.getMessage());
         }
-
-        capNhatBang();
-        capNhatTongTien();
-        capNhatLuoiMon(); // ← GỌI SAU KHI LOAD XONG
-    } catch (SQLException e) {
-        JOptionPane.showMessageDialog(this, "Lỗi: " + e.getMessage());
     }
- }
     
     private void taiDuLieuTuBan() {
-        try {
-            if (maPhieu != null && !maPhieu.isEmpty()) {
+        tenKhach = "Khách vãng lai"; 
+
+        if (maPhieu != null && !maPhieu.trim().isEmpty()) {
+            try {
                 String ten = phieuDatBanDAO.layTenKhachHang(maPhieu);
                 if (ten != null && !ten.trim().isEmpty()) {
                     tenKhach = ten;
                 }
+            } catch (Exception ex) {
+                ex.printStackTrace();
             }
-            TaiKhoan current = TaiKhoan_DAO.getCurrentTaiKhoan();
-            if (current != null) {
-                maNhanVien = current.getMaNhanVien();
-                tenNhanVien = current.getHoTen();
-            }
-        } catch (Exception e) {
-            tenKhach = "Khách vãng lai";
+        }
+        TaiKhoan current = TaiKhoan_DAO.getCurrentTaiKhoan();
+        if (current != null) {
+            maNhanVien = current.getMaNhanVien();
+            tenNhanVien = current.getHoTen();
+        } else {
             tenNhanVien = "Nhân viên mặc định";
         }
     }
+
     
     private void khoiTaoComboBoxLoai() {
         List<LoaiMon> list = loaiMonDAO.getAllLoaiMon();
@@ -277,15 +264,35 @@ public class FrmDatMon extends JFrame {
         getContentPane().setLayout(new BorderLayout());
         getContentPane().setBackground(MAU_TRANG);
 
-        // HEADER
+     // HEADER
         JPanel pnlHeader = new JPanel(new BorderLayout());
         pnlHeader.setBackground(MAU_DO_RUOU);
         pnlHeader.setBorder(new EmptyBorder(10, 15, 10, 15));
+
+        // nút quay lại
+        ImageIcon icon = new ImageIcon(
+                new ImageIcon("img/quaylai.png").getImage()
+                        .getScaledInstance(35, 35, Image.SCALE_SMOOTH)
+        );
+        JLabel lblBack = new JLabel(icon);
+        lblBack.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        lblBack.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                dispose();
+            }
+        });
+
+        // tiêu đề
         JLabel lblTieuDe = new JLabel("ĐẶT MÓN", SwingConstants.CENTER);
         lblTieuDe.setFont(FONT_TIEU_DE);
         lblTieuDe.setForeground(MAU_TRANG);
+
+        // add
+        pnlHeader.add(lblBack, BorderLayout.WEST);
         pnlHeader.add(lblTieuDe, BorderLayout.CENTER);
-        getContentPane().add(pnlHeader, BorderLayout.NORTH);
+        add(pnlHeader, BorderLayout.NORTH);
+
 
         // CHIA 50-50
         JSplitPane splitMain = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
@@ -311,7 +318,6 @@ public class FrmDatMon extends JFrame {
         pnlTimKiem.add(txtTimKiem);
         pnlTimKiem.add(lblLoc);
         pnlTimKiem.add(cmbLocLoai);
-        // ĐÃ BỎ NÚT "Tìm"
 
         pnlThucDon.add(pnlTimKiem, BorderLayout.NORTH);
 
@@ -324,7 +330,7 @@ public class FrmDatMon extends JFrame {
         pnlThucDon.add(scrMon, BorderLayout.CENTER);
         splitMain.setLeftComponent(pnlThucDon);
 
-        // PHẢI: PHIẾU – CHỈ 2 NÚT
+        // PHẢI: PHIẾU
         splitMain.setRightComponent(taoPanelPhieuDatMon());
 
         getContentPane().add(splitMain, BorderLayout.CENTER);
@@ -403,7 +409,6 @@ public class FrmDatMon extends JFrame {
 
     private boolean luuVaoChiTietDatMon() {
         try {
-            // Lấy mã phiếu từ biến truyền vào constructor (this.maPhieu)
             String maPhieuHienTai = this.maPhieu;
 
             if (maPhieuHienTai == null || maPhieuHienTai.trim().isEmpty()) {
@@ -411,29 +416,29 @@ public class FrmDatMon extends JFrame {
                 return false;
             }
 
-            ChiTietDatMon_DAO ctDAO = new ChiTietDatMon_DAO(con);
-            // Xóa các chi tiết cũ của phiếu trước khi thêm lại
-            ctDAO.xoaTheoPhieu(maPhieuHienTai);
+            ChiTietPhieuDatBan_DAO ctDAO = new ChiTietPhieuDatBan_DAO();
 
             for (MonDat item : danhSachMonDat) {
-                ChiTietDatMon ct = new ChiTietDatMon(
-                    maPhieuHienTai,
-                    item.mon.getMaMon(),
-                    item.soLuong,
-                    item.mon.getDonGia(),
-                    item.getGhiChu() != null ? item.getGhiChu() : ""
-                );
-                ctDAO.themChiTiet(ct);
+
+                ChiTietPhieuDatBan ct = new ChiTietPhieuDatBan();
+                ct.setMaPhieu(maPhieuHienTai);
+                ct.setMaMon(item.mon.getMaMon());
+                ct.setSoLuong(item.soLuong);
+                ct.setDonGia(item.mon.getDonGia());
+                ct.setGhiChu(item.getGhiChu() != null ? item.getGhiChu() : "");
+
+                ctDAO.luuMon(ct); // tự quyết định insert / update
             }
+
             return true;
+
         } catch (SQLException ex) {
+            ex.printStackTrace();
             JOptionPane.showMessageDialog(this, "Lỗi lưu món: " + ex.getMessage());
-            ex.printStackTrace(); // in ra console để debug
             return false;
         }
     }
 
-    
     private JPanel taoCardMon(MonAn mon) {
         JPanel khung = new JPanel(new BorderLayout(5, 5));
         khung.setBackground(MAU_TRANG);
@@ -575,14 +580,39 @@ public class FrmDatMon extends JFrame {
                 .sum();
         lblTongTien.setText(String.format("TỔNG TIỀN: %,d đ", (int) tongTien));
     }
+    
     private void xoaMonDat() {
+    	if (tblMonDat.isEditing()) {
+            tblMonDat.getCellEditor().stopCellEditing();
+        }
         int row = tblMonDat.getSelectedRow();
-        if (row >= 0) {
+        if (row < 0) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn món cần xóa!");
+            return;
+        }
+
+        MonDat item = danhSachMonDat.get(row);
+        String maMon = item.mon.getMaMon();
+
+        try {
+            if (maPhieu != null && !maPhieu.trim().isEmpty()) {
+                ChiTietPhieuDatBan_DAO ctDAO = new ChiTietPhieuDatBan_DAO();
+                ctDAO.xoaMon(maPhieu, maMon);
+            }
+
             danhSachMonDat.remove(row);
-            capNhatBang(); capNhatTongTien();
+            capNhatBang();
+            capNhatTongTien();
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this,
+                "Lỗi xóa món: " + ex.getMessage(),
+                "Lỗi",
+                JOptionPane.ERROR_MESSAGE);
         }
     }
-    
+
     
     private void themSuKien() {
         txtTimKiem.getDocument().addDocumentListener(new DocumentListener() {
@@ -612,15 +642,15 @@ public class FrmDatMon extends JFrame {
 
     
     public List<MonDat> getDanhSachMonDat() {
-        return new ArrayList<>(danhSachMonDat); // clone
+        return new ArrayList<>(danhSachMonDat); 
     }
     private void hienThiDanhSachMonDaDat() {
     bangModel.setRowCount(0);
     int stt = 1;
     for (MonDat item : danhSachMonDat) {
         bangModel.addRow(new Object[]{
-            stt++,                    // ← STT
-            item.mon.getTenMon(),     // Tên món
+            stt++,                    
+            item.mon.getTenMon(),    
             item.soLuong,
             String.format("%,.0f đ", item.mon.getDonGia()),
             String.format("%,.0f đ", item.getThanhTien()),
@@ -637,7 +667,7 @@ public class FrmDatMon extends JFrame {
             bangModel.addRow(new Object[]{
                 stt++,
                 item.mon.getTenMon(),
-                item.soLuong,                                           // chỉ để số lượng
+                item.soLuong,                                           
                 String.format("%,.0f đ", item.mon.getDonGia()),
                 String.format("%,.0f đ", item.soLuong * item.mon.getDonGia()),
                 item.getGhiChu() != null ? item.getGhiChu() : ""
@@ -722,18 +752,27 @@ public class FrmDatMon extends JFrame {
             btnPlus.setFont(new Font("Times New Roman", Font.BOLD, 16));
 
             btnPlus.addActionListener(e -> {
-                danhSachMonDat.get(currentRow).soLuong++;
-                capNhatBang(); capNhatTongTien();
-                fireEditingStopped();
+                MonDat md = danhSachMonDat.get(currentRow);
+                md.soLuong++;
+                lbl.setText(md.soLuong + "");   
+                fireEditingStopped();     
+                capNhatBang();
+                capNhatTongTien();
             });
 
             btnMinus.addActionListener(e -> {
                 MonDat md = danhSachMonDat.get(currentRow);
-                if (md.soLuong > 1) md.soLuong--;
-                else danhSachMonDat.remove(currentRow);
-                capNhatBang(); capNhatTongTien();
-                fireEditingStopped();
+                if (md.soLuong > 1) {
+                    md.soLuong--;
+                    lbl.setText(md.soLuong + "");
+                } else {
+                    danhSachMonDat.remove(currentRow); 
+                }
+                fireEditingStopped(); 
+                capNhatBang();
+                capNhatTongTien();
             });
+
 
             panel.add(btnMinus, BorderLayout.WEST);
             panel.add(lbl, BorderLayout.CENTER);
@@ -752,20 +791,20 @@ public class FrmDatMon extends JFrame {
         @Override public boolean stopCellEditing() { fireEditingStopped(); return true; }
     }
     
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            try {
-                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-                String maPhieu = JOptionPane.showInputDialog("Nhập mã phiếu đặt bàn:");
-                if (maPhieu != null && !maPhieu.isEmpty()) {
-                    // Lấy mã bàn từ phiếu
-                    PhieuDatBan_DAO phieuDAO = new PhieuDatBan_DAO(ConnectSQL.getConnection());
-                    String maBan = phieuDAO.layMaBanTheoPhieu(maPhieu);
-                    new FrmDatMon(con, maBan, maPhieu);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
-    }
+//    public static void main(String[] args) {
+//        SwingUtilities.invokeLater(() -> {
+//            try {
+//                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+//                String maPhieu = JOptionPane.showInputDialog("Nhập mã phiếu đặt bàn:");
+//                if (maPhieu != null && !maPhieu.isEmpty()) {
+//                    // Lấy mã bàn từ phiếu
+//                    PhieuDatBan_DAO phieuDAO = new PhieuDatBan_DAO(ConnectSQL.getConnection());
+//                    String maBan = phieuDAO.layMaBanTheoPhieu(maPhieu);
+//                    new FrmDatMon(con, maBan, maPhieu);
+//                }
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+//        });
+//    }
 }

@@ -32,6 +32,7 @@ public class FrmThucDon extends JFrame {
     private static final Color MAU_VANG = new Color(255, 200, 60);
     private static final Color MAU_XAM = Color.LIGHT_GRAY;
     private static final Color MAU_TRANG = Color.WHITE;
+    private static final Color MAU_TIM = new Color(121, 89, 229);
     private static final Font FONT_TXT = new Font("Times New Roman", Font.PLAIN, 14);
     private static final Font FONT_TIEU_DE = new Font("Times New Roman", Font.BOLD, 24);
     private static final Font FONT_BUTTON = new Font("Times New Roman", Font.BOLD, 16);
@@ -43,17 +44,16 @@ public class FrmThucDon extends JFrame {
 
     // Thành phần giao diện
     private List<MonAn> danhSachMon = new ArrayList<>();
-    private final Map<String, JPanel> panelByLoaiMa = new HashMap<>(); // key = maLoai
+    private final Map<String, JPanel> panelByLoaiMa = new HashMap<>(); 
     private JTextField txtTimKiem;
     private JComboBox<String> cmbLocLoai;
     private JTabbedPane tabLoai;
     private MonAn monDangChon = null;
     private JPanel khungDangChon = null;
     private List<LoaiMon> dsLoaiMonHienTai = new ArrayList<>(); 
-    private static FrmThucDon instance; // Để dialog gọi lại
+    private static FrmThucDon instance; 
 
     public FrmThucDon() throws SQLException {
-    	// Menu
     	instance = this;
     	setJMenuBar(ThanhTacVu.getInstance().getJMenuBar());
         ThanhTacVu customMenu = ThanhTacVu.getInstance();
@@ -67,19 +67,16 @@ public class FrmThucDon extends JFrame {
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
-        // Tạo giao diện
         taoThanhBen();
         taoTieuDe();
         taoNoiDungChinh();
 
-        // Load dữ liệu và build tab + combo
         refreshLoaiAndData();
 
         setVisible(true);
     }
 
 
- // Thanh bên trái
     private void taoThanhBen() {
         JPanel pnlBenTrai = new JPanel(new BorderLayout());
         pnlBenTrai.setPreferredSize(new Dimension(220, 0));
@@ -118,10 +115,10 @@ public class FrmThucDon extends JFrame {
 
         Dimension btnSize = new Dimension(160, 50);
 
-        JButton btnThem = taoNhoButton("Thêm món", MAU_XANH_LA, MAU_TRANG, btnSize);
+        JButton btnThem = taoNhoButton("Lưu", MAU_XANH_LA, MAU_TRANG, btnSize);
         btnThem.addActionListener(e -> new DialogThemMonAn(this).setVisible(true));
 
-        JButton btnCapNhat = taoNhoButton("Cập nhật", MAU_XANH_DUONG, MAU_TRANG, btnSize);
+        JButton btnCapNhat = taoNhoButton("Sửa", MAU_XANH_DUONG, MAU_TRANG, btnSize);
         btnCapNhat.addActionListener(e -> {
             if (monDangChon == null) {
                 JOptionPane.showMessageDialog(this, "Vui lòng chọn món để cập nhật!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
@@ -130,10 +127,10 @@ public class FrmThucDon extends JFrame {
             new DialogCapNhatMonAn(this, monDangChon).setVisible(true);
         });
 
-        JButton btnXoa = taoNhoButton("Xóa món", MAU_DO, MAU_TRANG, btnSize);
+        JButton btnXoa = taoNhoButton("Xóa", MAU_DO, MAU_TRANG, btnSize);
         btnXoa.addActionListener(e -> xoaMonAn());
 
-        JButton btnLoaiMon = taoNhoButton("Thêm loại món", MAU_VANG, Color.BLACK, btnSize);
+        JButton btnLoaiMon = taoNhoButton("Loại Món", MAU_TIM, MAU_TRANG, btnSize);
         btnLoaiMon.addActionListener(e -> {
             try {
                 FrmLoaiMon frm = new FrmLoaiMon();                    

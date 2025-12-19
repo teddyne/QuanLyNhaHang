@@ -89,7 +89,8 @@ gioDen TIME NOT NULL,
 ghiChu NVARCHAR(200) NULL, 
 tienCoc DECIMAL(18,2) DEFAULT 0, 
 ghiChuCoc NVARCHAR(200) NULL, 
-trangThai NVARCHAR(20) NOT NULL DEFAULT N'Đặt',
+trangThai NVARCHAR(20) NOT NULL DEFAULT N'Đặt' 
+	CHECK (trangThai IN (N'Đặt', N'Phục vụ', N'Hoàn thành')),
 CONSTRAINT FK_PhieuDatBan_Ban FOREIGN KEY (maBan) REFERENCES Ban(maBan)
 );
 
@@ -111,15 +112,15 @@ trangThai BIT,
 moTa NVARCHAR(200)
 );
 
-CREATE TABLE ChiTietDatMon (
-maPhieu NVARCHAR(10) NOT NULL,
-maMon NVARCHAR(20) NOT NULL,
-soLuong INT NOT NULL CHECK (soLuong > 0),
-donGia DECIMAL(18,2) NOT NULL CHECK (donGia > 0),
-ghiChu NVARCHAR(200) NULL,
-CONSTRAINT PK_ChiTietDatMon PRIMARY KEY (maPhieu, maMon),
-CONSTRAINT FK_ChiTietDatMon_Phieu FOREIGN KEY (maPhieu) REFERENCES PhieuDatBan(maPhieu) ON DELETE CASCADE,
-CONSTRAINT FK_ChiTietDatMon_Mon FOREIGN KEY (maMon) REFERENCES MonAn(maMon)
+CREATE TABLE ChiTietPhieuDatBan (
+    maPhieu NVARCHAR(10) NOT NULL,
+    maMon NVARCHAR(20) NOT NULL,
+    soLuong INT NOT NULL CHECK (soLuong > 0),
+    donGia DECIMAL(18,2) NOT NULL CHECK (donGia > 0),
+    ghiChu NVARCHAR(200) NULL,
+    CONSTRAINT PK_CTPDB PRIMARY KEY (maPhieu, maMon),
+    CONSTRAINT FK_CTPDB_PDB FOREIGN KEY (maPhieu) REFERENCES PhieuDatBan(maPhieu) ON DELETE CASCADE,
+    CONSTRAINT FK_CTPDB_Mon FOREIGN KEY (maMon) REFERENCES MonAn(maMon)
 );
 
 CREATE TABLE LoaiKhuyenMai (
@@ -334,13 +335,16 @@ INSERT INTO KhachHang (maKH, tenKH, email, sdt, ngaySinh, maLoaiKH, trangThai) V
 ('KH0005', N'Đỗ Minh Tú', 'tu@gmail.com', '0949678901', '1992-02-22', 'LKH01', N'Hoạt động'),
 ('KH0006', N'Nguyễn Hải Yến', 'yen@gmail.com', '0950789012', '1997-05-30', 'LKH02', N'Hoạt động');
 
-INSERT INTO PhieuDatBan (maPhieu, maBan, tenKhach, soDienThoai, soNguoi, ngayDen, gioDen, ghiChu, tienCoc, ghiChuCoc, trangThai) VALUES
-('P0001', 'A02', N'Nguyễn Văn Nam', '0905123456', 4, '2024-01-15', '18:00', N'Đặt bàn sinh nhật', 500000, N'Cọc 50%', N'Đã cọc'),
-('P0002', 'A04', N'Lê Thị Hồng', '0916345678', 2, '2024-04-20', '19:00', N'Hẹn hò', 300000, NULL, N'Đã cọc'),
-('P0003', 'B05', N'Trần Anh Dũng', '0927456789', 6, '2024-09-10', '18:30', N'Đặt tiệc công ty', 800000, N'Cọc 40%', N'Đã cọc'),
-('P0004', 'B02', N'Phạm Quỳnh Hoa', '0938567890', 3, '2025-02-05', '17:30', N'Đặt bàn view đẹp', 400000, NULL, N'Đã cọc'),
-('P0005', 'C02', N'Đỗ Minh Tú', '0949678901', 5, '2025-07-18', '19:00', N'Tiệc bạn bè', 600000, NULL, N'Đã cọc'),
-('P0006', 'A10', N'Nguyễn Hải Yến', '0950789012', 8, '2025-10-10', '18:45', N'Sinh nhật', 1000000, N'Cọc đủ', N'Đã cọc');
+INSERT INTO PhieuDatBan 
+(maPhieu, maBan, tenKhach, soDienThoai, soNguoi, ngayDen, gioDen, ghiChu, tienCoc, ghiChuCoc, trangThai)
+VALUES 
+('P0001', 'A02', N'Nguyễn Văn Nam', '0905123456', 4, '2024-01-15', '18:00', N'Đặt bàn sinh nhật', 500000, N'Cọc 50%', N'Đặt'),
+('P0002', 'A04', N'Lê Thị Hồng', '0916345678', 2, '2024-04-20', '19:00', N'Hẹn hò', 300000, NULL, N'Đặt'),
+('P0003', 'B05', N'Trần Anh Dũng', '0927456789', 6, '2024-09-10', '18:30', N'Đặt tiệc công ty', 800000, N'Cọc 40%', N'Đặt'),
+('P0004', 'B02', N'Phạm Quỳnh Hoa', '0938567890', 3, '2025-02-05', '17:30', N'Đặt bàn view đẹp', 400000, NULL, N'Đặt'),
+('P0005', 'C02', N'Đỗ Minh Tú', '0949678901', 5, '2025-07-18', '19:00', N'Tiệc bạn bè', 600000, NULL, N'Đặt'),
+('P0006', 'A10', N'Nguyễn Hải Yến', '0950789012', 8, '2025-10-10', '18:45', N'Sinh nhật', 1000000, N'Cọc đủ', N'Đặt');
+
 
 INSERT INTO HoaDon (maHD, ngayLap, trangThai, maPhieu, maKH, maKM, maNhanVien, phuThu, ghiChu) VALUES
 ('HD0001', '2025-10-27 19:00', N'Đã thanh toán', 'P0001', 'KH0001', 'KM0003', 'NV0002', 0, N'Mua lẩu hải sản, tặng sữa chua mít'),
@@ -370,6 +374,7 @@ select * from NhanVien
 select * from Ban
 select * from KhuyenMai
 select * from PhieuDatBan
+select * from ChiTietPhieuDatBan
 select * from HoaDon
 select * from ChiTietHoaDon
 select * from MonAn
@@ -378,11 +383,11 @@ select * from TaiKhoan
 select * from LoaiKhuyenMai
 select * from LoaiKhachHang
 
-ALTER TABLE Ban DROP CONSTRAINT CK__Ban__trangThai__534D60F1;
+ALTER TABLE Ban DROP CONSTRAINT CK__Ban__trangThai__534D60F1; 
 
-SELECT * 
-FROM sys.check_constraints 
-WHERE parent_object_id = OBJECT_ID('Ban');
-SELECT name 
-FROM sys.check_constraints 
-WHERE parent_object_id = OBJECT_ID('Ban');
+SELECT * FROM sys.check_constraints 
+WHERE parent_object_id = OBJECT_ID('Ban'); 
+
+SELECT name FROM sys.check_constraints 
+WHERE parent_object_id = OBJECT_ID('Ban'); 
+

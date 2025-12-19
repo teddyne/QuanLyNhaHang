@@ -36,13 +36,12 @@ import javax.swing.SpinnerDateModel;
 import javax.swing.SwingConstants;
 import javax.swing.Timer;
 import dao.Ban_DAO;
-import dao.ChiTietDatMon_DAO;
+import dao.ChiTietPhieuDatBan_DAO;
 import dao.HoaDon_DAO;
 import dao.KhachHang_DAO;
 import dao.MonAn_DAO;
 import dao.PhieuDatBan_DAO;
 import entity.Ban;
-import entity.ChiTietDatMon;
 import entity.KhachHang;
 import entity.MonAn;
 import entity.PhieuDatBan;
@@ -55,11 +54,9 @@ public class FrmDatBan extends JDialog {
     private PhieuDatBan_DAO phieuDatBanDAO;
     private Ban_DAO banDAO;
     private KhachHang_DAO khachHangDAO;
-    private List<MonDat> danhSachMonDat = new ArrayList<>();
     private String maBan;
     private PhieuDatBan editD;
     private Font fontBig = new Font("Times New Roman", Font.BOLD, 22);
-    private JButton btnDatMon;
     private JButton btnLuu;
     private JButton btnHuy;
     private JButton btnCheckKH;
@@ -68,10 +65,8 @@ public class FrmDatBan extends JDialog {
     private JTextField txtTienCoc;
     private JSpinner spnNgay;
     private JSpinner spnGio;
-    private double tongTienMon = 0.0;
     private Connection conn;
 	private Object maPhieu;
-	private FrmDatMon frmDatMon;
 	
 	public FrmDatBan(JFrame parent, String maBan, PhieuDatBan phieu, PhieuDatBan_DAO phieuDatBanDAO, Ban_DAO banDAO, KhachHang_DAO khachHangDAO, Connection conn) throws SQLException {
 	    super(parent, phieu == null ? "Đặt bàn" : "Sửa đặt bàn", true);
@@ -83,28 +78,13 @@ public class FrmDatBan extends JDialog {
 	    this.conn = conn;
 	    this.editD = phieu;
 	    this.maPhieu = (phieu != null) ? phieu.getMaPhieu() : "";
-	    this.danhSachMonDat = new ArrayList<>();
 	    initComponents();
-
-	    if (phieu != null) {
-	        ChiTietDatMon_DAO chiTietDAO = new ChiTietDatMon_DAO(conn);
-	        List<ChiTietDatMon> dsChiTiet = chiTietDAO.layTheoPhieu(phieu.getMaPhieu());
-	        MonAn_DAO monDAO = new MonAn_DAO(conn);
-	        for (ChiTietDatMon ct : dsChiTiet) {
-	            MonAn mon = monDAO.layMonAnTheoMa(ct.getMaMon());
-	            MonDat monDat = new MonDat(mon, ct.getSoLuong(), ct.getDonGia(), ct.getGhiChu());
-	            danhSachMonDat.add(monDat);
-	        }
-	        tongTienMon = danhSachMonDat.stream().mapToDouble(m -> m.getSoLuong() * m.getDonGia()).sum();
-	        capNhatTienCoc();
-	    }
 	}
-    
+	
     private void initComponents() throws SQLException {
         setSize(800, 700);
         setLayout(new BorderLayout(15, 15));
         setLocationRelativeTo(getParent());
-        new ChiTietDatMon_DAO(conn);
         // Header
         JLabel lblTieuDe = new JLabel("PHIẾU ĐẶT BÀN - Mã bàn: " + maBan, SwingConstants.CENTER);
         lblTieuDe.setOpaque(true);
@@ -152,7 +132,6 @@ public class FrmDatBan extends JDialog {
         txtGhiChuCK.setEnabled(chkCK.isSelected());
         Font buttonFont = new Font("Times New Roman", Font.BOLD, 20);
         Dimension buttonSize = new Dimension(120, 35);
-        btnDatMon = FrmDangNhap.taoNut("Đặt món", new Color(50, 205, 50), buttonSize, fontBig);
         btnLuu = FrmDangNhap.taoNut("Đặt Bàn", new Color(100, 149, 237), buttonSize, fontBig);
         btnHuy = FrmDangNhap.taoNut("Hủy", new Color(220, 20, 60), buttonSize, fontBig);
 
@@ -214,11 +193,6 @@ public class FrmDatBan extends JDialog {
         pForm.add(lblGhiChuCK, gbc);
         gbc.gridx = 1; pForm.add(new JScrollPane(txtGhiChuCK), gbc); row++;
         gbc.gridx = 0; gbc.gridy = row;
-        
-        JLabel lblMonAn = new JLabel("Món ăn");
-        lblMonAn.setFont(fontBig);
-        pForm.add(lblMonAn, gbc);
-        gbc.gridx = 1; pForm.add(btnDatMon, gbc);
 
         // Panel nút
         JPanel pSouth = new JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.RIGHT));
@@ -279,42 +253,6 @@ public class FrmDatBan extends JDialog {
         });
 
         chkCK.addActionListener(e -> txtGhiChuCK.setEnabled(chkCK.isSelected()));
-
-        btnDatMon.addActionListener(e -> {
-            try {
-                String maPhieu = txtMaPhieu.getText().trim();
-                if (maPhieu.isEmpty()) {
-                    maPhieu = "P" + System.currentTimeMillis();
-                    txtMaPhieu.setText(maPhieu);
-                }
-
-               // Mở form đặt món (chưa lưu DB)
-                JDialog datMonDialog = new JDialog(this, "ĐẶT MÓN - BÀN " + maBan, true);
-                datMonDialog.setSize(1500, 800);
-                datMonDialog.setLocationRelativeTo(this);
-                frmDatMon = new FrmDatMon(conn, maPhieu, maBan);
-                datMonDialog.add(frmDatMon.getRootPane());
-                datMonDialog.setVisible(true);
-
-                // Sau khi đóng dialog
-                if (frmDatMon != null) {
-                    danhSachMonDat = frmDatMon.getDanhSachMonDat();
-                    String monList = frmDatMon.layDanhSachMonDat();
-
-                   if (!monList.isEmpty()) {
-                        JOptionPane.showMessageDialog(this, "ĐÃ CHỌN MÓN:\n" + monList);
-                    }
-
-                    tongTienMon = frmDatMon.layTongTienMon();
-                    capNhatTienCoc();
-                }
-
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                JOptionPane.showMessageDialog(this, "Lỗi khi mở form đặt món: " + ex.getMessage());
-            }
-        });
-
 
         btnLuu.addActionListener(e -> {
             Connection conn = null;
@@ -397,20 +335,6 @@ public class FrmDatBan extends JDialog {
                 } else {
                     phieuDAO.add(dNew); 
                 }
-                if (!danhSachMonDat.isEmpty()) {
-                    ChiTietDatMon_DAO chiTietDAO = new ChiTietDatMon_DAO(conn);
-                    chiTietDAO.xoaTheoPhieu(maPhieuHienTai);
-                    for (MonDat item : danhSachMonDat) {
-                        ChiTietDatMon ct = new ChiTietDatMon(
-                            maPhieuHienTai, 
-                            item.getMon().getMaMon(),
-                            item.getSoLuong(),
-                            item.getMon().getDonGia(),
-                            item.getGhiChu()
-                        );
-                        chiTietDAO.themChiTiet(ct);
-                    }
-                }
                 conn.commit();
                JOptionPane.showMessageDialog(this, "Đặt bàn thành công!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
                 dispose();
@@ -436,11 +360,6 @@ public class FrmDatBan extends JDialog {
             }
         });
        btnHuy.addActionListener(e -> dispose());
-    }
-    
-    private void capNhatTienCoc() {
-        double tienCoc = (tongTienMon > 0) ? tongTienMon : 200000;
-        txtTienCoc.setText(String.valueOf(tienCoc));
     }
     
     private boolean validateSDT(String sdt) {

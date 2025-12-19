@@ -821,6 +821,12 @@ public class FrmBan extends JFrame {
         btnDatBan.setPreferredSize(new Dimension(120, 35));
         btnDatBan.setForeground(Color.white);
         pnlNut.add(btnDatBan);
+        
+        JButton btnDatMon = new JButton("Đặt món");
+        btnDatMon.setPreferredSize(new Dimension(140, 35));
+        btnDatMon.setForeground(Color.white);
+        ThanhTacVu.kieuNut(btnDatMon, new Color(241, 196, 15)); 
+        pnlNut.add(btnDatMon);
 
         JButton btnDangPhucVu = new JButton("Đang phục vụ");
         btnDangPhucVu.setPreferredSize(new Dimension(180, 35));
@@ -848,6 +854,32 @@ public class FrmBan extends JFrame {
             } catch (SQLException ex) {
                 ex.printStackTrace();
                 JOptionPane.showMessageDialog(this, "Lỗi khi mở form đặt bàn!");
+            }
+        });
+        
+        btnDatMon.addActionListener(e -> {
+            int selected = table.getSelectedRow();
+
+            if (selected < 0) {
+                JOptionPane.showMessageDialog(this,
+                    "Vui lòng chọn phiếu đặt bàn để đặt món!",
+                    "Thông báo",
+                    JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            try {
+                String maPhieu = (String) model.getValueAt(selected, 0);
+
+                FrmDatMon frmDatMon = new FrmDatMon(dialog, conn, maPhieu, maBan);
+                frmDatMon.setVisible(true);
+
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(this,
+                    "Lỗi mở form đặt món: " + ex.getMessage(),
+                    "Lỗi",
+                    JOptionPane.ERROR_MESSAGE);
             }
         });
 
@@ -1105,7 +1137,7 @@ public class FrmBan extends JFrame {
 	    }
 	
 	    // MỞ FORM ĐẶT MÓN
-	    new FrmDatMon(conn, banDangChon, phieu.getMaPhieu()).setVisible(true);
+	    new FrmDatMon(this, conn, banDangChon, phieu.getMaPhieu()).setVisible(true);
 	    taiLaiBangChinh();
 	}
 

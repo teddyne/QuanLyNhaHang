@@ -13,6 +13,8 @@ import java.awt.LayoutManager;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.List;
@@ -35,15 +37,15 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import connectSQL.ConnectSQL;
 import dao.Ban_DAO;
-import dao.ChiTietDatMon_DAO;
 import dao.ChiTietHoaDon_DAO;
+import dao.ChiTietPhieuDatBan_DAO;
 import dao.HoaDon_DAO;
 import dao.LoaiBan_DAO;
 import dao.MonAn_DAO;
 import dao.PhieuDatBan_DAO;
 import entity.Ban;
-import entity.ChiTietDatMon;
 import entity.ChiTietHoaDon;
+import entity.ChiTietPhieuDatBan;
 import entity.LoaiBan;
 import entity.MonAn;
 import entity.PhieuDatBan;
@@ -59,20 +61,24 @@ public class FrmPhucVu extends JFrame {
     private Ban_DAO banDAO;
     private PhieuDatBan_DAO phieuDatBanDAO;
     private Connection con = ConnectSQL.getConnection();
-    private ChiTietDatMon_DAO chiTietDatMonDAO;
     private ChiTietHoaDon_DAO chiTietHoaDonDAO;
     private String maBan;
     private Ban ban;
     private HoaDon_DAO hoaDonDAO;
     private LoaiBan loaiBan;
-    private PhieuDatBan phieuDatBanGoc;  // Phiếu gốc từ FrmBan
-    private PhieuDatBan phieuHienTai;    // Phiếu đang dùng (có thể load lại)
+    private PhieuDatBan phieuDangPhucVu;    
     private JTable tableMon;
     private DefaultTableModel modelMon;
     private JLabel lblTotal;
+    private ChiTietPhieuDatBan_DAO chiTietPDB_DAO; 
 
     public FrmPhucVu(JFrame parent, String maBan, PhieuDatBan phieuDatBan, PhieuDatBan_DAO phieuDatBanDAO, Ban_DAO banDAO, LoaiBan_DAO loaiBanDAO) throws SQLException {
-        setTitle("Phục vụ - Bàn " + maBan);
+    	if (phieuDatBan == null) {
+            throw new IllegalArgumentException(
+            );
+        }
+
+    	setTitle("Phục vụ - Bàn " + maBan);
         setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
         try {
             this.hoaDonDAO = HoaDon_DAO.getInstance();
@@ -80,9 +86,8 @@ public class FrmPhucVu extends JFrame {
             this.banDAO = banDAO;
             this.phieuDatBanDAO = phieuDatBanDAO;
             this.ban = banDAO.getBanByMa(maBan);
-            this.phieuDatBanGoc = phieuDatBan;
-            this.phieuHienTai = phieuDatBan;
-            this.chiTietDatMonDAO = new ChiTietDatMon_DAO(con);
+            this.phieuDangPhucVu = phieuDatBan;
+            this.chiTietPDB_DAO = new ChiTietPhieuDatBan_DAO(con);
             this.chiTietHoaDonDAO = new ChiTietHoaDon_DAO();
             System.out.println("phieuDatBan: " + (phieuDatBan != null ? phieuDatBan.getTenKhach() : "null"));
             this.loaiBan = loaiBanDAO.getLoaiBanByMa(ban.getMaLoai());
@@ -90,20 +95,15 @@ public class FrmPhucVu extends JFrame {
                 this.loaiBan = new LoaiBan();
                 this.loaiBan.setTenLoai("Thường");
             }
-            if (this.phieuHienTai == null) {
-                try {
-                    java.util.Date today = new java.util.Date();
-                    List<PhieuDatBan> list = phieuDatBanDAO.getDatBanByBanAndNgay(maBan, new java.sql.Date(today.getTime()));
-                    if (!list.isEmpty()) {
-                        this.phieuHienTai = list.stream()
-                            .filter(p -> "Phục vụ".equals(p.getTrangThai()) || "Đặt".equals(p.getTrangThai()))
-                            .findFirst()
-                            .orElse(list.get(0));
-                    }
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
+
+            if ("Đặt".equals(phieuDangPhucVu.getTrangThai())) {
+                phieuDatBanDAO.capNhatTrangThaiPhieu(
+                    phieuDangPhucVu.getMaPhieu(),
+                    "Phục vụ"
+                );
+                phieuDangPhucVu.setTrangThai("Phục vụ");
             }
+
             initComponents();
             setVisible(true);
         } catch (Exception e) {
@@ -214,8 +214,8 @@ public class FrmPhucVu extends JFrame {
         lblNgayDen.setFont(new Font("Times New Roman", Font.BOLD, 20));
         pnlBan.add(lblNgayDen, banGbc);
         banGbc.gridx = 1;
-        String ngayDenStr = (phieuHienTai != null && phieuHienTai.getNgayDen() != null)
-                ? new SimpleDateFormat("dd/MM/yyyy").format(phieuHienTai.getNgayDen()) : "Chưa có";
+        String ngayDenStr = (phieuDangPhucVu != null && phieuDangPhucVu.getNgayDen() != null)
+                ? new SimpleDateFormat("dd/MM/yyyy").format(phieuDangPhucVu.getNgayDen()) : "Chưa có";
         JLabel valNgayDen = new JLabel(ngayDenStr);
         valNgayDen.setFont(new Font("Times New Roman", Font.PLAIN, 20));
         pnlBan.add(valNgayDen, banGbc);
@@ -225,8 +225,8 @@ public class FrmPhucVu extends JFrame {
         lblGioDen.setFont(new Font("Times New Roman", Font.BOLD, 20));
         pnlBan.add(lblGioDen, banGbc);
         banGbc.gridx = 1;
-        String gioDenStr = (phieuHienTai != null && phieuHienTai.getGioDen() != null)
-                ? phieuHienTai.getGioDen().toString().substring(0, 5) : "Chưa có";
+        String gioDenStr = (phieuDangPhucVu != null && phieuDangPhucVu.getGioDen() != null)
+                ? phieuDangPhucVu.getGioDen().toString().substring(0, 5) : "Chưa có";
         JLabel valGioDen = new JLabel(gioDenStr);
         valGioDen.setFont(new Font("Times New Roman", Font.PLAIN, 20));
         pnlBan.add(valGioDen, banGbc);
@@ -240,7 +240,7 @@ public class FrmPhucVu extends JFrame {
         khGbc.insets = new Insets(5, 15, 5, 15);
         khGbc.anchor = GridBagConstraints.WEST;
         int khRow = 0;
-        if (phieuHienTai != null && phieuHienTai.getTenKhach() != null && !phieuHienTai.getTenKhach().trim().isEmpty()) {
+        if (phieuDangPhucVu != null && phieuDangPhucVu.getTenKhach() != null && !phieuDangPhucVu.getTenKhach().trim().isEmpty()) {
             // KHÁCH ĐẶT BÀN
             khGbc.gridx = 0; khGbc.gridy = khRow; khGbc.gridwidth = 2;
             khGbc.fill = GridBagConstraints.HORIZONTAL;
@@ -257,7 +257,7 @@ public class FrmPhucVu extends JFrame {
             lblTenKH.setFont(new Font("Times New Roman", Font.BOLD, 20));
             pnlKhachHang.add(lblTenKH, khGbc);
             khGbc.gridx = 1;
-            JLabel valTenKH = new JLabel(phieuHienTai.getTenKhach().trim());
+            JLabel valTenKH = new JLabel(phieuDangPhucVu.getTenKhach().trim());
             valTenKH.setFont(new Font("Times New Roman", Font.PLAIN, 20));
             pnlKhachHang.add(valTenKH, khGbc);
             khRow++;
@@ -268,7 +268,7 @@ public class FrmPhucVu extends JFrame {
             lblSDT.setFont(new Font("Times New Roman", Font.BOLD, 20));
             pnlKhachHang.add(lblSDT, khGbc);
             khGbc.gridx = 1;
-            JLabel valSDT = new JLabel(phieuHienTai.getSoDienThoai() != null ? phieuHienTai.getSoDienThoai() : "Không có");
+            JLabel valSDT = new JLabel(phieuDangPhucVu.getSoDienThoai() != null ? phieuDangPhucVu.getSoDienThoai() : "Không có");
             valSDT.setFont(new Font("Times New Roman", Font.PLAIN, 20));
             pnlKhachHang.add(valSDT, khGbc);
             khRow++;
@@ -279,7 +279,7 @@ public class FrmPhucVu extends JFrame {
             lblSoNguoiKH.setFont(new Font("Times New Roman", Font.BOLD, 20));
             pnlKhachHang.add(lblSoNguoiKH, khGbc);
             khGbc.gridx = 1;
-            JLabel valSoNguoiKH = new JLabel(String.valueOf(phieuHienTai.getSoNguoi()));
+            JLabel valSoNguoiKH = new JLabel(String.valueOf(phieuDangPhucVu.getSoNguoi()));
             valSoNguoiKH.setFont(new Font("Times New Roman", Font.PLAIN, 20));
             pnlKhachHang.add(valSoNguoiKH, khGbc);
             khRow++;
@@ -290,7 +290,7 @@ public class FrmPhucVu extends JFrame {
             lblTienCocLabel.setFont(new Font("Times New Roman", Font.BOLD, 20));
             pnlKhachHang.add(lblTienCocLabel, khGbc);
             khGbc.gridx = 1;
-            JLabel lblCoc = new JLabel(String.format("%,.0f VNĐ", phieuHienTai.getTienCoc()));
+            JLabel lblCoc = new JLabel(String.format("%,.0f VNĐ", phieuDangPhucVu.getTienCoc()));
             lblCoc.setFont(new Font("Times New Roman", Font.PLAIN, 20));
             lblCoc.setForeground(Color.BLUE);
             pnlKhachHang.add(lblCoc, khGbc);
@@ -329,14 +329,16 @@ public class FrmPhucVu extends JFrame {
         JScrollPane scrollMonAn = new JScrollPane(tableMon);
         scrollMonAn.setBorder(null);
         pnlMonAn.setPreferredSize(new Dimension(850, 500));
-        scrollMonAn.setPreferredSize(new Dimension(850, 450)); // bảng to hơn
+        scrollMonAn.setPreferredSize(new Dimension(850, 450));
         pnlMonAn.add(scrollMonAn, BorderLayout.CENTER);
-        double tongTien = calculateTongTien(modelMon);
-        this.lblTotal = new JLabel("TỔNG: 0 VNĐ", SwingConstants.RIGHT); // ← gán vào biến instance
+
+        this.lblTotal = new JLabel("TỔNG: 0 VNĐ", SwingConstants.RIGHT);
         this.lblTotal.setFont(new Font("Times New Roman", Font.BOLD, 18));
         this.lblTotal.setForeground(Color.RED);
         pnlMonAn.add(this.lblTotal, BorderLayout.SOUTH);
-        loadMonAnFromDB() ;
+
+        loadMonAnFromDB();
+
         // Layout nội dung
         int contentRow = 0;
         gbc.gridx = 0;
@@ -358,7 +360,7 @@ public class FrmPhucVu extends JFrame {
         pnlNut.setBackground(new Color(248, 249, 250));
         pnlNut.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
         JButton btnDatMon = new JButton("ĐẶT MÓN");
-        ThanhTacVu.kieuNut(btnDatMon, new Color(46, 204, 113));
+        ThanhTacVu.kieuNut(btnDatMon, new Color(241, 196, 15)); 
         btnDatMon.setForeground(Color.WHITE);
         btnDatMon.setPreferredSize(new Dimension(200, 40));
         pnlNut.add(btnDatMon);
@@ -374,16 +376,21 @@ public class FrmPhucVu extends JFrame {
         pnlNut.add(btnDong);
         btnDatMon.addActionListener(e -> {
             try {
-                String maPhieu = phieuHienTai != null ? phieuHienTai.getMaPhieu() : null;
-                System.out.println("Gọi đặt món với maBan: " + maBan + ", maPhieu: " + maPhieu);
-                FrmDatMon frm = new FrmDatMon(con, maPhieu, maBan);
+                String maPhieu = phieuDangPhucVu.getMaPhieu();
+
+                FrmDatMon frm = new FrmDatMon(this, con, maPhieu, maBan);
                 frm.setFrmPhucVu(this);
+                frm.setLocationRelativeTo(this);
                 frm.setVisible(true);
-                this.setVisible(false);
-                frm.setVisible(true);
+
             } catch (SQLException ex) {
                 ex.printStackTrace();
-                JOptionPane.showMessageDialog(this, "Lỗi mở form đặt món: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(
+                    this,
+                    "Lỗi mở form đặt món",
+                    "Lỗi",
+                    JOptionPane.ERROR_MESSAGE
+                );
             }
         });
        
@@ -415,50 +422,44 @@ public class FrmPhucVu extends JFrame {
         add(pnlNut, BorderLayout.SOUTH);
     }
 
-    void loadMonAnFromDB() {
-        modelMon.setRowCount(0);
+    private void loadMonAnFromDB() {
         try {
-            String maPhieu = phieuHienTai != null ? phieuHienTai.getMaPhieu() : null;
-            String maHD = getMaHDByMaPhieu(maPhieu);
-            if (maHD != null) {
-                // Load từ hóa đơn (đã phục vụ)
-                Object[][] data = getMonAnByMaHD(maHD);
-                int stt = 1;
-                for (Object[] row : data) {
-                    modelMon.addRow(new Object[]{
-                        stt++,
-                        row[0],
-                        row[1],
-                        String.format("%,.0f VNĐ", (Double)row[2]),
-                        String.format("%,.0f VNĐ", (Double)row[3])
-                    });
-                }
-            } else if (maPhieu != null && !maPhieu.trim().isEmpty()) {
-                ChiTietDatMon_DAO chiTietDAO = new ChiTietDatMon_DAO(con);
-                List<ChiTietDatMon> ds = chiTietDAO.layTheoPhieu(maPhieu);
-                MonAn_DAO monDAO = new MonAn_DAO(con);
-                int stt = 1;
-                for (ChiTietDatMon ct : ds) {
-                    MonAn mon = monDAO.layMonAnTheoMa(ct.getMaMon());
-                    if (mon != null) {
-                        modelMon.addRow(new Object[]{
-                            stt++,
-                            mon.getTenMon(),
-                            ct.getSoLuong(),
-                            String.format("%,.0f VNĐ", ct.getDonGia()),
-                            String.format("%,.0f VNĐ", ct.getSoLuong() * ct.getDonGia())
-                        });
-                    }
-                }
+            modelMon.setRowCount(0);
+
+            if (phieuDangPhucVu == null) return;
+
+            List<ChiTietPhieuDatBan> dsMon =
+                chiTietPDB_DAO.layTheoMaPhieu(
+                    phieuDangPhucVu.getMaPhieu()
+                );
+
+            int stt = 1;
+            for (ChiTietPhieuDatBan ct : dsMon) {
+                modelMon.addRow(new Object[]{
+                    stt++,
+                    ct.getTenMon(),
+                    ct.getSoLuong(),
+                    String.format("%,.0f VNĐ", ct.getDonGia()),
+                    String.format("%,.0f VNĐ",
+                        ct.getSoLuong() * ct.getDonGia()
+                    )
+                });
             }
-            double tongTien = calculateTongTien(modelMon);
-            if (lblTotal != null) {
-                lblTotal.setText(String.format("TỔNG: %,d VNĐ", (int)tongTien));
-            }
-        } catch (Exception e) {
+
+            capNhatTongTien();
+
+        } catch (SQLException e) {
             e.printStackTrace();
+            JOptionPane.showMessageDialog(
+                this,
+                "Lỗi load danh sách món",
+                "Lỗi",
+                JOptionPane.ERROR_MESSAGE
+            );
         }
     }
+
+
 
     private void capNhatNutBanTrongFrmBan() {
         if (getParent() instanceof FrmBan) {
@@ -497,12 +498,26 @@ public class FrmPhucVu extends JFrame {
         return monData;
     }
 
-    private double calculateTongTien(DefaultTableModel model) {
-        double tong = 0;
-        for (int i = 0; i < model.getRowCount(); i++) {
-            tong += Double.parseDouble(model.getValueAt(i, 4).toString().replaceAll("[^0-9]", ""));
+    private void capNhatTongTien() {
+        try {
+            if (phieuDangPhucVu == null) {
+                lblTotal.setText("TỔNG: 0 VNĐ");
+                return;
+            }
+
+            double tongTien =
+                chiTietPDB_DAO.tinhTongTien(
+                    phieuDangPhucVu.getMaPhieu()
+                );
+
+            lblTotal.setText(
+                "TỔNG: " + String.format("%,.0f VNĐ", tongTien)
+            );
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            lblTotal.setText("TỔNG: 0 VNĐ");
         }
-        return tong;
     }
 
     public void capNhatMonDat() {
@@ -511,51 +526,51 @@ public class FrmPhucVu extends JFrame {
         repaint();
     }
 
-    public void chuyenSangPhucVu(String maNhanVien) {
-        if (phieuDatBanGoc == null || !"Đặt".equals(phieuDatBanGoc.getTrangThai())) {
-            JOptionPane.showMessageDialog(this, "Không thể phục vụ! Phiếu không hợp lệ.");
-            return;
-        }
-
-        int confirm = JOptionPane.showConfirmDialog(this,
-            "Bắt đầu phục vụ bàn " + maBan + "?", "Xác nhận", JOptionPane.YES_NO_OPTION);
-        if (confirm != JOptionPane.YES_OPTION) return;
-
-        try (Connection conn = ConnectSQL.getConnection()) {
-            conn.setAutoCommit(false);
-
-            // Cập nhật trạng thái phiếu
-            phieuDatBanDAO.capNhatTrangThaiPhieu(phieuDatBanGoc.getMaPhieu(), "Phục vụ");
-            banDAO.capNhatTrangThai(maBan, "Đang phục vụ");
-
-            // Tạo hóa đơn
-            String maHD = hoaDonDAO.taoHoaDonMoi(
-                phieuDatBanGoc.getMaPhieu(), maNhanVien, null, null, 0, ""
-            );
-
-            // Copy chi tiết đặt món → hóa đơn
-            List<ChiTietDatMon> ds = chiTietDatMonDAO.layTheoPhieu(phieuDatBanGoc.getMaPhieu());
-            for (ChiTietDatMon ct : ds) {
-                chiTietHoaDonDAO.themChiTiet(new ChiTietHoaDon(
-                    maHD, ct.getMaMon(), ct.getSoLuong(), ct.getDonGia(), ct.getGhiChu()
-                ));
-            }
-
-            conn.commit();
-
-            // CẬP NHẬT phieuHienTai ĐỂ HIỂN THỊ
-            phieuHienTai = phieuDatBanGoc;
-            phieuHienTai.setTrangThai("Phục vụ");
-
-            JOptionPane.showMessageDialog(this, "Phục vụ thành công! HD: " + maHD);
-            loadMonAnFromDB();
-            capNhatNutBanTrongFrmBan();
-            revalidate();
-            repaint();
-
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage());
-        }
-    }
+//    public void chuyenSangPhucVu(String maNhanVien) {
+//        if (phieuDatBanGoc == null || !"Đặt".equals(phieuDatBanGoc.getTrangThai())) {
+//            JOptionPane.showMessageDialog(this, "Không thể phục vụ! Phiếu không hợp lệ.");
+//            return;
+//        }
+//
+//        int confirm = JOptionPane.showConfirmDialog(this,
+//            "Bắt đầu phục vụ bàn " + maBan + "?", "Xác nhận", JOptionPane.YES_NO_OPTION);
+//        if (confirm != JOptionPane.YES_OPTION) return;
+//
+//        try (Connection conn = ConnectSQL.getConnection()) {
+//            conn.setAutoCommit(false);
+//
+//            // Cập nhật trạng thái phiếu
+//            phieuDatBanDAO.capNhatTrangThaiPhieu(phieuDatBanGoc.getMaPhieu(), "Phục vụ");
+//            banDAO.capNhatTrangThai(maBan, "Đang phục vụ");
+//
+//            // Tạo hóa đơn
+//            String maHD = hoaDonDAO.taoHoaDonMoi(
+//                phieuDatBanGoc.getMaPhieu(), maNhanVien, null, null, 0, ""
+//            );
+//
+//            // Copy chi tiết đặt món → hóa đơn
+//            List<ChiTietDatMon> ds = chiTietDatMonDAO.layTheoPhieu(phieuDatBanGoc.getMaPhieu());
+//            for (ChiTietDatMon ct : ds) {
+//                chiTietHoaDonDAO.themChiTiet(new ChiTietHoaDon(
+//                    maHD, ct.getMaMon(), ct.getSoLuong(), ct.getDonGia(), ct.getGhiChu()
+//                ));
+//            }
+//
+//            conn.commit();
+//
+//            // CẬP NHẬT phieuHienTai ĐỂ HIỂN THỊ
+//            phieuHienTai = phieuDatBanGoc;
+//            phieuHienTai.setTrangThai("Phục vụ");
+//
+//            JOptionPane.showMessageDialog(this, "Phục vụ thành công! HD: " + maHD);
+//            loadMonAnFromDB();
+//            capNhatNutBanTrongFrmBan();
+//            revalidate();
+//            repaint();
+//
+//        } catch (SQLException ex) {
+//            ex.printStackTrace();
+//            JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage());
+//        }
+//    }
 }

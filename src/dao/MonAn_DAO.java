@@ -12,6 +12,7 @@ import java.util.List;
 
 public class MonAn_DAO {
     private final Connection conn;
+	private Connection con;
 
     public MonAn_DAO(Connection conn) {
         this.conn = conn;
@@ -210,5 +211,18 @@ public class MonAn_DAO {
             }
         }
         return "MON0001";
+    }
+    
+    public String layTenMonTheoMaMon(String maMon) throws SQLException {
+
+        String sql = "SELECT tenMon FROM MonAn WHERE maMon = ?";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, maMon);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getString("tenMon");
+            }
+        }
+        return null;
     }
 }

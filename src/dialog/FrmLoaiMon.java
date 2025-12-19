@@ -21,89 +21,100 @@ public class FrmLoaiMon extends JFrame {
 
     public FrmLoaiMon() {
         setTitle("Quản Lý Loại Món");
-        setSize(650, 480);
+        setSize(600, 400); // giống FrmLoaiBan
         setLocationRelativeTo(null);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-        setResizable(false);
 
         dao = new LoaiMon_DAO(ConnectSQL.getConnection());
-        getContentPane().setBackground(Color.WHITE);
 
-        taoGiaoDien();
-        loadDanhSach();
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        mainPanel.setBackground(Color.WHITE);
+        add(mainPanel);
 
-        setVisible(true);
-    }
+        // ==================== PANEL NHẬP LIỆU ====================
+        JPanel inputPanel = new JPanel(new GridBagLayout());
+        inputPanel.setBackground(Color.WHITE);
 
-    private void taoGiaoDien() {
-        // === FORM NHẬP LIỆU ===
-        JPanel pInput = new JPanel();
-        pInput.setLayout(new BoxLayout(pInput, BoxLayout.Y_AXIS));
-        pInput.setBackground(Color.WHITE);
-        pInput.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 10, 5, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        JPanel p1 = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 8));
-        p1.setBackground(Color.WHITE);
-        p1.add(new JLabel("Mã loại:") {{
-            setFont(new Font("Times New Roman", Font.BOLD, 20));
-        }});
-        txtMaLoai = new JTextField(20);
-        txtMaLoai.setFont(new Font("Times New Roman", Font.PLAIN, 18));
+        Font labelFont = new Font("Times New Roman", Font.BOLD, 22);
+        Font fieldFont = new Font("Times New Roman", Font.PLAIN, 18);
+
+        // Mã loại món
+        gbc.gridx = 0; gbc.gridy = 0;
+        JLabel lblMaLoai = new JLabel("Mã loại món");
+        lblMaLoai.setFont(labelFont);
+        inputPanel.add(lblMaLoai, gbc);
+
+        txtMaLoai = new JTextField(15);
+        txtMaLoai.setFont(fieldFont);
         txtMaLoai.setEditable(false);
         txtMaLoai.setBackground(new Color(245, 245, 245));
-        p1.add(txtMaLoai);
+        gbc.gridx = 1;
+        inputPanel.add(txtMaLoai, gbc);
 
-        JPanel p2 = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 8));
-        p2.setBackground(Color.WHITE);
-        p2.add(new JLabel("Tên loại:") {{
-            setFont(new Font("Times New Roman", Font.BOLD, 20));
-        }});
-        txtTenLoai = new JTextField(20);
-        txtTenLoai.setFont(new Font("Times New Roman", Font.PLAIN, 18));
-        p2.add(txtTenLoai);
+        // Tên loại món
+        gbc.gridx = 0; gbc.gridy = 1;
+        JLabel lblTenLoai = new JLabel("Tên loại món");
+        lblTenLoai.setFont(labelFont);
+        inputPanel.add(lblTenLoai, gbc);
 
-        pInput.add(p1);
-        pInput.add(Box.createVerticalStrut(10));
-        pInput.add(p2);
-        pInput.add(Box.createVerticalStrut(10));
+        txtTenLoai = new JTextField(25);
+        txtTenLoai.setFont(fieldFont);
+        gbc.gridx = 1;
+        inputPanel.add(txtTenLoai, gbc);
 
-        add(pInput, BorderLayout.NORTH);
+        // Panel nút thao tác
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        buttonPanel.setBackground(Color.WHITE);
 
-        // === BẢNG ===
+        // Tạo nút giống hệt FrmLoaiBan nhưng KHÔNG dùng FrmDangNhap
+        btnThem = taoNut("Thêm", new Color(46, 204, 113));
+        btnSua = taoNut("Sửa", new Color(52, 152, 219));
+        btnXoa = taoNut("Xóa", new Color(231, 76, 60));
+
+        buttonPanel.add(btnThem);
+        buttonPanel.add(btnSua);
+        buttonPanel.add(btnXoa);
+
+        gbc.gridx = 0; gbc.gridy = 2;
+        gbc.gridwidth = 2;
+        inputPanel.add(buttonPanel, gbc);
+
+        // ==================== BẢNG DANH SÁCH ====================
+        JPanel tablePanel = new JPanel(new BorderLayout());
+        tablePanel.setBorder(BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(new Color(165, 42, 42), 2),
+                "Danh Sách Loại Món",
+                0, 0,
+                new Font("Times New Roman", Font.BOLD, 24)));
+
+        tablePanel.setBackground(Color.WHITE);
+
         model = new DefaultTableModel(new String[]{"Mã loại", "Tên loại", "Trạng thái"}, 0) {
             @Override
-            public boolean isCellEditable(int row, int column) { return false; }
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
         };
+
         table = new JTable(model);
-        table.setRowHeight(30);
         table.setFont(new Font("Times New Roman", Font.PLAIN, 16));
-        table.getTableHeader().setFont(new Font("Times New Roman", Font.BOLD, 15));
-        table.getTableHeader().setBackground(new Color(240, 240, 240));
-        table.getTableHeader().setForeground(Color.BLACK);
+        table.setRowHeight(30);
 
         JScrollPane scroll = new JScrollPane(table);
-        scroll.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(new Color(165, 42, 42), 2),
-                "Danh Sách Loại Món", 0, 0,
-                new Font("Times New Roman", Font.BOLD, 22),
-                new Color(165, 42, 42)));
+        tablePanel.add(scroll, BorderLayout.CENTER);
 
-        add(scroll, BorderLayout.CENTER);
+        // ==================== THÊM VÀO MAIN ====================
+        mainPanel.add(inputPanel, BorderLayout.NORTH);
+        mainPanel.add(tablePanel, BorderLayout.CENTER);
 
-        // === NÚT ===
-        JPanel pNut = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 15));
-        pNut.setBackground(Color.WHITE);
+        // ==================== TẢI DỮ LIỆU & SỰ KIỆN ====================
+        loadDanhSach();
 
-        btnThem = taoNut("Thêm", new Color(46, 204, 113));
-        btnSua  = taoNut("Sửa",  new Color(52, 152, 219));
-        btnXoa  = taoNut("Xóa",   new Color(231, 76, 60));
-
-        pNut.add(btnThem);
-        pNut.add(btnSua);
-        pNut.add(btnXoa);
-        add(pNut, BorderLayout.SOUTH);
-
-        // === SỰ KIỆN ===
         btnThem.addActionListener(e -> them());
         btnSua.addActionListener(e -> sua());
         btnXoa.addActionListener(e -> an());
@@ -118,14 +129,17 @@ public class FrmLoaiMon extends JFrame {
                 }
             }
         });
+
+        setVisible(true);
     }
 
+    // Phương thức tạo nút giống hệt FrmLoaiBan (copy nguyên từ code cũ của bạn)
     private JButton taoNut(String text, Color color) {
         JButton btn = new JButton(text);
         btn.setFont(new Font("Times New Roman", Font.BOLD, 20));
         btn.setForeground(Color.WHITE);
         btn.setBackground(color);
-        btn.setPreferredSize(new Dimension(110, 38));
+        btn.setPreferredSize(new Dimension(100, 35)); // giống FrmLoaiBan
         btn.setFocusPainted(false);
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         btn.setOpaque(true);
@@ -133,11 +147,12 @@ public class FrmLoaiMon extends JFrame {
 
         btn.addMouseListener(new MouseAdapter() {
             public void mouseEntered(MouseEvent e) { btn.setBackground(color.darker()); }
-            public void mouseExited(MouseEvent e)  { btn.setBackground(color); }
+            public void mouseExited(MouseEvent e) { btn.setBackground(color); }
         });
         return btn;
     }
 
+    // Các hàm chức năng giữ nguyên 100% như code cũ của bạn
     private void loadDanhSach() {
         model.setRowCount(0);
         try {
