@@ -152,7 +152,7 @@ public class FrmTimKiemSDT extends JFrame {
                 gbc.gridx = 1;
                 
                 String tienCocStr = phieu.getTienCoc() > 0 
-                    ? String.format("%,.3f VNĐ", phieu.getTienCoc()).replace(",", ".") 
+                    ? String.format("%,.0f VNĐ", phieu.getTienCoc()).replace(",", ".") 
                     : "0 VNĐ";
 
                 JLabel valTienCoc = new JLabel(tienCocStr);

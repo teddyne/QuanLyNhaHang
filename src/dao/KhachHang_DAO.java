@@ -31,31 +31,33 @@ public class KhachHang_DAO {
     }
 
     public boolean themKhachHang(KhachHang kh) throws SQLException {
-        
-        String sql = "INSERT INTO KhachHang (maKH, tenKH, sdt, ngaySinh, email, maLoaiKH) VALUES (?, ?, ?, ?, ?, ?)";
-        
+        String sql = "INSERT INTO KhachHang (maKH, tenKH, sdt, ngaySinh, email, maLoaiKH, trangThai) VALUES (?, ?, ?, ?, ?, ?, N'Hoạt động')";
+
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             String maTuDong = generateMaKH();
-            
-            String maLoaiKH = kh.getloaiKH().equals("Thành viên") ? "LKH02" : "LKH01"; 
-            
+
+            String maLoaiKH = kh.getloaiKH().equals("Thành viên") ? "LKH02" : "LKH01"; // giữ nguyên logic bạn
+
             ps.setString(1, maTuDong);
             ps.setString(2, kh.getTenKH());
             ps.setString(3, kh.getSdt());
-
             if (kh.getNgaySinh() != null) {
                 ps.setDate(4, java.sql.Date.valueOf(kh.getNgaySinh()));
             } else {
                 ps.setNull(4, java.sql.Types.DATE);
             }
-            
             ps.setString(5, kh.getEmail());
             ps.setString(6, maLoaiKH);
+            // ps.setString(7, "Hoạt động"); // đã set mặc định trong SQL
 
-            return ps.executeUpdate() > 0;
+            int rows = ps.executeUpdate();
+            if (rows > 0) {
+                kh.setMaKH(maTuDong); // cập nhật mã mới cho object
+            }
+            return rows > 0;
         }
     }
-
+    
     public boolean suaKhachHang(KhachHang kh) throws SQLException {
       
         String sql = "UPDATE KhachHang SET tenKH = ?, sdt = ?, ngaySinh = ?, email = ?, maLoaiKH = ? WHERE maKH = ?";

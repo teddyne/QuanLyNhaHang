@@ -20,6 +20,10 @@ import java.util.List;
 import java.util.regex.Pattern;
 import com.toedter.calendar.JDateChooser;
 import connectSQL.ConnectSQL;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -39,6 +43,7 @@ import dao.Ban_DAO;
 import dao.ChiTietPhieuDatBan_DAO;
 import dao.HoaDon_DAO;
 import dao.KhachHang_DAO;
+import dao.LoaiKhachHang_DAO;
 import dao.MonAn_DAO;
 import dao.PhieuDatBan_DAO;
 import entity.Ban;
@@ -67,6 +72,8 @@ public class FrmDatBan extends JDialog {
     private JSpinner spnGio;
     private Connection conn;
 	private Object maPhieu;
+    private LoaiKhachHang_DAO loaiKhachHangDAO;
+
 	
 	public FrmDatBan(JFrame parent, String maBan, PhieuDatBan phieu, PhieuDatBan_DAO phieuDatBanDAO, Ban_DAO banDAO, KhachHang_DAO khachHangDAO, Connection conn) throws SQLException {
 	    super(parent, phieu == null ? "Đặt bàn" : "Sửa đặt bàn", true);
@@ -122,7 +129,7 @@ public class FrmDatBan extends JDialog {
         JTextArea txtGhiChu = new JTextArea(editD != null ? editD.getGhiChu() : "", 3, 20);
         txtGhiChu.setFont(fontBig);
 
-        txtTienCoc = new JTextField(editD != null ? String.valueOf(editD.getTienCoc()) : "200,000", 10); // Mặc định 200.000
+        txtTienCoc = new JTextField(editD != null ? String.valueOf(editD.getTienCoc()) : "200000", 10); // Mặc định 200.000
         txtTienCoc.setFont(fontBig);
         JCheckBox chkCK = new JCheckBox("Chuyển khoản");
         chkCK.setFont(fontBig);
@@ -210,39 +217,49 @@ public class FrmDatBan extends JDialog {
                 JOptionPane.showMessageDialog(this, "Số điện thoại phải là 10 số hợp lệ theo Việt Nam!");
                 return;
             }
+
             try {
-                if (khachHangDAO == null) {
-                    JOptionPane.showMessageDialog(this, "Lỗi: khachHangDAO chưa được khởi tạo!");
-                    return;
-                }
                 KhachHang kh = khachHangDAO.timKhachHangTheoSDT(sdt);
                 if (kh != null) {
                     txtTen.setText(kh.getTenKH());
                     JOptionPane.showMessageDialog(this, "Tìm thấy khách hàng: " + kh.getTenKH());
-                } else {
-                    Object[] options = {"OK", "Thêm khách hàng"};
-                    int choice = JOptionPane.showOptionDialog(this, "Không tìm thấy khách hàng!", "Thông báo",
-                            JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, options, options[0]);
-                    if (choice == 0) {
-                        if (txtTen.getText().trim().isEmpty()) {
-                            JOptionPane.showMessageDialog(this, "Vui lòng nhập tên khách hàng!");
-                            return;
-                        }
-                        KhachHang khNew = new KhachHang();
-                        khNew.setMaKH(khachHangDAO.generateMaKH());
-                        khNew.setTenKH(txtTen.getText().trim());
-                        khNew.setSdt(sdt);
-                        khNew.setNgaySinh(null);
-                        khNew.setEmail(null);
-                        khNew.setLoaiKH("Thành viên");
-                        khachHangDAO.themKhachHang(khNew);
-                        JOptionPane.showMessageDialog(this, "Đã tạo khách hàng mới theo số điện thoại và tên!");
-                    } else if (choice == 1) {
-                        FrmThemKhachHang frmThemKH = new FrmThemKhachHang(this, sdt, txtTen.getText().trim(), khachHangDAO);
-                        frmThemKH.setVisible(true);
-                        KhachHang khNew = khachHangDAO.timKhachHangTheoSDT(sdt);
-                        if (khNew != null) {
-                            txtTen.setText(khNew.getTenKH());
+                    return;
+                }
+
+                int choice = JOptionPane.showConfirmDialog(this,
+                    "Không tìm thấy khách hàng với SĐT này.\nBạn có muốn thêm khách hàng mới không?",
+                    "Xác nhận", JOptionPane.YES_NO_OPTION);
+
+                if (choice == JOptionPane.YES_OPTION) {
+                    FrmThemKhachHang frmThemKH = new FrmThemKhachHang(this, sdt, txtTen.getText().trim(), khachHangDAO, conn);
+                    frmThemKH.setVisible(true);
+
+                    KhachHang khMoi = khachHangDAO.timKhachHangTheoSDT(sdt);
+                    if (khMoi != null) {
+                        txtTen.setText(khMoi.getTenKH());
+                        JOptionPane.showMessageDialog(this, "Đã thêm và tải thông tin khách hàng mới!");
+                    }
+                } else if (!txtTen.getText().trim().isEmpty()) {
+                    // Thêm nhanh
+                    KhachHang khNew = new KhachHang();
+                    khNew.setMaKH(khachHangDAO.generateMaKH());
+                    khNew.setTenKH(txtTen.getText().trim());
+                    khNew.setSdt(sdt);
+                    khNew.setNgaySinh(null);
+                    khNew.setEmail(null);
+                    khNew.setLoaiKH("Thành viên");
+
+                    String maLoaiKH = loaiKhachHangDAO.layMaLoaiTheoTen("Thành viên");
+                    if (maLoaiKH == null) {
+                        JOptionPane.showMessageDialog(this, "Không tìm thấy loại khách hàng 'Thành viên'!");
+                        return;
+                    }
+
+                    if (khachHangDAO.themKhachHang(khNew)) {
+                        KhachHang khMoi = khachHangDAO.timKhachHangTheoSDT(sdt);
+                        if (khMoi != null) {
+                            txtTen.setText(khMoi.getTenKH());
+                            JOptionPane.showMessageDialog(this, "Thêm nhanh thành công!");
                         }
                     }
                 }
@@ -291,7 +308,7 @@ public class FrmDatBan extends JDialog {
                     JOptionPane.showMessageDialog(this, "Vui lòng chọn ngày và giờ!");
                     return;
                 }
-
+                
                 Calendar cal = Calendar.getInstance();
                 cal.setTime(ngayUtil);
                 cal.set(Calendar.HOUR_OF_DAY, 0);
@@ -312,6 +329,13 @@ public class FrmDatBan extends JDialog {
 
                 java.sql.Time gio = new java.sql.Time(cal.getTimeInMillis());
 
+                // === KIỂM TRA KHÔNG ĐƯỢC ĐẶT TRƯỚC HIỆN TẠI ===
+                LocalDateTime thoiGianDat = LocalDateTime.of(ngay.toLocalDate(), gio.toLocalTime());
+                LocalDateTime now = LocalDateTime.now();
+                if (thoiGianDat.isBefore(now)) {
+                    JOptionPane.showMessageDialog(this, "Không thể đặt bàn vào thời gian đã qua!");
+                    return;
+                }
                 String maPhieuHienTai = txtMaPhieu.getText().trim();
                 if (!phieuDatBanDAO.checkCachGio(maBan, ngay, gio, 1, maPhieuHienTai)) {
                     JOptionPane.showMessageDialog(this, "Lịch đặt phải cách ít nhất 1 tiếng với lịch khác cùng ngày!");
@@ -367,132 +391,159 @@ public class FrmDatBan extends JDialog {
     }
 
     private void batDauNhacNho(PhieuDatBan pdb) {
-        long thoiGianDenGioHen = pdb.getNgayDen().getTime() + pdb.getGioDen().getTime() - System.currentTimeMillis();
-        if (thoiGianDenGioHen > 0) {
-            Timer timerDenGio = new Timer((int) thoiGianDenGioHen, e -> {
-                JOptionPane.showMessageDialog(null, "Khách hàng chưa đến cho phiếu " + pdb.getMaPhieu() + " tại bàn " + maBan);
-                Timer timerSau1Tieng = new Timer(3600000, ev -> {
-                    try {
-                        Ban ban = banDAO.getBanByMa(maBan);
-                        if (!"Phục vụ".equals(ban.getTrangThai())) {
-                            FrmNhacNho frmNhacNho = new FrmNhacNho(this, pdb, conn);
-                            frmNhacNho.setVisible(true);
-                        }
-                    } catch (SQLException ex) {
-                        ex.printStackTrace();
-                        JOptionPane.showMessageDialog(this, "Lỗi khi kiểm tra trạng thái bàn: " + ex.getMessage());
+    // Chuyển ngày và giờ đến thành LocalDateTime
+    LocalDate ngayDen = pdb.getNgayDen().toLocalDate();
+    LocalTime gioDen = pdb.getGioDen().toLocalTime();
+    LocalDateTime thoiGianDatBan = LocalDateTime.of(ngayDen, gioDen);
+
+    LocalDateTime now = LocalDateTime.now();
+
+    if (thoiGianDatBan.isAfter(now)) {
+        long delayMillis = java.time.Duration.between(now, thoiGianDatBan).toMillis();
+
+        Timer timerDenGio = new Timer((int) Math.min(delayMillis, Integer.MAX_VALUE), e -> {
+            JOptionPane.showMessageDialog(null, 
+                "Khách hàng chưa đến cho phiếu " + pdb.getMaPhieu() + " tại bàn " + maBan,
+                "Nhắc nhở khách đến", JOptionPane.WARNING_MESSAGE);
+
+            // Sau 1 giờ kể từ giờ hẹn, kiểm tra xem khách có đến không
+            Timer timerSau1Gio = new Timer(3600000, ev -> { // 1 giờ = 3600000 ms
+                try {
+                    Ban ban = banDAO.getBanByMa(maBan);
+                    // Nếu bàn vẫn chưa được phục vụ (tức khách chưa đến)
+                    if (!"Phục vụ".equals(ban.getTrangThai())) {
+                        FrmNhacNho frmNhacNho = new FrmNhacNho(this, pdb, conn);
+                        frmNhacNho.setVisible(true);
                     }
-                });
-                timerSau1Tieng.setRepeats(false);
-                timerSau1Tieng.start();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(this, "Lỗi kiểm tra trạng thái bàn: " + ex.getMessage());
+                }
             });
-            timerDenGio.setRepeats(false);
-            timerDenGio.start();
-        }
+            timerSau1Gio.setRepeats(false);
+            timerSau1Gio.start();
+        });
+        timerDenGio.setRepeats(false);
+        timerDenGio.start();
     }
+}
 
 // Class form thêm khách hàng
 class FrmThemKhachHang extends JDialog {
-    private KhachHang_DAO khachHangDAO;
-    private JTextField txtTen;
-    private JTextField txtSDT;
-    private JTextField txtEmail;
-    private JDateChooser dateChooserNgaySinh;
-
-    public FrmThemKhachHang(JDialog parent, String sdt, String ten, KhachHang_DAO khachHangDAO) {
-        super(parent, "Thêm khách hàng thành viên", true);
-        this.khachHangDAO = khachHangDAO;
-        initComponents(sdt, ten);
-    }
-
-   private void initComponents(String sdt, String ten) {
-        setSize(550, 350);
-        setLayout(new GridBagLayout());
-        setLocationRelativeTo(getParent());
-
-        getContentPane().setBackground(Color.WHITE);
-
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-
-        Font font = new Font("Times New Roman", Font.BOLD, 20);
-        Font fonttxt = new Font("Times New Roman", Font.PLAIN, 20);
-
-        JLabel lblMa;
-        try {
-            lblMa = new JLabel("Mã KH: " + khachHangDAO.generateMaKH());
-        } catch (SQLException ex) {
-            lblMa = new JLabel("Mã KH: Lỗi tạo mã");
-            ex.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Lỗi khi tạo mã khách hàng: " + ex.getMessage());
+        private KhachHang_DAO khachHangDAO;
+        private LoaiKhachHang_DAO loaiDAO;
+        private JTextField txtTen, txtSDT, txtEmail;
+        public FrmThemKhachHang(JDialog parent, String sdt, String ten, KhachHang_DAO khachHangDAO, Connection conn) {
+            super(parent, "Thêm khách hàng thành viên", true);
+            this.khachHangDAO = khachHangDAO;
+            this.loaiDAO = new LoaiKhachHang_DAO(conn);
+            initComponents(sdt, ten);
         }
-        lblMa.setFont(font);
-        gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2; add(lblMa, gbc);
 
-        JLabel lblTen = new JLabel("Tên KH:");
-        lblTen.setFont(font);
-        gbc.gridy = 1; gbc.gridwidth = 1; add(lblTen, gbc);
-        txtTen = new JTextField(ten, 20); txtTen.setFont(fonttxt);
-        gbc.gridx = 1; add(txtTen, gbc);
+        private void initComponents(String sdt, String ten) {
+            setSize(550, 350);
+            setLayout(new GridBagLayout());
+            setLocationRelativeTo(getParent());
+            getContentPane().setBackground(Color.WHITE);
 
-        JLabel lblSDT = new JLabel("SĐT:");
-        lblSDT.setFont(font);
-        gbc.gridx = 0; gbc.gridy = 2; add(lblSDT, gbc);
-        txtSDT = new JTextField(sdt, 20); txtSDT.setFont(fonttxt); txtSDT.setEditable(false);
-        gbc.gridx = 1; add(txtSDT, gbc);
+            GridBagConstraints gbc = new GridBagConstraints();
+            gbc.insets = new Insets(5, 5, 5, 5);
+            gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        JLabel lblNgaySinh = new JLabel("Ngày sinh:");
-        lblNgaySinh.setFont(font);
-        gbc.gridx = 0;
-        gbc.gridy = 3;
-        add(lblNgaySinh, gbc);
+            Font font = new Font("Times New Roman", Font.BOLD, 20);
+            Font fonttxt = new Font("Times New Roman", Font.PLAIN, 20);
 
-        JDateChooser dateChooserNgaySinh = new JDateChooser();
-        dateChooserNgaySinh.setFont(fonttxt);
-        dateChooserNgaySinh.setDateFormatString("dd/MM/yyyy"); // định dạng ngày
-        gbc.gridx = 1;
-        add(dateChooserNgaySinh, gbc);
-
-        JLabel lblEmail = new JLabel("Email:");
-        lblEmail.setFont(font);
-        gbc.gridx = 0; gbc.gridy = 4; add(lblEmail, gbc);
-        txtEmail = new JTextField(20); txtEmail.setFont(fonttxt);
-        gbc.gridx = 1; add(txtEmail, gbc);
-
-        JLabel lblLoai = new JLabel("Loại: Thành viên");
-        lblLoai.setFont(font);
-        gbc.gridx = 0; gbc.gridy = 5; gbc.gridwidth = 2; add(lblLoai, gbc);
-
-        JButton btnThem = new JButton("Thêm");
-        btnThem.setForeground(Color.white);
-        btnThem.setFocusPainted(false);
-        btnThem.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btnThem.setContentAreaFilled(false);
-        btnThem.setOpaque(true);
-        btnThem.setBackground(new Color(231, 76, 60));
-        btnThem.setFont(font);
-        gbc.gridy = 6; gbc.gridx = 0; gbc.gridwidth = 2; add(btnThem, gbc);
-
-        btnThem.addActionListener(e -> {
+            JLabel lblMa;
             try {
-                KhachHang kh = new KhachHang();
-                kh.setMaKH(khachHangDAO.generateMaKH());
-                kh.setTenKH(txtTen.getText().trim());
-                kh.setSdt(txtSDT.getText().trim());
-                kh.setNgaySinh( (dateChooserNgaySinh.getDate() == null) ? null : dateChooserNgaySinh.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate() );
-                kh.setEmail(txtEmail.getText().trim().isEmpty() ? null : txtEmail.getText().trim());
-                kh.setLoaiKH("Thành viên");
-                khachHangDAO.themKhachHang(kh);
-                JOptionPane.showMessageDialog(this, "Thêm khách hàng thành công!");
-                dispose();
+                lblMa = new JLabel("Mã KH: " + khachHangDAO.generateMaKH());
             } catch (SQLException ex) {
-                ex.printStackTrace();
-                JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage());
+                lblMa = new JLabel("Mã KH: Lỗi tạo mã");
             }
-        });
+        
+	        lblMa.setFont(font);
+	        gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2; add(lblMa, gbc);
+	
+	        JLabel lblTen = new JLabel("Tên KH:");
+	        lblTen.setFont(font);
+	        gbc.gridy = 1; gbc.gridwidth = 1; add(lblTen, gbc);
+	        txtTen = new JTextField(ten, 20); txtTen.setFont(fonttxt);
+	        gbc.gridx = 1; add(txtTen, gbc);
+	
+	        JLabel lblSDT = new JLabel("SĐT:");
+	        lblSDT.setFont(font);
+	        gbc.gridx = 0; gbc.gridy = 2; add(lblSDT, gbc);
+	        txtSDT = new JTextField(sdt, 20); txtSDT.setFont(fonttxt); txtSDT.setEditable(false);
+	        gbc.gridx = 1; add(txtSDT, gbc);
+	
+	        JLabel lblNgaySinh = new JLabel("Ngày sinh:");
+	        lblNgaySinh.setFont(font);
+	        gbc.gridx = 0;
+	        gbc.gridy = 3;
+	        add(lblNgaySinh, gbc);
+	
+	        JDateChooser dateChooserNgaySinh = new JDateChooser();
+	        dateChooserNgaySinh.setFont(fonttxt);
+	        dateChooserNgaySinh.setDateFormatString("dd/MM/yyyy"); // định dạng ngày
+	        gbc.gridx = 1;
+	        add(dateChooserNgaySinh, gbc);
+	
+	        JLabel lblEmail = new JLabel("Email:");
+	        lblEmail.setFont(font);
+	        gbc.gridx = 0; gbc.gridy = 4; add(lblEmail, gbc);
+	        txtEmail = new JTextField(20); txtEmail.setFont(fonttxt);
+	        gbc.gridx = 1; add(txtEmail, gbc);
+	
+	        JLabel lblLoai = new JLabel("Loại: Thành viên");
+	        lblLoai.setFont(font);
+	        gbc.gridx = 0; gbc.gridy = 5; gbc.gridwidth = 2; add(lblLoai, gbc);
+
+	        JButton btnThem = new JButton("Thêm");
+	        btnThem.setForeground(Color.white);
+	        btnThem.setFocusPainted(false);
+	        btnThem.setCursor(new Cursor(Cursor.HAND_CURSOR));
+	        btnThem.setContentAreaFilled(false);
+	        btnThem.setOpaque(true);
+	        btnThem.setBackground(new Color(231, 76, 60));
+	        btnThem.setFont(font);
+	        gbc.gridy = 6; gbc.gridx = 0; gbc.gridwidth = 2; add(btnThem, gbc);
+
+            btnThem.addActionListener(e -> {
+                try {
+                    if (txtTen.getText().trim().isEmpty()) {
+                        JOptionPane.showMessageDialog(this, "Vui lòng nhập tên khách hàng!");
+                        return;
+                    }
+
+                    KhachHang kh = new KhachHang();
+                    kh.setMaKH(khachHangDAO.generateMaKH());
+                    kh.setTenKH(txtTen.getText().trim());
+                    kh.setSdt(txtSDT.getText().trim());
+                    kh.setEmail(txtEmail.getText().trim().isEmpty() ? null : txtEmail.getText().trim());
+
+                    if (dateChooserNgaySinh.getDate() != null) {
+                        kh.setNgaySinh(dateChooserNgaySinh.getDate().toInstant()
+                            .atZone(ZoneId.systemDefault()).toLocalDate());
+                    }
+
+                    kh.setLoaiKH("Thành viên");
+
+                    String maLoaiKH = loaiDAO.layMaLoaiTheoTen("Thành viên");
+                    if (maLoaiKH == null) {
+                        JOptionPane.showMessageDialog(this, "Không tìm thấy loại 'Thành viên'!");
+                        return;
+                    }
+
+                    if (khachHangDAO.themKhachHang(kh)) {
+                        JOptionPane.showMessageDialog(this, "Thêm khách hàng thành công!");
+                        dispose();
+                    }
+                } catch (SQLException ex) {
+                    JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage());
+                }
+            });
+        }
     }
-}
+
 
 // Class form nhắc nhở
 class FrmNhacNho extends JDialog {

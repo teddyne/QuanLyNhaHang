@@ -11,7 +11,7 @@ public class ConnectSQL {
     private static ConnectSQL instance = new ConnectSQL();
 
     // Cấu hình kết nối
-    private static final String URL = "jdbc:sqlserver://localhost:1433;databaseName=QLNH;encrypt=false;trustServerCertificate=true;";
+    private static final String URL = "jdbc:sqlserver://localhost:1433;databaseName=QuanLyNhaHang;encrypt=false;trustServerCertificate=true;";
     private static final String USER = "sa";
     private static final String PASSWORD = "sapassword";
 
