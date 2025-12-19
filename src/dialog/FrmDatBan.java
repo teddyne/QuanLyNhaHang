@@ -5,6 +5,7 @@ import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Frame;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -359,6 +360,7 @@ public class FrmDatBan extends JDialog {
                 } else {
                     phieuDAO.add(dNew); 
                 }
+                batDauNhacNho(dNew);
                 conn.commit();
                JOptionPane.showMessageDialog(this, "Đặt bàn thành công!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
                 dispose();
@@ -546,16 +548,26 @@ class FrmThemKhachHang extends JDialog {
 
 
 // Class form nhắc nhở
-class FrmNhacNho extends JDialog {
+public static class FrmNhacNho extends JDialog {
     private PhieuDatBan pdb;
     private PhieuDatBan_DAO phieuDatBanDAO;
 
+ // SỬA CONSTRUCTOR ĐỂ NHẬN JFrame HOẶC JDialog (tương thích cả 2)
+    public FrmNhacNho(Frame parent, PhieuDatBan pdb, Connection conn) {
+        super(parent, "Nhắc nhở hủy bàn", true);
+        this.pdb = pdb;
+        this.phieuDatBanDAO = new PhieuDatBan_DAO(conn);
+        initComponents();
+    }
+
+    // Thêm constructor thứ 2 để tương thích nếu gọi từ JDialog (an toàn hơn)
     public FrmNhacNho(JDialog parent, PhieuDatBan pdb, Connection conn) {
         super(parent, "Nhắc nhở hủy bàn", true);
         this.pdb = pdb;
         this.phieuDatBanDAO = new PhieuDatBan_DAO(conn);
         initComponents();
     }
+    
     private void initComponents() {
         setSize(300, 200);
         setLayout(new BorderLayout());

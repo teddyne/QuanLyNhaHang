@@ -24,6 +24,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -63,6 +66,7 @@ import dao.LoaiBan_DAO;
 import dao.PhieuDatBan_DAO;
 import dialog.BanDialog;
 import dialog.FrmDatBan;
+import dialog.FrmDatBan.FrmNhacNho;
 import dialog.FrmPhucVu;
 import dialog.FrmTatCaLich;
 import dialog.FrmTimKiemSDT;
@@ -197,6 +201,10 @@ public class FrmBan extends JFrame {
 
         taiLaiBangChinh();
         xuLySuKienBoLoc();
+        Timer timerNhacNho = new Timer(300000, e -> kiemTraVaNhacNhoPhieuDatBan());
+        timerNhacNho.start();
+
+        SwingUtilities.invokeLater(() -> kiemTraVaNhacNhoPhieuDatBan());
     }
     private void capNhatCheDo(String cheDo) {
         cheDoHienTai = cheDo;
@@ -258,6 +266,7 @@ public class FrmBan extends JFrame {
                             case "Đặt bàn":
                                 new FrmDatBan(FrmBan.this, banDangChon, null, phieuDatBanDAO, banDAO, khachHangDAO, conn).setVisible(true);
                                 taiLaiBangChinh();
+                                resetCheDoMenu();
                                 break;
 
                             case "Hủy bàn":
@@ -288,7 +297,7 @@ public class FrmBan extends JFrame {
             });
         }
     }
-   
+
 	private JPanel taoPanelBoLoc() {
         JPanel pnlLoc = new JPanel(new GridBagLayout());
         pnlLoc.setBackground(Color.WHITE);
@@ -673,23 +682,22 @@ public class FrmBan extends JFrame {
 
     public String layTrangThaiHienTai(String maBan) {
         try {
-            Date today = new Date(System.currentTimeMillis());
-            List<PhieuDatBan> list = phieuDatBanDAO.getDatBanByBanAndNgay(maBan, today);
-            if (list != null && !list.isEmpty()) {
-                for (PhieuDatBan phieu : list) {
-                    String trangThai = phieu.getTrangThai();
-                    if (trangThai != null && !trangThai.trim().isEmpty()) {
-                        String cleanStatus = trangThai.trim();
-                        if ("Phục vụ".equals(cleanStatus)) {
-                            return "Phục vụ";
-                        } else if ("Đặt".equals(cleanStatus)) {
-                            return "Đặt";
-                        } else if ("Hoàn thành".equals(cleanStatus) || "Hủy".equals(cleanStatus)) {
-                            continue; 
-                        }
+            PhieuDatBan phieuPhucVu = phieuDatBanDAO.layPhieuPhucVuChuaHoanThanh(maBan);
+            if (phieuPhucVu != null) {
+                return "Phục vụ";
+            }
+
+            java.sql.Date today = new java.sql.Date(System.currentTimeMillis());
+            List<PhieuDatBan> listHomNay = phieuDatBanDAO.getDatBanByBanAndNgay(maBan, today);
+            if (listHomNay != null && !listHomNay.isEmpty()) {
+                for (PhieuDatBan phieu : listHomNay) {
+                    String tt = phieu.getTrangThai();
+                    if ("Đặt".equals(tt)) {
+                        return "Đặt";
                     }
                 }
             }
+
             return "Trống";
         } catch (SQLException e) {
             e.printStackTrace();
@@ -1078,8 +1086,16 @@ public class FrmBan extends JFrame {
                 phieuDatBanDAO.update(d);
                 model.setValueAt("Hủy", selected, 9);
                 model.setValueAt(d.getGhiChu(), selected, 6);
+                JOptionPane.showMessageDialog(dlg, 
+                    "Hủy đặt bàn thành công!\nMã phiếu: " + d.getMaPhieu() + "\nBàn: " + d.getMaBan(),
+                    "Thành công", JOptionPane.INFORMATION_MESSAGE);
+                
                 taiLaiBangChinh();
                 dlg.dispose();
+                
+                if (dlg.getOwner() instanceof FrmBan) {
+                    ((FrmBan) dlg.getOwner()).resetCheDoMenu();
+                }
             } catch (NumberFormatException ex) {
                 JOptionPane.showMessageDialog(dlg, "Tiền trả cọc phải là số!");
             } catch (SQLException ex) {
@@ -1104,6 +1120,7 @@ public class FrmBan extends JFrame {
         }
         new BanDialog(this, banDangChon, banDAO, phieuDatBanDAO, conn).setVisible(true);
         taiLaiBangChinh();
+        resetCheDoMenu();
     }
 
     private void xuLyDatMon() throws SQLException {
@@ -1139,6 +1156,7 @@ public class FrmBan extends JFrame {
 	    // MỞ FORM ĐẶT MÓN
 	    new FrmDatMon(this, conn, banDangChon, phieu.getMaPhieu()).setVisible(true);
 	    taiLaiBangChinh();
+	    resetCheDoMenu();
 	}
 
     private void xuLyThanhToan() {
@@ -1175,6 +1193,7 @@ public class FrmBan extends JFrame {
 	
 	            if (cheDoHienTai != null) {
 	                capNhatCheDo(cheDoHienTai);
+	                resetCheDoMenu();
 	            }
 	
 	        } catch (SQLException ex) {
@@ -1184,6 +1203,69 @@ public class FrmBan extends JFrame {
 	
 	    new FrmThanhToan(maHD, banDangChon, capNhatGiaoDien).setVisible(true);
 	}
+    private void kiemTraVaNhacNhoPhieuDatBan() {
+        try {
+            // Lấy tất cả phiếu "Đặt" từ hôm nay trở đi
+            List<PhieuDatBan> dsPhieu = phieuDatBanDAO.getPhieuDatBanTrangThai("Đặt");
+            
+            LocalDateTime now = LocalDateTime.now();
+            
+            for (PhieuDatBan pdb : dsPhieu) {
+                LocalDate ngayDen = pdb.getNgayDen().toLocalDate();
+                LocalTime gioDen = pdb.getGioDen().toLocalTime();
+                LocalDateTime thoiGianDat = LocalDateTime.of(ngayDen, gioDen);
+                
+                // Chỉ xử lý nếu phiếu trong tương lai hoặc quá khứ gần
+                if (ngayDen.isBefore(LocalDate.now().minusDays(1))) continue; // Bỏ phiếu quá cũ
+                
+                // Nếu đã đến hoặc quá giờ hẹn
+                if (!thoiGianDat.isAfter(now)) {
+                    // Hiện nhắc nhở ngay lập tức (nếu chưa hiện)
+                    JOptionPane.showMessageDialog(this,
+                        "Khách hàng chưa đến cho phiếu " + pdb.getMaPhieu() + " tại bàn " + pdb.getMaBan(),
+                        "Nhắc nhở khách đến", JOptionPane.WARNING_MESSAGE);
+                    
+                    // Kiểm tra quá 1 giờ → mở FrmNhacNho
+                    long phutQua = java.time.Duration.between(thoiGianDat, now).toMinutes();
+                    if (phutQua >= 60) {
+                        Ban ban = banDAO.getBanByMa(pdb.getMaBan());
+                        if (!"Phục vụ".equals(ban.getTrangThai())) {
+                        	new FrmNhacNho(FrmBan.this, pdb, conn).setVisible(true);
+                        	}
+                     }
+                } else {
+                    // Chưa đến giờ → tạo Timer nhắc đúng giờ (như trong FrmDatBan)
+                    long delayMillis = java.time.Duration.between(now, thoiGianDat).toMillis();
+                    if (delayMillis > 0) {
+                        Timer timer = new Timer((int) Math.min(delayMillis, Integer.MAX_VALUE), e -> {
+                            // Khi đến giờ
+                            JOptionPane.showMessageDialog(this,
+                                "Khách hàng chưa đến cho phiếu " + pdb.getMaPhieu() + " tại bàn " + pdb.getMaBan(),
+                                "Nhắc nhở khách đến", JOptionPane.WARNING_MESSAGE);
+                            
+                            // Sau 1 giờ nữa kiểm tra FrmNhacNho
+                            Timer timerSau1Gio = new Timer(3600000, ev -> {
+                                try {
+                                    Ban ban = banDAO.getBanByMa(pdb.getMaBan());
+                                    if (!"Phục vụ".equals(ban.getTrangThai())) {
+                                    	new FrmNhacNho(FrmBan.this, pdb, conn).setVisible(true);
+                                    	}
+                                } catch (SQLException ex) {
+                                    ex.printStackTrace();
+                                }
+                            });
+                            timerSau1Gio.setRepeats(false);
+                            timerSau1Gio.start();
+                        });
+                        timer.setRepeats(false);
+                        timer.start();
+                    }
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+    }
     private String timMaHoaDonHienTai() {
         try {
             String sql = """
@@ -1207,6 +1289,19 @@ public class FrmBan extends JFrame {
         return null;
     }
 
+    private void resetCheDoMenu() {
+        cheDoHienTai = "Xem";  // hoặc "" nếu bạn muốn
+        
+        for (Component c : sidebar.getComponents()) {
+            if (c instanceof JButton btn) {
+                btn.setBackground(Color.WHITE); 
+        }
+        
+        cbTrangThai.setSelectedItem("Tất cả");
+        apDungBoLoc();
+        ganSuKienClickTheoCheDo(); 
+        }
+    }
 	private ImageIcon toMauBieuTuong(ImageIcon nguon, Color mau) {
         Image imgNguon = nguon.getImage();
         BufferedImage imgTinted = new BufferedImage(imgNguon.getWidth(null),

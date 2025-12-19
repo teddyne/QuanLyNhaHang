@@ -527,5 +527,57 @@ public class PhieuDatBan_DAO {
 	    return phieu;
 	}
 
-	
+	public List<PhieuDatBan> getPhieuDatBanTrangThai(String trangThai) throws SQLException {
+	    List<PhieuDatBan> list = new ArrayList<>();
+	    String sql = "SELECT * FROM PhieuDatBan WHERE trangThai = ? ORDER BY ngayDen, gioDen";
+	    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+	        ps.setString(1, trangThai);
+	        ResultSet rs = ps.executeQuery();
+	        while (rs.next()) {
+	            PhieuDatBan p = new PhieuDatBan();
+	            p.setMaPhieu(rs.getString("maPhieu"));
+	            p.setMaBan(rs.getString("maBan"));
+	            p.setTenKhach(rs.getString("tenKhach"));
+	            p.setSoDienThoai(rs.getString("soDienThoai"));
+	            p.setSoNguoi(rs.getInt("soNguoi"));
+	            p.setNgayDen(rs.getDate("ngayDen"));
+	            p.setGioDen(rs.getTime("gioDen"));
+	            p.setGhiChu(rs.getString("ghiChu"));
+	            p.setTienCoc(rs.getDouble("tienCoc"));
+	            p.setGhiChuCoc(rs.getString("ghiChuCoc"));
+	            p.setTrangThai(rs.getString("trangThai"));
+	            list.add(p);
+	        }
+	    }
+	    return list;
+	}
+
+	public PhieuDatBan layPhieuPhucVuChuaHoanThanh(String maBan) throws SQLException {
+	    String sql = """
+	        SELECT TOP 1 * FROM PhieuDatBan 
+	        WHERE maBan = ? 
+	          AND trangThai = 'Phục vụ'
+	        ORDER BY ngayDen DESC, gioDen DESC
+	        """;
+	    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+	        ps.setString(1, maBan);
+	        ResultSet rs = ps.executeQuery();
+	        if (rs.next()) {
+	            PhieuDatBan p = new PhieuDatBan();
+	            p.setMaPhieu(rs.getString("maPhieu"));
+	            p.setMaBan(rs.getString("maBan"));
+	            p.setTenKhach(rs.getString("tenKhach"));
+	            p.setSoDienThoai(rs.getString("soDienThoai"));
+	            p.setSoNguoi(rs.getInt("soNguoi"));
+	            p.setNgayDen(rs.getDate("ngayDen"));
+	            p.setGioDen(rs.getTime("gioDen"));
+	            p.setGhiChu(rs.getString("ghiChu"));
+	            p.setTienCoc(rs.getDouble("tienCoc"));
+	            p.setGhiChuCoc(rs.getString("ghiChuCoc"));
+	            p.setTrangThai(rs.getString("trangThai"));
+	            return p;
+	        }
+	    }
+	    return null;
+	}
 }
