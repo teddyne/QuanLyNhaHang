@@ -395,28 +395,67 @@ public class FrmPhucVu extends JFrame {
         });
         btnThanhToan.addActionListener(e -> {
             try {
+                // Lấy hoặc tạo maHD
                 String maHD = hoaDonDAO.layMaHoaDonTheoPhieu(phieuDangPhucVu.getMaPhieu());
                 if (maHD == null) {
-                    //Tạo hóa đơn
-                	maHD = hoaDonDAO.taoHoaDonTuPhieuDatBan(phieuDangPhucVu.getMaPhieu());
-                    //Copy chi tiết món
-                    chiTietHoaDonDAO.saoChepTuPhieuDatBan(
-                        phieuDangPhucVu.getMaPhieu(),
-                        maHD
-                    );
+                    maHD = hoaDonDAO.taoHoaDonTuPhieuDatBan(phieuDangPhucVu.getMaPhieu());
+                    chiTietHoaDonDAO.saoChepTuPhieuDatBan(phieuDangPhucVu.getMaPhieu(), maHD);
                 }
+
+                final String finalMaHD = maHD;
                 FrmBan frmBan = (getParent() instanceof FrmBan) ? (FrmBan) getParent() : null;
-                FrmThanhToan frmTT = new FrmThanhToan(
-                	    phieuDangPhucVu.getMaPhieu(),
-                	    ban.getMaBan(),
-                	    () -> {
-                	        if (frmBan != null) frmBan.taiLaiBangChinh();
-                	        dispose();
-                	    }
-                	);
-                frmTT.setVisible(true);
+
+                Runnable capNhatGiaoDien = () -> {
+                    try {
+                        String sql = "UPDATE PhieuDatBan SET trangThai = N'Hoàn thành' " +
+                                     "WHERE maPhieu = ?";
+                        try (PreparedStatement ps = con.prepareStatement(sql)) {
+                            ps.setString(1, phieuDangPhucVu.getMaPhieu());
+                            ps.executeUpdate();
+                        }
+
+                        if (frmBan != null) {
+                            frmBan.capNhatMotBan(maBan);
+
+                            frmBan.taiLaiBangChinh();
+
+                            frmBan.resetCheDoMenu();
+
+                            frmBan.apDungBoLoc();
+                        }
+
+                        // 3. Đóng FrmPhucVu
+                        SwingUtilities.invokeLater(this::dispose);
+
+                        // 4. Hiện thông báo thành công
+                        SwingUtilities.invokeLater(() ->
+                            JOptionPane.showMessageDialog(
+                                frmBan,
+                                "Thanh toán thành công! Bàn đã trở về trạng thái trống.",
+                                "Thành công",
+                                JOptionPane.INFORMATION_MESSAGE
+                            )
+                        );
+
+                    } catch (SQLException ex) {
+                        ex.printStackTrace();
+                        SwingUtilities.invokeLater(() ->
+                            JOptionPane.showMessageDialog(
+                                frmBan,
+                                "Lỗi cập nhật sau thanh toán: " + ex.getMessage(),
+                                "Lỗi",
+                                JOptionPane.ERROR_MESSAGE
+                            )
+                        );
+                    }
+                };
+                // Mở form thanh toán - callback chỉ chạy khi người dùng nhấn Xác nhận
+                FrmThanhToan frmTT = new FrmThanhToan(finalMaHD, maBan, capNhatGiaoDien);
+                frmTT.setLocationRelativeTo(this);
+                frmTT.setVisible(true); // ← Form sẽ hiện bình thường
+
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Lỗi thanh toán: " + ex.getMessage());
+                JOptionPane.showMessageDialog(this, "Lỗi mở form thanh toán: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
                 ex.printStackTrace();
             }
         });

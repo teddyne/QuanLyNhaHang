@@ -56,23 +56,43 @@ public class FrmThanhToan extends JFrame implements ActionListener {
 	private JLabel lblGiamGia;
 	private JLabel valGiamGia;
 
-    public FrmThanhToan(String maPhieuDatBan, String banDangChon, Runnable callback) {
-        this.maPhieu = maPhieuDatBan;
-        this.banDangChon = banDangChon;
-        this.onThanhToanThanhCong = callback;
-        this.maHD = hoaDonDAO.layMaHoaDonTheoPhieuDatBan(maPhieuDatBan);
-        if (maHD == null) {
-            JOptionPane.showMessageDialog(this,
-                    "Không tìm thấy hóa đơn cho phiếu đặt bàn!",
-                    "Lỗi", JOptionPane.ERROR_MESSAGE);
-            dispose();
-            return;
-        }
-        initComponents();
-        loadDuLieuTuPhieuDatBan(maPhieuDatBan);
-        loadChiTietTuPhieuDatBan(maPhieuDatBan);
-        loadKhuyenMaiTotNhat();
-    }
+	// Thay đổi constructor này
+	public FrmThanhToan(String maHD, String banDangChon, Runnable callback) {
+	    this.maHD = maHD;
+	    this.banDangChon = banDangChon;
+	    this.onThanhToanThanhCong = callback;
+
+	    // Kiểm tra maHD hợp lệ
+	    if (maHD == null || maHD.trim().isEmpty()) {
+	        JOptionPane.showMessageDialog(this,
+	                "Mã hóa đơn không hợp lệ!",
+	                "Lỗi", JOptionPane.ERROR_MESSAGE);
+	        dispose();
+	        return;
+	    }
+
+	    // Lấy maPhieu từ maHD (đảo ngược lại)
+	    try {
+	        this.maPhieu = hoaDonDAO.layMaPhieuTuHoaDon(maHD); // bạn cần thêm method này trong HoaDon_DAO
+	        if (maPhieu == null) {
+	            JOptionPane.showMessageDialog(this,
+	                    "Không tìm thấy phiếu đặt bàn liên kết với hóa đơn này!",
+	                    "Lỗi", JOptionPane.ERROR_MESSAGE);
+	            dispose();
+	            return;
+	        }
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        JOptionPane.showMessageDialog(this, "Lỗi truy vấn phiếu từ hóa đơn!");
+	        dispose();
+	        return;
+	    }
+
+	    initComponents();
+	    loadDuLieuTuPhieuDatBan(maPhieu);        // vẫn dùng maPhieu để load chi tiết
+	    loadChiTietTuPhieuDatBan(maPhieu);
+	    loadKhuyenMaiTotNhat();
+	}
 
 	private void initComponents() {
         setTitle("Thanh toán");
@@ -360,9 +380,9 @@ public class FrmThanhToan extends JFrame implements ActionListener {
 
         //Nút
         JPanel pSouth = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        Font buttonFont = new Font("Times New Roman", Font.BOLD, 16);
-        Dimension btnSize = new Dimension(150, 50);
-        Dimension buttonSize = new Dimension(100, 35);
+        Font buttonFont = new Font("Times New Roman", Font.BOLD, 20);
+        Dimension btnSize = new Dimension(100, 50);
+        Dimension buttonSize = new Dimension(150, 45);
 
         btnHuy = taoNut("Hủy", new Color(231, 76, 60), buttonSize, buttonFont);
         btnXacNhan = taoNut("Xác nhận", new Color(46, 204, 113), buttonSize, buttonFont);
@@ -372,9 +392,9 @@ public class FrmThanhToan extends JFrame implements ActionListener {
             btn.setAlignmentX(Component.CENTER_ALIGNMENT);
             btn.addActionListener(this);
         }
-        pSouth.add(Box.createHorizontalStrut(350));
+        pSouth.add(Box.createHorizontalStrut(530));
         pSouth.add(btnHuy);
-        pSouth.add(Box.createHorizontalStrut(30));
+        pSouth.add(Box.createHorizontalStrut(20));
         pSouth.add(btnXacNhan);
         add(pSouth, BorderLayout.SOUTH);
 
@@ -432,20 +452,6 @@ public class FrmThanhToan extends JFrame implements ActionListener {
         k.setMaKM(null);
         k.setTenKM("Không có khuyến mãi phù hợp");
         return k;
-    }
-
-    private void loadKhuyenMai() {
-        try {
-            List<KhuyenMai> dsKM = kmDAO.layDanhSachKhuyenMai();
-            Collections.sort(dsKM, Comparator.comparing(KhuyenMai::getTenKM));
-            cmbKhuyenMai.removeAllItems();
-            cmbKhuyenMai.addItem(NO_PROMO); // mặc định: không chọn KM
-            for (KhuyenMai km : dsKM) {
-                cmbKhuyenMai.addItem(km);
-            }
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Lỗi tải danh sách khuyến mãi: " + e.getMessage());
-        }
     }
 
     private void loadKhuyenMaiTotNhat() {
@@ -614,9 +620,10 @@ public class FrmThanhToan extends JFrame implements ActionListener {
                 KhuyenMai selectedKM = (KhuyenMai) cmbKhuyenMai.getSelectedItem();
                 String maKM = (selectedKM == null || selectedKM.getMaKM() == null) ? null : selectedKM.getMaKM();
                 // DỮ LIỆU TỪ BIẾN, KHÔNG TỪ JLabel
-                String tenKH = tenKhachHang;
-                String sdt = soDienThoai;
+                String tenKH = tenKhachHang != null ? tenKhachHang.trim() : "";
+                String sdt = soDienThoai != null ? soDienThoai.trim() : "";
                 String maKH = null;
+
                 if (!tenKH.isEmpty() && !sdt.isEmpty()) {
                     maKH = hoaDonDAO.layMaKhachTuTen(tenKH, sdt);
                 }

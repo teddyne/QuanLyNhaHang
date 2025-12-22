@@ -586,5 +586,22 @@ public class HoaDon_DAO {
         }
     }
 
+
+    public String layMaPhieuTuHoaDon(String maHD) throws SQLException {
+        String sql = "SELECT maPhieu FROM HoaDon WHERE maHD = ?";
+        try (Connection con = ConnectSQL.getInstance().getConnection(); // hoặc ConnectSQL.getConnection()
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, maHD);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("maPhieu");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw e; // ném lại để form xử lý nếu cần
+        }
+        return null;
+    }
     
 }

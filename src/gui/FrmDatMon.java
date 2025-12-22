@@ -395,32 +395,32 @@ public class FrmDatMon extends JDialog {
 
     private boolean luuVaoChiTietDatMon() {
         try {
-            String maPhieuHienTai = this.maPhieu;
+            if (maPhieu == null || maPhieu.trim().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Lỗi: Mã phiếu không hợp lệ!");
+                return false;
+            }
 
-            if (maPhieuHienTai == null || maPhieuHienTai.trim().isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Lỗi: Không tìm thấy mã phiếu!");
+            // Check phiếu có tồn tại không
+            PhieuDatBan phieuCheck = phieuDatBanDAO.getByMa(maPhieu);
+            if (phieuCheck == null) {
+                JOptionPane.showMessageDialog(this, "Phiếu không tồn tại trong database!");
                 return false;
             }
 
             ChiTietPhieuDatBan_DAO ctDAO = new ChiTietPhieuDatBan_DAO();
-
             for (MonDat item : danhSachMonDat) {
-
                 ChiTietPhieuDatBan ct = new ChiTietPhieuDatBan();
-                ct.setMaPhieu(maPhieuHienTai);
+                ct.setMaPhieu(maPhieu);
                 ct.setMaMon(item.mon.getMaMon());
                 ct.setSoLuong(item.soLuong);
                 ct.setDonGia(item.mon.getDonGia());
                 ct.setGhiChu(item.getGhiChu() != null ? item.getGhiChu() : "");
-
-                ctDAO.luuMon(ct); 
+                ctDAO.luuMon(ct); // gọi DAO lưu chi tiết
             }
-
             return true;
-
         } catch (SQLException ex) {
             ex.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Lỗi lưu món: " + ex.getMessage());
+            JOptionPane.showMessageDialog(this, "Lỗi lưu chi tiết món: " + ex.getMessage());
             return false;
         }
     }

@@ -340,8 +340,7 @@ public class FrmDatBan extends JDialog {
                 }
 
                 if (thoiGianDat.toLocalDate().equals(LocalDate.now())) {
-                    long minutesDiff = java.time.Duration.between(thoiGianDat, now).toMinutes();
-                    if (minutesDiff > 2) {  
+                    if (thoiGianDat.isBefore(now.minusMinutes(3))) { 
                         JOptionPane.showMessageDialog(this, "Không thể đặt bàn vào thời gian đã qua");
                         return;
                     }

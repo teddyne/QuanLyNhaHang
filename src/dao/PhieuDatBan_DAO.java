@@ -220,11 +220,11 @@ public class PhieuDatBan_DAO {
 	
 	public boolean checkCachGio(String maBan, Date ngay, Time gio, int gioCach, String maPhieuBoQua) throws SQLException {
 	    String sql = """
-	        SELECT ngayDen, gioDen 
-	        FROM PhieuDatBan 
-	        WHERE maBan = ? 
-	          AND ngayDen = ? 
-	          AND trangThai NOT IN ('Hủy')
+	        SELECT ngayDen, gioDen
+	        FROM PhieuDatBan
+	        WHERE maBan = ?
+	          AND ngayDen = ?
+	          AND trangThai NOT IN ('Hủy', 'Hoàn thành')  
 	        """;
 
 	    if (maPhieuBoQua != null && !maPhieuBoQua.trim().isEmpty()) {
@@ -610,7 +610,7 @@ public class PhieuDatBan_DAO {
 		        }
 		    } catch (SQLException e) {
 		        e.printStackTrace();
-		    } return null; // không tìm thấy hoặc lỗi
+		    } return null; 
 		}
 
 		public List<Object[]> layChiTietPhieuDatBan(String maPDB) {

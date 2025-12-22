@@ -54,11 +54,10 @@ public class FrmThucDon extends JFrame {
     	instance = this;
     	setJMenuBar(ThanhTacVu.getInstance().getJMenuBar());
         ThanhTacVu customMenu = ThanhTacVu.getInstance();
-        add(customMenu.getBottomBar(), BorderLayout.SOUTH);
         
         monAnDAO = new MonAn_DAO(con);
         loaiMonDAO = new LoaiMon_DAO(con);
-        setTitle("THỰC ĐƠN");
+        setTitle("Phần mềm quản lý nhà hàng");
         setExtendedState(JFrame.MAXIMIZED_BOTH);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
