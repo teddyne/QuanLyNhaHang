@@ -393,30 +393,35 @@ public class FrmPhucVu extends JFrame {
                 );
             }
         });
-       
         btnThanhToan.addActionListener(e -> {
             try {
-                String maHD = hoaDonDAO.getMaHoaDonTheoBan(ban.getMaBan());
+                String maHD = hoaDonDAO.layMaHoaDonTheoPhieu(phieuDangPhucVu.getMaPhieu());
                 if (maHD == null) {
-                    JOptionPane.showMessageDialog(this, "Bàn chưa có hóa đơn!", "Thông báo", JOptionPane.WARNING_MESSAGE);
-                    return;
+                    //Tạo hóa đơn
+                	maHD = hoaDonDAO.taoHoaDonTuPhieuDatBan(phieuDangPhucVu.getMaPhieu());
+                    //Copy chi tiết món
+                    chiTietHoaDonDAO.saoChepTuPhieuDatBan(
+                        phieuDangPhucVu.getMaPhieu(),
+                        maHD
+                    );
                 }
                 FrmBan frmBan = (getParent() instanceof FrmBan) ? (FrmBan) getParent() : null;
-                FrmThanhToan frmTT = new FrmThanhToan(maHD,ban.getMaBan(),() -> {
-                        if (frmBan != null) {
-                            frmBan.taiLaiBangChinh();
-                        }
-                        dispose();
-                    }
-                );
+                FrmThanhToan frmTT = new FrmThanhToan(
+                	    phieuDangPhucVu.getMaPhieu(),
+                	    ban.getMaBan(),
+                	    () -> {
+                	        if (frmBan != null) frmBan.taiLaiBangChinh();
+                	        dispose();
+                	    }
+                	);
                 frmTT.setVisible(true);
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Lỗi khi mở thanh toán: " + ex.getMessage());
+                JOptionPane.showMessageDialog(this, "Lỗi thanh toán: " + ex.getMessage());
                 ex.printStackTrace();
             }
         });
         btnDong.addActionListener(e -> dispose());
-        // Thêm vào dialog
+        //Thêm vào dialog
         add(pnlHeader, BorderLayout.NORTH);
         add(pnlContent, BorderLayout.CENTER);
         add(pnlNut, BorderLayout.SOUTH);

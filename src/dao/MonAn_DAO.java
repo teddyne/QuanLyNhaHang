@@ -225,4 +225,23 @@ public class MonAn_DAO {
         }
         return null;
     }
+    
+    //dùng để lấy món cho khuyến mãi tặng món
+    public String layTenMon(String maMon) {
+        String sql = "SELECT tenMon FROM MonAn WHERE maMon = ?";
+        try (
+            Connection con = ConnectSQL.getConnection();
+            PreparedStatement ps = con.prepareStatement(sql)
+        ) {
+            ps.setString(1, maMon);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getString("tenMon");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return "";
+    }
+
 }

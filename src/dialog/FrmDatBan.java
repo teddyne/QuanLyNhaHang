@@ -333,9 +333,19 @@ public class FrmDatBan extends JDialog {
                 // === KIỂM TRA KHÔNG ĐƯỢC ĐẶT TRƯỚC HIỆN TẠI ===
                 LocalDateTime thoiGianDat = LocalDateTime.of(ngay.toLocalDate(), gio.toLocalTime());
                 LocalDateTime now = LocalDateTime.now();
-                if (thoiGianDat.isBefore(now)) {
-                    JOptionPane.showMessageDialog(this, "Không thể đặt bàn vào thời gian đã qua!");
+
+                if (thoiGianDat.toLocalDate().isBefore(LocalDate.now())) {
+                    JOptionPane.showMessageDialog(this, "Không thể đặt bàn vào ngày trong quá khứ!");
                     return;
+                }
+
+                if (thoiGianDat.toLocalDate().equals(LocalDate.now())) {
+                    long minutesDiff = java.time.Duration.between(thoiGianDat, now).toMinutes();
+                    if (minutesDiff > 2) {  
+                        JOptionPane.showMessageDialog(this, "Không thể đặt bàn vào thời gian đã qua");
+                        return;
+                    }
+
                 }
                 String maPhieuHienTai = txtMaPhieu.getText().trim();
                 if (!phieuDatBanDAO.checkCachGio(maBan, ngay, gio, 1, maPhieuHienTai)) {

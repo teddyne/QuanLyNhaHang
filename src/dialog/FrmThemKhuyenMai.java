@@ -28,9 +28,9 @@ public class FrmThemKhuyenMai extends JFrame {
     private JSpinner spTuNgay, spDenNgay;
     private JButton btnLuu, btnHuy, btnLamMoi;
     private KhuyenMai_DAO kmDAO;
-    private JPanel pNorth, pMain, p1, p2, p3, p4, p5, p6, p7, p8, p9;
+    private JPanel pNorth, pMain, p1, p2, p3, p4, p5, p6, p9;
     private JLabel lblTieuDe;
-    private JLabel lblMa, lblTen, lblLoai, lblGiaTri, lblTuNgay, lblDenNgay, lblTrangThai, lblDonHangTu, lblDoiTuong, lblMon1, lblMon2, lblMonTang, lblGhiChu;
+    private JLabel lblMa, lblTen, lblLoai, lblGiaTri, lblTuNgay, lblDenNgay, lblTrangThai, lblDonHangTu, lblDoiTuong, lblGhiChu;
 
     private Connection con = ConnectSQL.getConnection();
 	private DefaultTableModel modelDieuKien;
@@ -50,7 +50,7 @@ public class FrmThemKhuyenMai extends JFrame {
 
     public FrmThemKhuyenMai() {
         setTitle("Thêm Khuyến Mãi");
-        setSize(770, 600);
+        setSize(700, 530);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         kmDAO = new KhuyenMai_DAO();
@@ -72,7 +72,7 @@ public class FrmThemKhuyenMai extends JFrame {
         Font labelFont = new Font("Times New Roman", Font.BOLD, 16);
         Font fieldFont = new Font("Times New Roman", Font.PLAIN, 16);
         Dimension fieldSize = new Dimension(200, 30);
-        Dimension labelSize = new Dimension(110, 30);
+        Dimension labelSize = new Dimension(90, 30);
 
         // Dòng 1: Mã KM
         p1 = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -87,7 +87,7 @@ public class FrmThemKhuyenMai extends JFrame {
         txtMaKM.setText(kmDAO.taoMaKhuyenMaiMoi()); // Tự động tạo mã mới
         p1.add(txtMaKM);
         pMain.add(p1);
-        pMain.add(Box.createVerticalStrut(10));
+        pMain.add(Box.createVerticalStrut(5));
 
         // Dòng 2: Tên KM
         p2 = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -99,7 +99,7 @@ public class FrmThemKhuyenMai extends JFrame {
         txtTenKM.setFont(fieldFont);
         txtTenKM.setPreferredSize(fieldSize);
         p2.add(txtTenKM);
-        p2.add(Box.createHorizontalStrut(40));
+        p2.add(Box.createHorizontalStrut(30));
 
         lblGiamToiDa = new JLabel("Giảm tối đa:");
         lblGiamToiDa.setFont(labelFont);
@@ -110,7 +110,7 @@ public class FrmThemKhuyenMai extends JFrame {
         txtGiamToiDa.setPreferredSize(fieldSize);
         p2.add(txtGiamToiDa);
         pMain.add(p2);
-        pMain.add(Box.createVerticalStrut(10));
+        pMain.add(Box.createVerticalStrut(5));
 
         // Dòng 3: Loại KM + Giá trị
         p3 = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -123,7 +123,7 @@ public class FrmThemKhuyenMai extends JFrame {
         cmbLoaiKM.setFont(fieldFont);
         cmbLoaiKM.setPreferredSize(fieldSize);
         p3.add(cmbLoaiKM);
-        p3.add(Box.createHorizontalStrut(40));
+        p3.add(Box.createHorizontalStrut(30));
         
         lblGiaTri = new JLabel("Giá trị:");
         lblGiaTri.setFont(labelFont);
@@ -134,7 +134,7 @@ public class FrmThemKhuyenMai extends JFrame {
         txtGiaTri.setPreferredSize(fieldSize);
         p3.add(txtGiaTri);
         pMain.add(p3);
-        pMain.add(Box.createVerticalStrut(10));
+        pMain.add(Box.createVerticalStrut(5));
 
         // Dòng 4: Từ ngày + Đến ngày
         p4 = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -148,7 +148,7 @@ public class FrmThemKhuyenMai extends JFrame {
         spTuNgay.setPreferredSize(fieldSize);
         spTuNgay.setValue(new java.util.Date()); // Đặt ngày hiện tại
         p4.add(spTuNgay);
-        p4.add(Box.createHorizontalStrut(40));
+        p4.add(Box.createHorizontalStrut(30));
         
         lblDenNgay = new JLabel("Đến ngày:");
         lblDenNgay.setFont(labelFont);
@@ -161,7 +161,7 @@ public class FrmThemKhuyenMai extends JFrame {
         spDenNgay.setValue(new java.util.Date()); // Đặt ngày hiện tại
         p4.add(spDenNgay);
         pMain.add(p4);
-        pMain.add(Box.createVerticalStrut(10));
+        pMain.add(Box.createVerticalStrut(5));
 
         // Dòng 5: Trạng thái + Đối tượng
         p5 = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -173,7 +173,7 @@ public class FrmThemKhuyenMai extends JFrame {
         txtTrangThai.setFont(fieldFont);
         txtTrangThai.setPreferredSize(fieldSize);
         p5.add(txtTrangThai);
-        p5.add(Box.createHorizontalStrut(40));
+        p5.add(Box.createHorizontalStrut(30));
         
         lblDoiTuong = new JLabel("Đối tượng:");
         lblDoiTuong.setFont(labelFont);
@@ -184,7 +184,7 @@ public class FrmThemKhuyenMai extends JFrame {
         cmbDoiTuongApDung.setPreferredSize(fieldSize);
         p5.add(cmbDoiTuongApDung);
         pMain.add(p5);
-        pMain.add(Box.createVerticalStrut(10));
+        pMain.add(Box.createVerticalStrut(5));
 
         // Dòng 6: Đơn hàng từ
         p6 = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -196,7 +196,7 @@ public class FrmThemKhuyenMai extends JFrame {
         txtDonHangTu.setFont(fieldFont);
         txtDonHangTu.setPreferredSize(fieldSize);
         p6.add(txtDonHangTu);
-        p6.add(Box.createHorizontalStrut(40));
+        p6.add(Box.createHorizontalStrut(30));
 
         lblGhiChu = new JLabel("Ghi chú:");
         lblGhiChu.setFont(labelFont);
@@ -211,7 +211,7 @@ public class FrmThemKhuyenMai extends JFrame {
         
         pTangMon = taoPanelTangMon();
         pMain.add(pTangMon);
-        pTangMon.setVisible(false); // Ẩn mặc định
+        pTangMon.setVisible(false);
 
 
         // Dòng 9: Nút
@@ -222,13 +222,12 @@ public class FrmThemKhuyenMai extends JFrame {
         btnHuy = taoNut("Hủy", new Color(231, 76, 60), buttonSize, buttonFont);
         btnLamMoi = taoNut("Làm mới", new Color(52, 152, 219), buttonSize, buttonFont);
         p9.add(btnHuy);
-        p9.add(Box.createHorizontalStrut(20));
+        p9.add(Box.createHorizontalStrut(15));
         p9.add(btnLamMoi);
-        p9.add(Box.createHorizontalStrut(20));
+        p9.add(Box.createHorizontalStrut(15));
         p9.add(btnLuu);
         pMain.add(p9);
 
-        // Thiết lập màu sắc
         pMain.setBackground(Color.WHITE);
         pNorth.setBackground(new Color(169, 55, 68));
         p1.setBackground(Color.WHITE);
@@ -247,7 +246,7 @@ public class FrmThemKhuyenMai extends JFrame {
         panelRight.setBackground(Color.WHITE);
         pTangMon = taoPanelTangMon();
         panelRight.add(pTangMon, BorderLayout.CENTER);
-        panelRight.setVisible(false); // ẨN BAN ĐẦU
+        panelRight.setVisible(false);
         
         add(panelLeft, BorderLayout.CENTER);
         add(panelRight, BorderLayout.EAST);
@@ -291,9 +290,9 @@ public class FrmThemKhuyenMai extends JFrame {
         
         panelRight.setVisible(laTangMon);
         if (laTangMon) {
-            setSize(1100, 600);
+            setSize(1030, 530);
         } else {
-            setSize(770, 600);
+            setSize(700, 530);
         }
     }
 
@@ -631,4 +630,3 @@ public class FrmThemKhuyenMai extends JFrame {
     }
     
 }
-

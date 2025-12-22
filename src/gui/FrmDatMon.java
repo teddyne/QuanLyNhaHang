@@ -78,7 +78,6 @@ import java.util.*;
 
 
 public class FrmDatMon extends JDialog {
-    // TONE CHỦ ĐẠO + FONT GIỮ NGUYÊN 100%
     private static final Color MAU_DO_RUOU = new Color(169, 55, 68);
     private static final Color MAU_HONG_NHAT = new Color(255, 230, 230);
     private static final Color MAU_TRANG = Color.WHITE;
@@ -127,12 +126,6 @@ public class FrmDatMon extends JDialog {
         setLocationRelativeTo(parent);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); 
-//        addWindowListener(new java.awt.event.WindowAdapter() {
-//            @Override
-//            public void windowClosing(java.awt.event.WindowEvent e) {
-//                quayLaiPhucVu();
-//            }
-//        });
     }
 
     private void initComponents() throws SQLException {
@@ -264,12 +257,10 @@ public class FrmDatMon extends JDialog {
         getContentPane().setLayout(new BorderLayout());
         getContentPane().setBackground(MAU_TRANG);
 
-     // HEADER
         JPanel pnlHeader = new JPanel(new BorderLayout());
         pnlHeader.setBackground(MAU_DO_RUOU);
         pnlHeader.setBorder(new EmptyBorder(10, 15, 10, 15));
 
-        // nút quay lại
         ImageIcon icon = new ImageIcon(
                 new ImageIcon("img/quaylai.png").getImage()
                         .getScaledInstance(35, 35, Image.SCALE_SMOOTH)
@@ -283,18 +274,15 @@ public class FrmDatMon extends JDialog {
             }
         });
 
-        // tiêu đề
         JLabel lblTieuDe = new JLabel("ĐẶT MÓN", SwingConstants.CENTER);
         lblTieuDe.setFont(FONT_TIEU_DE);
         lblTieuDe.setForeground(MAU_TRANG);
 
-        // add
         pnlHeader.add(lblBack, BorderLayout.WEST);
         pnlHeader.add(lblTieuDe, BorderLayout.CENTER);
         add(pnlHeader, BorderLayout.NORTH);
 
 
-        // CHIA 50-50
         JSplitPane splitMain = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         splitMain.setResizeWeight(0.5);
         splitMain.setDividerLocation(0.5);
@@ -321,7 +309,7 @@ public class FrmDatMon extends JDialog {
 
         pnlThucDon.add(pnlTimKiem, BorderLayout.NORTH);
 
-        // 3 CARD MỘT HÀNG
+        // CARD MỘT HÀNG
         pnlLuoiMon = new JPanel(new GridLayout(0, 3, 30, 30));
         pnlLuoiMon.setBackground(MAU_TRANG);
         JScrollPane scrMon = new JScrollPane(pnlLuoiMon);
@@ -384,7 +372,6 @@ public class FrmDatMon extends JDialog {
         kieuNut(btnLuu, new Color(52, 152, 219));
         btnLuu.setPreferredSize(new Dimension(220, 50));
         btnLuu.addActionListener(e -> {
-            // Chỉ lưu thật khi đã có maPhieu (tức là đã xác nhận đặt bàn)
             if (maPhieu != null && !maPhieu.trim().isEmpty()) {
                 if (luuVaoChiTietDatMon()) {
                     if (frmPhucVu != null) frmPhucVu.capNhatMonDat();
@@ -392,9 +379,8 @@ public class FrmDatMon extends JDialog {
                     dispose();
                 }
             } else {
-                // Chưa có phiếu → chỉ lưu tạm → đóng form là được
                 JOptionPane.showMessageDialog(this, "Đã lưu tạm món cho bàn " + maBan);
-                dispose(); // tự đóng
+                dispose(); 
             }
         });
 
@@ -427,7 +413,7 @@ public class FrmDatMon extends JDialog {
                 ct.setDonGia(item.mon.getDonGia());
                 ct.setGhiChu(item.getGhiChu() != null ? item.getGhiChu() : "");
 
-                ctDAO.luuMon(ct); // tự quyết định insert / update
+                ctDAO.luuMon(ct); 
             }
 
             return true;
@@ -477,18 +463,13 @@ public class FrmDatMon extends JDialog {
         lblAnh.setPreferredSize(new Dimension(200, 160));
         lblAnh.setBorder(BorderFactory.createLineBorder(MAU_XAM, 1));
         String duongDan = mon.getAnhMon() != null && !mon.getAnhMon().isEmpty() ? mon.getAnhMon() : "img/placeholder.png";
-        try {
-            URL url = getClass().getResource("/img/" + duongDan);
-            if (url != null) {
-                ImageIcon icon = new ImageIcon(url);
-                Image img = icon.getImage().getScaledInstance(200, 160, Image.SCALE_SMOOTH);
-                lblAnh.setIcon(new ImageIcon(img));
-            } else throw new Exception();
-        } catch (Exception ex) {
-            lblAnh.setText("NO IMAGE");
-            lblAnh.setForeground(MAU_DO_RUOU);
-            lblAnh.setFont(new Font("Times New Roman", Font.BOLD, 16));
+        ImageIcon icon = new ImageIcon(duongDan);
+        if (icon.getImageLoadStatus() == java.awt.MediaTracker.ERRORED) {
+            icon = new ImageIcon("img/placeholder.png");
         }
+        Image img = icon.getImage().getScaledInstance(200, 160, Image.SCALE_SMOOTH);
+        lblAnh.setIcon(new ImageIcon(img));
+        lblAnh.setText(""); 
         khung.add(lblAnh, BorderLayout.NORTH);
 
         JPanel pnlTT = new JPanel(new GridBagLayout());
@@ -675,8 +656,13 @@ public class FrmDatMon extends JDialog {
         }
     }
     
+   
+    public void refreshThucDon() throws SQLException {
+        danhSachMon = monAnDAO.getAllMonAn();  
+		capNhatLuoiMon();                     
+    }
     
-    // ================== RENDERER ==================
+    
     class SoLuongRenderer extends JPanel implements TableCellRenderer {
         private final JLabel lbl = new JLabel("1", SwingConstants.CENTER);
         private final JButton btnMinus = new JButton("-");
@@ -720,7 +706,6 @@ public class FrmDatMon extends JDialog {
         }
     }
 
-    // ================== EDITOR ==================
     class SoLuongEditor extends DefaultCellEditor {
         private final JPanel panel = new JPanel(new BorderLayout(4, 0));
         private final JLabel lbl = new JLabel("1", SwingConstants.CENTER);
@@ -791,20 +776,4 @@ public class FrmDatMon extends JDialog {
         @Override public boolean stopCellEditing() { fireEditingStopped(); return true; }
     }
     
-//    public static void main(String[] args) {
-//        SwingUtilities.invokeLater(() -> {
-//            try {
-//                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-//                String maPhieu = JOptionPane.showInputDialog("Nhập mã phiếu đặt bàn:");
-//                if (maPhieu != null && !maPhieu.isEmpty()) {
-//                    // Lấy mã bàn từ phiếu
-//                    PhieuDatBan_DAO phieuDAO = new PhieuDatBan_DAO(ConnectSQL.getConnection());
-//                    String maBan = phieuDAO.layMaBanTheoPhieu(maPhieu);
-//                    new FrmDatMon(con, maBan, maPhieu);
-//                }
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
-//        });
-//    }
 }

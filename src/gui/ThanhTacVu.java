@@ -55,7 +55,7 @@ public class ThanhTacVu extends JFrame {
     }
 
     public ThanhTacVu() {
-        setTitle("Quản Lý Nhà Hàng Vang");
+        setTitle("Phần mềm quản lý nhà hàng");
         setExtendedState(JFrame.MAXIMIZED_BOTH);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);

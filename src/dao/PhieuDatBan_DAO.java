@@ -580,4 +580,65 @@ public class PhieuDatBan_DAO {
 	    }
 	    return null;
 	}
+
+	//phục vụ cho thanh toán
+		public PhieuDatBan layThongTinPhieuDatBan(String maPhieu) {
+		    String sql = """
+		        SELECT maPhieu, maBan, tenKhach, soDienThoai, soNguoi,
+		               ngayDen, gioDen, ghiChu, tienCoc, ghiChuCoc, trangThai
+		        FROM PhieuDatBan
+		        WHERE maPhieu = ?
+		    	""";
+		    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+		        ps.setString(1, maPhieu);
+		        try (ResultSet rs = ps.executeQuery()) {
+		            if (rs.next()) {
+		                return new PhieuDatBan(
+		                    rs.getString("maPhieu"),
+		                    rs.getString("maBan"),
+		                    rs.getString("tenKhach"),
+		                    rs.getString("soDienThoai"),
+		                    rs.getInt("soNguoi"),
+		                    rs.getDate("ngayDen"),
+		                    rs.getTime("gioDen"),
+		                    rs.getString("ghiChu"),
+		                    rs.getDouble("tienCoc"),
+		                    rs.getString("ghiChuCoc"),
+		                    rs.getString("trangThai")
+		                );
+		            }
+		        }
+		    } catch (SQLException e) {
+		        e.printStackTrace();
+		    } return null; // không tìm thấy hoặc lỗi
+		}
+
+		public List<Object[]> layChiTietPhieuDatBan(String maPDB) {
+		    List<Object[]> list = new ArrayList<>();
+		    String sql = """
+		        SELECT 
+		            ct.maMon,
+		            m.tenMon,
+		            ct.soLuong,
+		            ct.donGia
+		        FROM ChiTietPhieuDatBan ct
+		        JOIN MonAn m ON ct.maMon = m.maMon
+		        WHERE ct.maPhieu = ?
+		    	""";
+		    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+		        ps.setString(1, maPDB);
+		        ResultSet rs = ps.executeQuery();
+		        while (rs.next()) {
+		            list.add(new Object[]{
+		                rs.getString("maMon"),
+		                rs.getString("tenMon"),
+		                rs.getInt("soLuong"),
+		                rs.getDouble("donGia")
+		            });
+		        }
+		    } catch (SQLException e) {
+		        e.printStackTrace();
+		    }return list;
+		}
+
 }

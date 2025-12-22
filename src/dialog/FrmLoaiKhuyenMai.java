@@ -71,6 +71,7 @@ public class FrmLoaiKhuyenMai extends JFrame {
 	    model = new DefaultTableModel(new String[]{"Mã loại", "Tên loại"}, 0);
 	    table = new JTable(model);
 	    table.setRowHeight(30);
+	    table.setFont(new Font("Times New Roman", Font.PLAIN, 16));
 	    table.setBackground(Color.WHITE);
 	    table.setGridColor(Color.LIGHT_GRAY);
 
@@ -214,7 +215,7 @@ public class FrmLoaiKhuyenMai extends JFrame {
     }
 
     public static void main(String[] args) {
-    	UIManager.put("TableHeader.font", new Font("Times New Roman", Font.BOLD, 14));
+    	UIManager.put("TableHeader.font", new Font("Times New Roman", Font.BOLD, 18));
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException

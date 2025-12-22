@@ -1,7 +1,7 @@
 package dao;
 
 import connectSQL.ConnectSQL;
-import entity.HoaDon;
+//import entity.HoaDon;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,14 +9,10 @@ import java.util.List;
 import javax.swing.JOptionPane;
 
 public class HoaDon_DAO {
-    //private final Connection conn;
+    private Connection conn;
     private Object tenKhach;
     private Object maNhanVien;
-
-//    public HoaDon_DAO() {
-//        this.conn = conn;
-//    }
- // Trong HoaDon_DAO
+    
     public static HoaDon_DAO getInstance() {
         return new HoaDon_DAO();
     }
@@ -54,17 +50,22 @@ public class HoaDon_DAO {
     }
 
     // Tự sinh mã hóa đơn mới
-    private static String taoMaHoaDon() throws SQLException {
-        String query = "SELECT MAX(maHD) AS maHD FROM HoaDon";
+    private static String taoMaHoaDon() {
+        String sql = """
+            SELECT 'HD' + RIGHT(
+        		    '0000' + CAST(
+        		        ISNULL(MAX(CAST(SUBSTRING(maHD, 3, LEN(maHD)) AS INT)), 0) + 1 AS VARCHAR
+        			), 4
+        		)
+            FROM HoaDon WHERE maHD LIKE 'HD%'
+            AND ISNUMERIC(SUBSTRING(maHD, 3, LEN(maHD))) = 1
+        	""";
         try (Connection con = ConnectSQL.getConnection();
-             PreparedStatement ps = con.prepareStatement(query);
+             PreparedStatement ps = con.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
-            if (rs.next()) {
-                String maxMaHD = rs.getString("maHD");
-                if (maxMaHD == null) return "HD0001";
-                int num = Integer.parseInt(maxMaHD.substring(2)) + 1;
-                return String.format("HD%04d", num);
-            }
+            if (rs.next()) return rs.getString(1);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         return "HD0001";
     }
@@ -140,7 +141,6 @@ public class HoaDon_DAO {
         }
         return thongTin;
     }
-
 
     public List<Object[]> layChiTietHoaDon(String maHD) {
         List<Object[]> list = new ArrayList<>();
@@ -264,27 +264,20 @@ public class HoaDon_DAO {
         return null;
     }
     
-    public boolean thanhToanHoaDon(
-            String maHD,
+    public boolean thanhToanHoaDon(String maHD,
             double tienKhachDua,      // chỉ để kiểm tra ở UI
             double tienSauGiam,       // chỉ để kiểm tra ở UI
-            String maKM,
-            String maKH,
-            double phuThu,
-            String ghiChu) {
-
+            String maKM, String maKH, double phuThu, String ghiChu) {
+    	
         String sqlUpdateHD =
                 "UPDATE HoaDon SET " +
                 "trangThai = N'Đã thanh toán', " +
                 "maKM = ?, maKH = ?, phuThu = ?, ghiChu = ?, ngayLap = GETDATE() " +
                 "WHERE maHD = ?";
-
         String sqlGetBan = "SELECT p.maBan FROM HoaDon hd " +
                            "JOIN PhieuDatBan p ON hd.maPhieu = p.maPhieu " +
                            "WHERE hd.maHD = ?";
-
         String sqlUpdateBan = "UPDATE Ban SET trangThai = N'Trống' WHERE maBan = ?";
-
         Connection conn = null;
         PreparedStatement psHD = null, psGet = null, psBan = null;
         ResultSet rs = null;
@@ -345,7 +338,6 @@ public class HoaDon_DAO {
             } catch (SQLException e) { e.printStackTrace(); }
         }
     }
-
 
     public String layMaBanTheoHoaDon(String maHD) {
         String sql = "SELECT b.maBan FROM HoaDon hd " +
@@ -455,4 +447,144 @@ public class HoaDon_DAO {
         }
         return ds;
     }
+    
+    public boolean taoHoaDonTuPhieuDatBan(String maPDB, String tenKH, String sdt, 
+    		double tongTien, double giamGia, double phuThu, String maKM, double tienKhachDua) {
+    	
+        String maHD = taoMaHoaDon();
+        try {
+            conn.setAutoCommit(false);
+            //Lấy mã khách
+            String maKH = layHoacTaoKhachHang(tenKH, sdt);
+            //Insert hóa đơn
+            String sqlHD = """
+                INSERT INTO HoaDon(maHD, ngayLap, tongTien, giamGia, phuThu, tienKhachDua, maKM, maKH)
+                VALUES (?, GETDATE(), ?, ?, ?, ?, ?, ?)
+                """;
+            try (PreparedStatement ps = conn.prepareStatement(sqlHD)) {
+                ps.setString(1, maHD);
+                ps.setDouble(2, tongTien);
+                ps.setDouble(3, giamGia);
+                ps.setDouble(4, phuThu);
+                ps.setDouble(5, tienKhachDua);
+                ps.setString(6, maKM);
+                ps.setString(7, maKH);
+                ps.executeUpdate();
+            }
+            //Copy chi tiết
+            String sqlCT = """
+                INSERT INTO ChiTietHoaDon(maHD, maMon, soLuong, donGia)
+                SELECT ?, maMon, soLuong, donGia
+                FROM ChiTietPhieuDatBan
+                WHERE maPDB = ?
+            	""";
+            try (PreparedStatement ps = conn.prepareStatement(sqlCT)) {
+                ps.setString(1, maHD);
+                ps.setString(2, maPDB);
+                ps.executeUpdate();
+            }
+            //Cập nhật trạng thái phiếu
+            String sqlUpdate = "UPDATE PhieuDatBan SET trangThai = N'Hoàn thành' WHERE maPDB = ?";
+            try (PreparedStatement ps = conn.prepareStatement(sqlUpdate)) {
+                ps.setString(1, maPDB);
+                ps.executeUpdate();
+            }
+            conn.commit();
+            return true;
+        } catch (SQLException e) {
+            try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+            e.printStackTrace();
+            return false;
+        } finally {
+            try { conn.setAutoCommit(true); } catch (SQLException e) { e.printStackTrace(); }
+        }
+    }
+    
+    private String layHoacTaoKhachHang(String tenKH, String sdt) throws SQLException {
+        //Nếu khách đã tồn tại → trả về luôn
+        String sqlCheck = "SELECT maKH FROM KhachHang WHERE tenKH = ? AND sdt = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sqlCheck)) {
+            ps.setString(1, tenKH);
+            ps.setString(2, sdt);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getString("maKH");
+            }
+        }
+        
+        //Sinh mã KH mới
+        String sqlGenMa = """
+            SELECT 'KH' + RIGHT('0000' + CAST(
+        			  ISNULL(MAX(CAST(SUBSTRING(maKH, 3, LEN(maKH)) AS INT)), 0) + 1 AS VARCHAR
+        		   ), 4
+        		)
+            FROM KhachHang WHERE maKH LIKE 'KH%'
+            AND ISNUMERIC(SUBSTRING(maKH, 3, LEN(maKH))) = 1
+        	""";
+        String maKH = null;
+        try (PreparedStatement ps = conn.prepareStatement(sqlGenMa);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                maKH = rs.getString(1);
+            }
+        }
+        if (maKH == null) maKH = "KH0001";
+        //Insert khách hàng mới
+        String sqlInsert = "INSERT INTO KhachHang(maKH, tenKH, sdt) VALUES (?, ?, ?)";
+        try (PreparedStatement ps = conn.prepareStatement(sqlInsert)) {
+            ps.setString(1, maKH);
+            ps.setString(2, tenKH);
+            ps.setString(3, sdt);
+            ps.executeUpdate();
+        } return maKH;
+    }
+
+    public String taoHoaDonTuPhieuDatBan(String maPhieu) throws SQLException {
+    	String maHD = taoMaHoaDon();
+        String sql = """
+            INSERT INTO HoaDon (maHD, maPhieu, ngayLap, trangThai)
+            VALUES (?, ?, GETDATE(), N'Chưa thanh toán')
+        	""";
+        try (Connection con = ConnectSQL.getInstance().getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, maHD);
+            ps.setString(2, maPhieu);
+            ps.executeUpdate();
+        } return maHD;
+    }
+
+    public String layMaHoaDonTheoPhieuDatBan(String maPDB) {
+        String sql = """
+            SELECT maHD FROM HoaDon
+            WHERE maPhieu = ?
+        	""";
+        try (Connection con = ConnectSQL.getInstance().getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, maPDB);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getString("maHD");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } return null;
+    }
+
+    public void themMonTangVaoHoaDon(String maHD, String maMon, int soLuong) {
+        String sql = """
+            INSERT INTO ChiTietHoaDon(maHD, maMon, soLuong, donGia, ghiChu)
+            VALUES (?, ?, ?, 0, N'Tặng')
+        	""";
+        try (Connection conn = ConnectSQL.getInstance().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, maHD);
+            ps.setString(2, maMon);
+            ps.setInt(3, soLuong);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    
 }

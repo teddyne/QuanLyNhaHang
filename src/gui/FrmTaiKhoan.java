@@ -30,7 +30,7 @@ public class FrmTaiKhoan extends ThanhTacVu {
 
     public FrmTaiKhoan() throws SQLException {
         super();
-        setTitle("Quản Lý Tài Khoản");
+        setTitle("Phần mềm quản lý nhà hàng");
         Connection conn = ConnectSQL.getConnection();
         taiKhoanDAO = new TaiKhoan_DAO(conn);
 
